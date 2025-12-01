@@ -1,0 +1,401 @@
+package presentation;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+public class CharacterSelectionPanel extends JPanel {
+
+    private static final int WINDOW_WIDTH = 1280;
+    private static final int WINDOW_HEIGHT = 720;
+
+    private ResourceLoader resources;
+    private FontLoader fontLoader;
+    private int selectedLevel;
+    private int numberOfPlayers;
+
+    private String hoveredCharacter = null;
+    private String selectedCharacter = null;
+
+    // Áreas de los personajes (clickeables)
+    private Rectangle chocolateArea;
+    private Rectangle fresaArea;
+    private Rectangle vainillaArea;
+
+    // GIFs animados de personajes
+    private ImageIcon currentChocolateGif;
+    private ImageIcon currentFresaGif;
+    private ImageIcon currentVainillaGif;
+
+    // Timer para actualizar las animaciones
+    private javax.swing.Timer animationTimer;
+
+    // Tamaño del marco y del personaje
+    private static final int MARCO_SIZE = 220;
+    private static final int CHARACTER_SIZE = 150;
+
+    // Control de animación de victoria
+    private boolean showingVictory = false;
+    private ImageIcon victoryGif = null;
+    private Rectangle victoryArea = null;
+
+    public CharacterSelectionPanel(int selectedLevel, int numberOfPlayers, ResourceLoader resources) {
+        this.selectedLevel = selectedLevel;
+        this.numberOfPlayers = numberOfPlayers;
+        this.resources = resources;
+        this.fontLoader = FontLoader.getInstance();
+
+        setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
+        setLayout(null);
+
+        // Inicializar con animaciones de quieto
+        currentChocolateGif = resources.chocolateIdleDownGif;
+        currentFresaGif = resources.rosaIdleDownGif;
+        currentVainillaGif = resources.vainillaIdleDownGif;
+
+        setupCharacterAreas();
+        setupMouseListeners();
+        setupBackButton();
+        startAnimationTimer();
+    }
+
+    private void setupCharacterAreas() {
+        int spacing = 100;
+        int totalWidth = (MARCO_SIZE * 3) + (spacing * 2);
+        int startX = (WINDOW_WIDTH - totalWidth) / 2;
+        int characterY = 320;
+
+        chocolateArea = new Rectangle(startX, characterY, MARCO_SIZE, MARCO_SIZE);
+        fresaArea = new Rectangle(startX + MARCO_SIZE + spacing, characterY, MARCO_SIZE, MARCO_SIZE);
+        vainillaArea = new Rectangle(startX + (MARCO_SIZE + spacing) * 2, characterY, MARCO_SIZE, MARCO_SIZE);
+    }
+
+    private void setupMouseListeners() {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (showingVictory) return;
+
+                Point clickPoint = e.getPoint();
+
+                if (chocolateArea.contains(clickPoint)) {
+                    selectedCharacter = "Chocolate";
+                    confirmSelection();
+                } else if (fresaArea.contains(clickPoint)) {
+                    selectedCharacter = "Fresa";
+                    confirmSelection();
+                } else if (vainillaArea.contains(clickPoint)) {
+                    selectedCharacter = "Vainilla";
+                    confirmSelection();
+                }
+            }
+        });
+
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (showingVictory) return;
+
+                Point mousePoint = e.getPoint();
+                String previousHovered = hoveredCharacter;
+
+                if (chocolateArea.contains(mousePoint)) {
+                    hoveredCharacter = "Chocolate";
+                } else if (fresaArea.contains(mousePoint)) {
+                    hoveredCharacter = "Fresa";
+                } else if (vainillaArea.contains(mousePoint)) {
+                    hoveredCharacter = "Vainilla";
+                } else {
+                    hoveredCharacter = null;
+                }
+
+                if (!java.util.Objects.equals(previousHovered, hoveredCharacter)) {
+                    updateCharacterAnimations();
+                }
+            }
+        });
+    }
+
+    private void updateCharacterAnimations() {
+        if ("Chocolate".equals(hoveredCharacter)) {
+            currentChocolateGif = resources.chocolateWalkDownGif;
+        } else {
+            currentChocolateGif = resources.chocolateIdleDownGif;
+        }
+
+        if ("Fresa".equals(hoveredCharacter)) {
+            currentFresaGif = resources.rosaWalkDownGif;
+        } else {
+            currentFresaGif = resources.rosaIdleDownGif;
+        }
+
+        if ("Vainilla".equals(hoveredCharacter)) {
+            currentVainillaGif = resources.vainillaWalkDownGif;
+        } else {
+            currentVainillaGif = resources.vainillaIdleDownGif;
+        }
+    }
+
+    private void startAnimationTimer() {
+        animationTimer = new javax.swing.Timer(33, e -> repaint());
+        animationTimer.start();
+    }
+
+    private void confirmSelection() {
+        // Determinar el mensaje según el modo de juego
+        String modeMessage;
+        if (numberOfPlayers == 0) {
+            modeMessage = "Modo: Machine vs Machine";
+        } else if (numberOfPlayers == 1) {
+            modeMessage = "Modo: 1 Jugador";
+        } else {
+            modeMessage = "Modo: 2 Jugadores";
+        }
+
+        int response = JOptionPane.showConfirmDialog(
+                this,
+                "¿Estás seguro de elegir a " + selectedCharacter + "?\n" + modeMessage,
+                "Confirmar selección",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (response == JOptionPane.YES_OPTION) {
+            showVictoryAnimation();
+        }
+    }
+
+    private void showVictoryAnimation() {
+        showingVictory = true;
+
+        switch (selectedCharacter) {
+            case "Chocolate":
+                victoryGif = resources.chocolateVictoryGif;
+                victoryArea = chocolateArea;
+                break;
+            case "Fresa":
+                victoryGif = resources.rosaVictoryGif;
+                victoryArea = fresaArea;
+                break;
+            case "Vainilla":
+                victoryGif = resources.vainillaVictoryGif;
+                victoryArea = vainillaArea;
+                break;
+        }
+
+        javax.swing.Timer victoryTimer = new javax.swing.Timer(2000, e -> {
+            startGame();
+        });
+        victoryTimer.setRepeats(false);
+        victoryTimer.start();
+    }
+
+    private void setupBackButton() {
+        int backButtonWidth = 200;
+        int backButtonHeight = 100;
+        int backButtonWidthHover = 220;
+        int backButtonHeightHover = 110;
+
+        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight, Image.SCALE_SMOOTH);
+        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover, Image.SCALE_SMOOTH);
+
+        JLabel backButton = new JLabel(new ImageIcon(normalButton));
+        int backX = 30;
+        int backY = WINDOW_HEIGHT - backButtonHeight - 30;
+        backButton.setBounds(backX, backY, backButtonWidth, backButtonHeight);
+        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+        final int originalX = backX;
+        final int originalY = backY;
+
+        backButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!showingVictory) {
+                    goBackToLevelSelection();
+                }
+            }
+
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (!showingVictory) {
+                    backButton.setIcon(new ImageIcon(hoverButton));
+                    int newX = originalX - (backButtonWidthHover - backButtonWidth) / 2;
+                    int newY = originalY - (backButtonHeightHover - backButtonHeight) / 2;
+                    backButton.setBounds(newX, newY, backButtonWidthHover, backButtonHeightHover);
+                }
+            }
+
+            @Override
+            public void mouseExited(MouseEvent e) {
+                backButton.setIcon(new ImageIcon(normalButton));
+                backButton.setBounds(originalX, originalY, backButtonWidth, backButtonHeight);
+            }
+        });
+
+        add(backButton);
+    }
+
+    private void startGame() {
+        System.out.println("Starting game with character: " + selectedCharacter + ", Level: " + selectedLevel + ", Mode: " + numberOfPlayers);
+
+        cleanup();
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            frame.dispose();
+
+            new GameWindow(selectedCharacter, selectedLevel, numberOfPlayers, resources);
+        }
+    }
+
+    private void goBackToLevelSelection() {
+        cleanup();
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            frame.getContentPane().removeAll();
+
+            LevelSelectionPanel levelPanel = new LevelSelectionPanel(numberOfPlayers, resources);
+            frame.add(levelPanel);
+            frame.revalidate();
+            frame.repaint();
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        // Dibujar fondo
+        if (resources.wallpaperImage != null) {
+            g2d.drawImage(resources.wallpaperImage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, this);
+        }
+
+        // Dibujar título de selección de personaje
+        if (resources.characterSelectionGif != null) {
+            Image titleImage = resources.characterSelectionGif.getImage();
+            int titleWidth = 600;
+            int titleHeight = 150;
+            int titleX = (WINDOW_WIDTH - titleWidth) / 2;
+            int titleY = 50;
+            g2d.drawImage(titleImage, titleX, titleY, titleWidth, titleHeight, this);
+        }
+
+        if (showingVictory && victoryGif != null && victoryArea != null) {
+            // Dibujar el marco del personaje seleccionado
+            if (resources.marcoSeleccionImage != null) {
+                g2d.drawImage(resources.marcoSeleccionImage, victoryArea.x, victoryArea.y, MARCO_SIZE, MARCO_SIZE, this);
+            }
+
+            // Dibujar la animación de victoria centrada
+            int offsetX = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+            int offsetY = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+
+            Image victoryImage = victoryGif.getImage();
+            g2d.drawImage(victoryImage,
+                    victoryArea.x + offsetX,
+                    victoryArea.y + offsetY,
+                    CHARACTER_SIZE,
+                    CHARACTER_SIZE,
+                    this);
+
+            // Dibujar nombre del personaje con fuente personalizada
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(fontLoader.getBoldFont(28f));
+            FontMetrics fm = g2d.getFontMetrics();
+            int textWidth = fm.stringWidth(selectedCharacter);
+            g2d.drawString(selectedCharacter, victoryArea.x + (MARCO_SIZE - textWidth) / 2, victoryArea.y + MARCO_SIZE + 40);
+
+            // Mensaje de confirmación con fuente personalizada
+            g2d.setFont(fontLoader.getBoldFont(36f));
+            String confirmMessage = "¡" + selectedCharacter + " seleccionado!";
+            FontMetrics fmConfirm = g2d.getFontMetrics();
+            int confirmWidth = fmConfirm.stringWidth(confirmMessage);
+            g2d.setColor(new Color(255, 255, 100));
+            g2d.drawString(confirmMessage, (WINDOW_WIDTH - confirmWidth) / 2, 250);
+
+        } else {
+            // Mostrar todos los personajes normalmente
+
+            // Dibujar marcos
+            if (resources.marcoSeleccionImage != null) {
+                if ("Chocolate".equals(hoveredCharacter)) {
+                    g2d.drawImage(resources.marcoSeleccionImage, chocolateArea.x, chocolateArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                }
+
+                if ("Fresa".equals(hoveredCharacter)) {
+                    g2d.drawImage(resources.marcoSeleccionImage, fresaArea.x, fresaArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                }
+
+                if ("Vainilla".equals(hoveredCharacter)) {
+                    g2d.drawImage(resources.marcoSeleccionImage, vainillaArea.x, vainillaArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                }
+            }
+
+            // Dibujar personajes
+            int offsetX = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+            int offsetY = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+
+            if (currentChocolateGif != null) {
+                Image chocolateImg = currentChocolateGif.getImage();
+                g2d.drawImage(chocolateImg,
+                        chocolateArea.x + offsetX,
+                        chocolateArea.y + offsetY,
+                        CHARACTER_SIZE,
+                        CHARACTER_SIZE,
+                        this);
+            }
+
+            if (currentFresaGif != null) {
+                Image fresaImg = currentFresaGif.getImage();
+                g2d.drawImage(fresaImg,
+                        fresaArea.x + offsetX,
+                        fresaArea.y + offsetY,
+                        CHARACTER_SIZE,
+                        CHARACTER_SIZE,
+                        this);
+            }
+
+            if (currentVainillaGif != null) {
+                Image vainillaImg = currentVainillaGif.getImage();
+                g2d.drawImage(vainillaImg,
+                        vainillaArea.x + offsetX,
+                        vainillaArea.y + offsetY,
+                        CHARACTER_SIZE,
+                        CHARACTER_SIZE,
+                        this);
+            }
+
+            // Dibujar nombres con fuente personalizada
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(fontLoader.getBoldFont(24f));
+
+            FontMetrics fm = g2d.getFontMetrics();
+
+            String chocolateText = "Chocolate";
+            int chocolateTextWidth = fm.stringWidth(chocolateText);
+            g2d.drawString(chocolateText, chocolateArea.x + (MARCO_SIZE - chocolateTextWidth) / 2, chocolateArea.y + MARCO_SIZE + 40);
+
+            String fresaText = "Fresa";
+            int fresaTextWidth = fm.stringWidth(fresaText);
+            g2d.drawString(fresaText, fresaArea.x + (MARCO_SIZE - fresaTextWidth) / 2, fresaArea.y + MARCO_SIZE + 40);
+
+            String vainillaText = "Vainilla";
+            int vainillaTextWidth = fm.stringWidth(vainillaText);
+            g2d.drawString(vainillaText, vainillaArea.x + (MARCO_SIZE - vainillaTextWidth) / 2, vainillaArea.y + MARCO_SIZE + 40);
+        }
+    }
+
+    public void cleanup() {
+        if (animationTimer != null) {
+            animationTimer.stop();
+        }
+    }
+}
