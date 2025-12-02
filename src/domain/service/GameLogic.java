@@ -9,7 +9,8 @@ import java.util.Random;
 
 /**
  * Lógica central del juego.
- * Maneja movimiento, acciones, actualización de entidades y detección de victoria.
+ * Maneja movimiento, acciones, actualización de entidades y detección de
+ * victoria.
  */
 public class GameLogic {
 
@@ -38,93 +39,93 @@ public class GameLogic {
     // ==================== DECISIÓN DE ACCIONES ====================
 
     /**
-     * Ejecuta la acción del jugador al presionar SPACE.
+     * Ejecuta la acción del jugador 1 al presionar SPACE.
      * Decide automáticamente: si hay hielo adelante → kick, sino → sneeze
      */
     public List<Point> performSpaceAction() {
-        Player player = gameState.getPlayer();
+        return performAction(gameState.getPlayer());
+    }
 
-        // No hacer nada si el jugador está ocupado
-        if (player.isBusy()) {
+    /**
+     * Ejecuta la acción del Jugador 2 (M).
+     */
+    public List<Point> performActionPlayer2() {
+        return performAction(gameState.getPlayer2());
+    }
+
+    /**
+     * Lógica común para realizar acción (Sneeze/Kick) para cualquier jugador.
+     */
+    private List<Point> performAction(Player player) {
+        if (player == null || player.isBusy()) {
             return new ArrayList<>();
         }
 
         Point playerPos = player.getPosition();
         Direction direction = player.getFacingDirection();
 
-        // Calcular posición adelante
         Point checkPos = new Point(
                 playerPos.x + direction.getDeltaX(),
-                playerPos.y + direction.getDeltaY()
-        );
+                playerPos.y + direction.getDeltaY());
 
-        // Decidir: ¿hay hielo adelante?
         if (collisionDetector.isValidPosition(checkPos) && collisionDetector.hasIceAt(checkPos)) {
-            // Acción: KICK (romper hielo)
-            return performIceKick();
+            return performIceKick(player);
         } else {
-            // Acción: SNEEZE (crear hielo)
-            return performIceSneeze();
+            return performIceSneeze(player);
         }
-    }
-
-    /**
-     * Verifica si Player 2 puede romper hielo (solo CALAMAR).
-     */
-    public boolean canPlayer2BreakIce() {
-        Enemy controlledEnemy = getPlayerControlledEnemy();
-        if (controlledEnemy == null || !controlledEnemy.isActive()) {
-            return false;
-        }
-        return controlledEnemy.getType().canBreakIce();
-    }
-
-    /**
-     * Intenta romper hielo con Player 2 (solo si es CALAMAR).
-     */
-    public Point performPlayer2IceBreak() {
-        if (!canPlayer2BreakIce()) {
-            return null;
-        }
-
-        Enemy controlledEnemy = getPlayerControlledEnemy();
-        Point enemyPos = controlledEnemy.getPosition();
-        Direction direction = controlledEnemy.getCurrentDirection();
-
-        Point checkPos = new Point(
-                enemyPos.x + direction.getDeltaX(),
-                enemyPos.y + direction.getDeltaY()
-        );
-
-        if (!collisionDetector.isValidPosition(checkPos) || !collisionDetector.hasIceAt(checkPos)) {
-            return null;
-        }
-
-        // Romper UN SOLO bloque de hielo
-        IceBlock ice = collisionDetector.getIceAt(checkPos);
-        if (ice != null) {
-            ice.startBreaking();
-            controlledEnemy.startBreakIce();
-            System.out.println("✓ Calamar (P2/IA) rompió hielo en " + checkPos);
-            return checkPos;
-        }
-
-        return null;
     }
 
     // ==================== MOVIMIENTO DEL JUGADOR ====================
 
     /**
-     * Mueve al jugador en la dirección especificada.
+     * Mueve al jugador 1 en la dirección especificada.
      */
     public void movePlayer(Direction direction) {
-        if (gameState.isGameOver() || gameState.isVictory() || gameState.getPlayer().isBusy()) {
+        movePlayerEntity(gameState.getPlayer(), direction);
+    }
+
+    /**
+     * Mueve al jugador 2 en la dirección especificada.
+     */
+    public void movePlayer2(Direction direction) {
+        movePlayerEntity(gameState.getPlayer2(), direction);
+    }
+
+    /**
+     * Mueve al enemigo controlado por el jugador (o IA) en la dirección
+     * especificada.
+     */
+    public void movePlayerControlledEnemy(Direction direction) {
+        for (Enemy enemy : gameState.getEnemies()) {
+            if (enemy.isControlledByPlayer()) {
+                Point oldPosition = enemy.getPosition();
+
+                // Calcular nueva posición basada en la dirección
+                Point newPosition = new Point(oldPosition);
+                newPosition.x += direction.getDeltaX();
+                newPosition.y += direction.getDeltaY();
+
+                enemy.move(newPosition);
+                enemy.setDirection(direction); // Actualizar dirección visual
+
+                if (!collisionDetector.isValidPosition(enemy.getPosition()) ||
+                        collisionDetector.isPositionBlocked(enemy.getPosition())) {
+                    enemy.setPosition(oldPosition);
+                }
+                return;
+            }
+        }
+    }
+
+    /**
+     * Lógica común de movimiento para cualquier jugador.
+     */
+    private void movePlayerEntity(Player player, Direction direction) {
+        if (gameState.isGameOver() || gameState.isVictory() || player == null || player.isBusy()) {
             return;
         }
 
-        Player player = gameState.getPlayer();
         Point oldPosition = player.getPosition();
-
         player.move(direction);
 
         if (!collisionDetector.isValidPosition(player.getPosition()) ||
@@ -138,36 +139,18 @@ public class GameLogic {
     }
 
     /**
-     * Detiene el movimiento del jugador.
+     * Detiene el movimiento del jugador 1.
      */
     public void stopPlayer() {
         gameState.getPlayer().stopMoving();
     }
 
-    // ==================== MOVIMIENTO DEL ENEMIGO CONTROLADO ====================
-
     /**
-     * Mueve al enemigo controlado por el jugador.
+     * Detiene el movimiento del jugador 2.
      */
-    public void movePlayerControlledEnemy(Direction direction) {
-        if (gameState.isGameOver()) return;
-
-        Enemy controlledEnemy = getPlayerControlledEnemy();
-        if (controlledEnemy == null || !controlledEnemy.isActive()) return;
-
-        controlledEnemy.setDirection(direction);
-        Point nextPos = controlledEnemy.getNextPosition();
-
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.hasIceAt(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, controlledEnemy)) {
-
-            controlledEnemy.move(nextPos);
-            collisionDetector.checkCollisions();
-
-            if (gameState.isGameOver()) {
-                System.out.println("✗ P2 (enemigo controlado) tocó a P1 - Game Over");
-            }
+    public void stopPlayer2() {
+        if (gameState.getPlayer2() != null) {
+            gameState.getPlayer2().stopMoving();
         }
     }
 
@@ -176,8 +159,7 @@ public class GameLogic {
     /**
      * Crea una línea de hielo desde el jugador.
      */
-    public List<Point> performIceSneeze() {
-        Player player = gameState.getPlayer();
+    public List<Point> performIceSneeze(Player player) {
         if (player.isBusy()) {
             return new ArrayList<>();
         }
@@ -190,8 +172,7 @@ public class GameLogic {
 
         Point current = new Point(
                 playerPos.x + direction.getDeltaX(),
-                playerPos.y + direction.getDeltaY()
-        );
+                playerPos.y + direction.getDeltaY());
 
         while (collisionDetector.isValidPosition(current)) {
             if (collisionDetector.hasEnemyAt(current) || collisionDetector.hasIceAt(current)) {
@@ -209,10 +190,16 @@ public class GameLogic {
     }
 
     /**
+     * Sobrecarga para IA: Realiza sneeze con el jugador principal.
+     */
+    public List<Point> performIceSneeze() {
+        return performIceSneeze(gameState.getPlayer());
+    }
+
+    /**
      * Rompe una línea de hielo desde el jugador.
      */
-    public List<Point> performIceKick() {
-        Player player = gameState.getPlayer();
+    public List<Point> performIceKick(Player player) {
         if (player.isBusy()) {
             return new ArrayList<>();
         }
@@ -222,8 +209,7 @@ public class GameLogic {
 
         Point checkPos = new Point(
                 playerPos.x + direction.getDeltaX(),
-                playerPos.y + direction.getDeltaY()
-        );
+                playerPos.y + direction.getDeltaY());
 
         if (!collisionDetector.isValidPosition(checkPos) || !collisionDetector.hasIceAt(checkPos)) {
             return new ArrayList<>();
@@ -247,26 +233,82 @@ public class GameLogic {
         return brokenIcePositions;
     }
 
+    /**
+     * Sobrecarga para IA: Realiza kick con el jugador principal.
+     */
+    public List<Point> performIceKick() {
+        return performIceKick(gameState.getPlayer());
+    }
+
+    /**
+     * Realiza la acción de romper hielo para el enemigo controlado (Player 2 / IA).
+     */
+    public Point performPlayer2IceBreak() {
+        // Buscar el enemigo controlado
+        Enemy controlledEnemy = null;
+        for (Enemy enemy : gameState.getEnemies()) {
+            if (enemy.isControlledByPlayer()) {
+                controlledEnemy = enemy;
+                break;
+            }
+        }
+
+        if (controlledEnemy == null || !controlledEnemy.getType().canBreakIce()) {
+            return null;
+        }
+
+        Point enemyPos = controlledEnemy.getPosition();
+        // Romper hielo en las 4 direcciones adyacentes
+        for (Direction dir : Direction.values()) {
+            Point checkPos = new Point(
+                    enemyPos.x + dir.getDeltaX(),
+                    enemyPos.y + dir.getDeltaY());
+
+            if (collisionDetector.isValidPosition(checkPos) && collisionDetector.hasIceAt(checkPos)) {
+                IceBlock ice = collisionDetector.getIceAt(checkPos);
+                if (ice != null) {
+                    ice.startBreaking();
+                    return checkPos; // Retorna el punto roto
+                }
+            }
+        }
+        return null;
+    }
+
     // ==================== ACTUALIZACIÓN DE ENTIDADES ====================
 
     /**
      * Actualiza todos los enemigos del juego.
      */
     public void updateEnemies(int deltaTime) {
-        if (gameState.isVictory() || gameState.isGameOver()) return;
+        if (gameState.isVictory() || gameState.isGameOver())
+            return;
 
-        Point playerPosition = gameState.getPlayer().getPosition();
+        // Enemies target the closest player
+        Point p1Pos = gameState.getPlayer().getPosition();
+        Point p2Pos = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getPosition() : null;
+
         int currentLevel = gameState.getLevel();
         int numberOfPlayers = gameState.getNumberOfPlayers();
 
         for (Enemy enemy : gameState.getEnemies()) {
-            if (!enemy.isActive()) continue;
+            if (!enemy.isActive())
+                continue;
 
             enemy.update(deltaTime);
 
-            // Solo mover automáticamente si NO es controlado por jugador
-            if (!enemy.isControlledByPlayer() && enemy.shouldMove()) {
-                processEnemyMovement(enemy, playerPosition, currentLevel, numberOfPlayers);
+            if (enemy.shouldMove()) {
+                // Determine target based on distance
+                Point targetPos = p1Pos;
+                if (p2Pos != null) {
+                    double dist1 = enemy.getPosition().distance(p1Pos.x, p1Pos.y);
+                    double dist2 = enemy.getPosition().distance(p2Pos.x, p2Pos.y);
+                    if (dist2 < dist1) {
+                        targetPos = p2Pos;
+                    }
+                }
+
+                processEnemyMovement(enemy, targetPos, currentLevel, numberOfPlayers);
             }
         }
 
@@ -278,15 +320,15 @@ public class GameLogic {
     /**
      * Procesa el movimiento de un enemigo específico.
      */
-    private void processEnemyMovement(Enemy enemy, Point playerPosition, int currentLevel, int numberOfPlayers) {
+    private void processEnemyMovement(Enemy enemy, Point targetPosition, int currentLevel, int numberOfPlayers) {
         EnemyType type = enemy.getType();
 
-        // Comportamiento especial en modo 1 jugador
-        if (numberOfPlayers == 1 && type.shouldChasePlayer()) {
+        // Logic adapted for PvP: Enemies chase the closest player if applicable
+        if (type.shouldChasePlayer()) {
             if (currentLevel == 2 && type == EnemyType.MACETA) {
-                processMacetaMovement(enemy, playerPosition);
+                processMacetaMovement(enemy, targetPosition);
             } else if (currentLevel == 3 && type == EnemyType.CALAMAR) {
-                processCalamarMovement(enemy, playerPosition);
+                processCalamarMovement(enemy, targetPosition);
             } else {
                 processDefaultMovement(enemy);
             }
@@ -298,8 +340,8 @@ public class GameLogic {
     /**
      * Procesa movimiento de Maceta (persecución con anti-atasco).
      */
-    private void processMacetaMovement(Enemy enemy, Point playerPosition) {
-        enemy.chasePlayer(playerPosition);
+    private void processMacetaMovement(Enemy enemy, Point targetPosition) {
+        enemy.chasePlayer(targetPosition);
         Point nextPos = enemy.getNextPosition();
 
         if (collisionDetector.isValidPosition(nextPos) &&
@@ -311,7 +353,7 @@ public class GameLogic {
             int attempts = 0;
 
             while (!moved && attempts < 4) {
-                enemy.chasePlayer(playerPosition);
+                enemy.chasePlayer(targetPosition);
                 nextPos = enemy.getNextPosition();
 
                 if (collisionDetector.isValidPosition(nextPos) &&
@@ -335,8 +377,8 @@ public class GameLogic {
     /**
      * Procesa movimiento de Calamar (persecución + romper hielo).
      */
-    private void processCalamarMovement(Enemy enemy, Point playerPosition) {
-        enemy.chasePlayer(playerPosition);
+    private void processCalamarMovement(Enemy enemy, Point targetPosition) {
+        enemy.chasePlayer(targetPosition);
         Point nextPos = enemy.getNextPosition();
 
         // Si hay hielo en el camino, romperlo
@@ -377,7 +419,8 @@ public class GameLogic {
      */
     public void updateFruits(int deltaTime) {
         for (Fruit fruit : gameState.getFruits()) {
-            if (fruit.isCollected()) continue;
+            if (fruit.isCollected())
+                continue;
 
             fruit.update(deltaTime);
 
@@ -431,8 +474,12 @@ public class GameLogic {
      */
     public void update(int deltaTime) {
         Player player = gameState.getPlayer();
+        Player player2 = gameState.getPlayer2();
 
         player.update(deltaTime);
+        if (player2 != null) {
+            player2.update(deltaTime);
+        }
 
         // Actualizar temporizador
         gameState.updateTime(deltaTime);
@@ -442,14 +489,17 @@ public class GameLogic {
             aiController.updateAI(deltaTime);
         }
 
-        if (!gameState.isGameOver() || player.isDying()) {
+        boolean p1Dying = player.isDying();
+        boolean p2Dying = (player2 != null && player2.isDying());
+
+        if (!gameState.isGameOver() || p1Dying || p2Dying) {
             if (!gameState.isGameOver()) {
                 updateEnemies(deltaTime);
                 updateFruits(deltaTime);
             }
             updateIceBlocks(deltaTime);
 
-            if (!player.isDying() && !gameState.isVictory() && !gameState.isGameOver()) {
+            if (!p1Dying && !p2Dying && !gameState.isVictory() && !gameState.isGameOver()) {
                 checkVictory();
             }
         }
@@ -472,6 +522,16 @@ public class GameLogic {
         if (allFruitsCollected) {
             gameState.setVictory(true);
             gameState.getPlayer().startCelebration();
+            if (gameState.getPlayer2() != null) {
+                gameState.getPlayer2().startCelebration();
+            }
+
+            // Determine winner based on score
+            if (gameState.getNumberOfPlayers() == 2) {
+                int score1 = gameState.getScore();
+                int score2 = gameState.getScorePlayer2();
+                System.out.println("Victory! P1: " + score1 + " - P2: " + score2);
+            }
         }
     }
 
@@ -496,20 +556,9 @@ public class GameLogic {
             }
         }
 
-        if (emptyPositions.isEmpty()) return null;
+        if (emptyPositions.isEmpty())
+            return null;
 
         return emptyPositions.get(random.nextInt(emptyPositions.size()));
-    }
-
-    /**
-     * Obtiene el enemigo controlado por el jugador.
-     */
-    private Enemy getPlayerControlledEnemy() {
-        for (Enemy enemy : gameState.getEnemies()) {
-            if (enemy.isControlledByPlayer()) {
-                return enemy;
-            }
-        }
-        return null;
     }
 }

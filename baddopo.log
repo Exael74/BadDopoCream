@@ -22,3 +22,21 @@ Dec 01, 2025 11:08:06 AM domain.BadDopoLogger logInfo
 INFO: Partida cargada exitosamente: save_2025-12-01_11-06-35.dat
 Dec 01, 2025 11:57:59 AM domain.BadDopoLogger logInfo
 INFO: Iniciando nivel 1 con 1 jugadores.
+Dec 02, 2025 12:33:30 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 2 jugadores.
+Dec 02, 2025 12:34:15 PM domain.BadDopoLogger logInfo
+INFO: Partida guardada exitosamente: save_2025-12-02_12-34-14.dat
+Dec 02, 2025 12:34:17 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 2 jugadores.
+Dec 02, 2025 12:34:36 PM domain.BadDopoLogger logInfo
+INFO: Partida cargada exitosamente: save_2025-12-02_12-34-14.dat
+Dec 02, 2025 1:06:55 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 2 jugadores.
+Dec 02, 2025 1:07:38 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores.
+Dec 02, 2025 1:07:46 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores.
+Dec 02, 2025 1:07:52 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores.
+Dec 02, 2025 1:08:26 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 2 jugadores.

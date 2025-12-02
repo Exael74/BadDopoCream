@@ -130,14 +130,23 @@ public class CollisionDetector {
     }
 
     /**
-     * Detecta y procesa colisiones del jugador con otras entidades.
+     * Detecta y procesa colisiones de los jugadores con otras entidades.
      * Maneja colisiones con enemigos (muerte) y frutas (recolección).
      */
     public void checkCollisions() {
-        if (gameState.getPlayer().isDying())
+        // Verificar colisiones para Jugador 1
+        checkPlayerCollisions(gameState.getPlayer(), false);
+
+        // Verificar colisiones para Jugador 2 (si existe)
+        if (gameState.getPlayer2() != null) {
+            checkPlayerCollisions(gameState.getPlayer2(), true);
+        }
+    }
+
+    private void checkPlayerCollisions(Player player, boolean isPlayer2) {
+        if (player.isDying())
             return;
 
-        Player player = gameState.getPlayer();
         Point playerPos = player.getPosition();
 
         // Verificar colisión con enemigos
@@ -145,13 +154,12 @@ public class CollisionDetector {
             if (enemy.isActive() && enemy.isAt(playerPos)) {
                 if (!gameState.isGameOver()) {
                     player.die();
+                    // Si muere cualquiera, el juego termina (o reinicia nivel)
+                    // En este diseño, marcamos game over y el GameLogic/Facade maneja el reinicio
                     gameState.setGameOver(true);
 
-                    if (enemy.isControlledByPlayer()) {
-                        System.out.println("✗ P1 fue tocado por P2 (enemigo controlado) - Game Over");
-                    } else {
-                        System.out.println("✗ P1 fue tocado por un enemigo - Game Over");
-                    }
+                    String pName = isPlayer2 ? "P2" : "P1";
+                    System.out.println("✗ " + pName + " fue tocado por un enemigo - Game Over");
                 }
                 return;
             }
@@ -162,8 +170,14 @@ public class CollisionDetector {
             if (!fruit.isCollected() && fruit.isAt(playerPos)) {
                 fruit.collect();
                 int points = fruit.getType().getScore();
-                gameState.addScore(points);
-                System.out.println("✓ Fruta recolectada: " + fruit.getType() + " (+" + points + " pts)");
+
+                if (isPlayer2) {
+                    gameState.addScorePlayer2(points);
+                    System.out.println("✓ P2 recolectó fruta: " + fruit.getType() + " (+" + points + " pts)");
+                } else {
+                    gameState.addScore(points);
+                    System.out.println("✓ P1 recolectó fruta: " + fruit.getType() + " (+" + points + " pts)");
+                }
             }
         }
     }

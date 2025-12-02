@@ -65,7 +65,7 @@ public class GamePanel extends JPanel {
     private float currentPixelY;
     private boolean isMoving;
 
-    // Variables para animación suave del jugador 2 (enemigo controlado)
+    // Variables para animación suave del jugador 2
     private Point player2TargetGridPosition;
     private float player2CurrentPixelX;
     private float player2CurrentPixelY;
@@ -101,18 +101,24 @@ public class GamePanel extends JPanel {
     /**
      * Constructor del panel de juego.
      *
-     * @param character       Personaje seleccionado
+     * @param character       Personaje seleccionado P1
+     * @param characterP2     Personaje seleccionado P2 (puede ser null)
      * @param level           Nivel a jugar
      * @param numberOfPlayers Número de jugadores
      * @param resources       Recursos cargados
      */
-    public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
+    public GamePanel(String character, String characterP2, int level, int numberOfPlayers, ResourceLoader resources) {
         this.resources = resources;
         this.fontLoader = FontLoader.getInstance();
         this.selectedCharacter = character;
         this.currentLevel = level;
         this.numberOfPlayers = numberOfPlayers;
         this.gameFacade = new GameFacade(character, level, numberOfPlayers);
+
+        if (numberOfPlayers == 2 && characterP2 != null) {
+            this.gameFacade.setPlayer2CharacterType(characterP2);
+        }
+
         this.pressedKeys = new HashSet<>();
         this.spaceWasPressed = false;
         this.mWasPressed = false;
@@ -133,13 +139,6 @@ public class GamePanel extends JPanel {
             enemyCurrentPixelX.put(pos, (float) (pos.x * CELL_SIZE));
             enemyCurrentPixelY.put(pos, (float) (pos.y * CELL_SIZE));
             enemyIsMoving.put(pos, false);
-
-            if (enemySnapshot.isControlledByPlayer()) {
-                player2TargetGridPosition = new Point(pos);
-                player2CurrentPixelX = pos.x * CELL_SIZE;
-                player2CurrentPixelY = pos.y * CELL_SIZE;
-                player2IsMoving = false;
-            }
         }
 
         // Inicializar posición de animación del jugador 1
@@ -148,6 +147,16 @@ public class GamePanel extends JPanel {
         this.currentPixelX = initialPos.x * CELL_SIZE;
         this.currentPixelY = initialPos.y * CELL_SIZE;
         this.isMoving = false;
+
+        // Inicializar posición de animación del jugador 2
+        PlayerSnapshot p2Snapshot = gameFacade.getPlayer2Snapshot();
+        if (p2Snapshot != null) {
+            Point p2Pos = p2Snapshot.getPosition();
+            this.player2TargetGridPosition = new Point(p2Pos);
+            this.player2CurrentPixelX = p2Pos.x * CELL_SIZE;
+            this.player2CurrentPixelY = p2Pos.y * CELL_SIZE;
+            this.player2IsMoving = false;
+        }
 
         setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
         setLayout(null);
@@ -164,6 +173,11 @@ public class GamePanel extends JPanel {
 
         String modeText = numberOfPlayers == 0 ? "Machine vs Machine" : numberOfPlayers + " player(s)";
         System.out.println("GamePanel initialized for level " + level + " with " + modeText);
+    }
+
+    // Constructor for backwards compatibility (if needed)
+    public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
+        this(character, null, level, numberOfPlayers, resources);
     }
 
     // ==================== CONFIGURACIÓN DE LISTENERS ====================
@@ -187,12 +201,13 @@ public class GamePanel extends JPanel {
                     if (gameFacade.isPaused())
                         return; // No procesar otros inputs si está pausado
 
+                    // P1 Action
                     if (keyCode == KeyEvent.VK_SPACE && !spaceWasPressed) {
                         spaceWasPressed = true;
                         handleSpaceAction();
                     }
 
-                    // Tecla M para romper hielo (P2 - solo si controla calamar)
+                    // P2 Action (M)
                     if (keyCode == KeyEvent.VK_M && !mWasPressed && numberOfPlayers == 2) {
                         mWasPressed = true;
                         handleMAction();
@@ -219,33 +234,28 @@ public class GamePanel extends JPanel {
     // ==================== MANEJO DE ACCIONES ====================
 
     /**
-     * Maneja la acción de SPACE.
-     * La decisión kick vs sneeze se hace en el dominio.
+     * Maneja la acción de SPACE (P1).
      */
     private void handleSpaceAction() {
         if (!gameFacade.isPlayerAlive() || gameFacade.isPlayerBusy())
             return;
 
-        // El dominio decide automáticamente: kick o sneeze
         List<Point> affectedPositions = gameFacade.performSpaceAction();
 
         if (!affectedPositions.isEmpty()) {
-            // Iniciar animación visual
             startIcePlacementAnimation(affectedPositions);
         }
     }
 
     /**
-     * Maneja la acción de M (romper hielo con P2).
+     * Maneja la acción de M (P2).
      */
     private void handleMAction() {
-        // La validación de si es CALAMAR se hace en el dominio
-        if (!gameFacade.canPlayer2BreakIce())
-            return;
+        // Check if P2 is alive/busy if needed, but performActionPlayer2 handles logic
+        List<Point> affectedPositions = gameFacade.performActionPlayer2();
 
-        Point brokenIce = gameFacade.performPlayer2IceBreak();
-        if (brokenIce != null) {
-            System.out.println("✓ P2 (Calamar) rompió hielo con tecla M en " + brokenIce);
+        if (!affectedPositions.isEmpty()) {
+            startIcePlacementAnimation(affectedPositions);
         }
     }
 
@@ -275,21 +285,17 @@ public class GamePanel extends JPanel {
 
     /**
      * Procesa el movimiento de los jugadores humanos.
-     * La IA se ejecuta automáticamente en el dominio.
      */
     private void processMovement() {
         if (!gameFacade.isPlayerAlive() || gameFacade.isPlayerDying())
             return;
 
-        // Solo procesar movimiento humano - la IA se maneja en el dominio
         if (numberOfPlayers == 1) {
             processHumanPlayerMovement();
         } else if (numberOfPlayers == 2) {
             processHumanPlayerMovement();
             processHumanPlayer2Movement();
         }
-        // Si numberOfPlayers == 0, la IA se ejecuta automáticamente en
-        // GameLogic.update()
     }
 
     /**
@@ -336,8 +342,7 @@ public class GamePanel extends JPanel {
      * Procesa el movimiento del jugador 2 (Flechas).
      */
     private void processHumanPlayer2Movement() {
-        EnemySnapshot controlledEnemy = gameFacade.getControlledEnemySnapshot();
-        if (controlledEnemy != null && !player2IsMoving) {
+        if (!player2IsMoving) {
             boolean moved = false;
 
             if (pressedKeys.contains(KeyEvent.VK_UP)) {
@@ -352,6 +357,8 @@ public class GamePanel extends JPanel {
             } else if (pressedKeys.contains(KeyEvent.VK_RIGHT)) {
                 gameFacade.movePlayer2Right();
                 moved = true;
+            } else {
+                gameFacade.stopPlayer2();
             }
 
             if (moved) {
@@ -364,9 +371,9 @@ public class GamePanel extends JPanel {
      * Actualiza la animación del jugador 2.
      */
     private void updatePlayer2Animation() {
-        EnemySnapshot controlledEnemy = gameFacade.getControlledEnemySnapshot();
-        if (controlledEnemy != null) {
-            Point newGridPos = controlledEnemy.getPosition();
+        PlayerSnapshot p2 = gameFacade.getPlayer2Snapshot();
+        if (p2 != null) {
+            Point newGridPos = p2.getPosition();
             if (!newGridPos.equals(player2TargetGridPosition)) {
                 player2TargetGridPosition = new Point(newGridPos);
                 player2IsMoving = true;
@@ -383,10 +390,10 @@ public class GamePanel extends JPanel {
         // Actualizar animación del jugador 1
         updatePlayerPixelPosition();
 
-        // Actualizar animación del jugador 2 / IA
+        // Actualizar animación del jugador 2
         updatePlayer2PixelPosition();
 
-        // Actualizar animación de enemigos NO controlados
+        // Actualizar animación de enemigos
         updateEnemiesPixelPosition();
 
         // Actualizar animación de hielo (fade in)
@@ -395,7 +402,7 @@ public class GamePanel extends JPanel {
         // Sincronizar animaciones con los cambios del dominio (para Machine vs Machine)
         if (numberOfPlayers == 0) {
             syncPlayerAnimationWithDomain();
-            syncPlayer2AnimationWithDomain();
+            // P2 logic for AI vs AI if implemented later
         }
     }
 
@@ -426,10 +433,10 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * Actualiza la posición en píxeles del jugador 2 / IA.
+     * Actualiza la posición en píxeles del jugador 2.
      */
     private void updatePlayer2PixelPosition() {
-        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && player2IsMoving) {
+        if (player2IsMoving) {
             float targetPixelX = player2TargetGridPosition.x * CELL_SIZE;
             float targetPixelY = player2TargetGridPosition.y * CELL_SIZE;
 
@@ -452,7 +459,7 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * Actualiza la posición en píxeles de enemigos NO controlados.
+     * Actualiza la posición en píxeles de enemigos.
      */
     private void updateEnemiesPixelPosition() {
         if (!gameFacade.isVictory()) {
@@ -461,8 +468,6 @@ public class GamePanel extends JPanel {
 
             for (EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
                 if (!enemySnapshot.isActive())
-                    continue;
-                if (enemySnapshot.isControlledByPlayer())
                     continue;
 
                 Point actualPosition = enemySnapshot.getPosition();
@@ -542,21 +547,6 @@ public class GamePanel extends JPanel {
         }
     }
 
-    /**
-     * Sincroniza la posición visual del enemigo controlado con el dominio (para
-     * IA).
-     */
-    private void syncPlayer2AnimationWithDomain() {
-        EnemySnapshot controlledEnemy = gameFacade.getControlledEnemySnapshot();
-        if (controlledEnemy != null) {
-            Point domainPos = controlledEnemy.getPosition();
-            if (!domainPos.equals(player2TargetGridPosition)) {
-                player2TargetGridPosition = new Point(domainPos);
-                player2IsMoving = true;
-            }
-        }
-    }
-
     // ==================== TIMERS ====================
 
     /**
@@ -616,7 +606,17 @@ public class GamePanel extends JPanel {
                     frame.getContentPane().removeAll();
 
                     System.out.println("✓ Creando nuevo panel de juego...");
-                    GamePanel newGamePanel = new GamePanel(selectedCharacter, currentLevel, numberOfPlayers, resources);
+                    // P2 character type is preserved in GameFacade logic, but here we might need to
+                    // retrieve it or just pass null and let Facade handle it?
+                    // Facade restart logic handles preserving types. But we are creating a NEW
+                    // GamePanel.
+                    // We should pass the original types.
+                    String p2Char = (gameFacade.getPlayer2Snapshot() != null)
+                            ? gameFacade.getPlayer2Snapshot().getCharacterType()
+                            : null;
+
+                    GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, currentLevel, numberOfPlayers,
+                            resources);
                     frame.add(newGamePanel);
                     frame.revalidate();
                     frame.repaint();
@@ -659,8 +659,11 @@ public class GamePanel extends JPanel {
         // Dibujar enemigos usando EnemySnapshot
         drawEnemies(g2d, offsetX, offsetY);
 
-        // Dibujar jugador usando PlayerSnapshot
+        // Dibujar jugador 1
         drawPlayer(g2d, offsetX, offsetY);
+
+        // Dibujar jugador 2
+        drawPlayer2(g2d, offsetX, offsetY);
 
         // Mostrar controles según modo
         drawControls(g2d);
@@ -753,13 +756,8 @@ public class GamePanel extends JPanel {
         float pixelX, pixelY;
         Point gridPos = enemySnapshot.getPosition();
 
-        if (enemySnapshot.isControlledByPlayer()) {
-            pixelX = player2CurrentPixelX;
-            pixelY = player2CurrentPixelY;
-        } else {
-            pixelX = enemyCurrentPixelX.getOrDefault(gridPos, (float) (gridPos.x * CELL_SIZE));
-            pixelY = enemyCurrentPixelY.getOrDefault(gridPos, (float) (gridPos.y * CELL_SIZE));
-        }
+        pixelX = enemyCurrentPixelX.getOrDefault(gridPos, (float) (gridPos.x * CELL_SIZE));
+        pixelY = enemyCurrentPixelY.getOrDefault(gridPos, (float) (gridPos.y * CELL_SIZE));
 
         int x = offsetX + (int) pixelX + (CELL_SIZE - TROLL_SIZE) / 2;
         int y = offsetY + (int) pixelY + (CELL_SIZE - TROLL_SIZE) / 2;
@@ -774,9 +772,13 @@ public class GamePanel extends JPanel {
             g2d.drawImage(enemyImage, x, y, TROLL_SIZE, TROLL_SIZE, this);
         }
 
-        // Etiqueta P2 o AI
-        if (enemySnapshot.isControlledByPlayer()) {
-            drawEnemyLabel(g2d, x, y);
+        if (numberOfPlayers == 0) {
+            g2d.setColor(new Color(255, 165, 0, 180));
+            g2d.setFont(fontLoader.getBoldFont(16f));
+            String aiLabel = "AI";
+            FontMetrics fm = g2d.getFontMetrics();
+            int labelWidth = fm.stringWidth(aiLabel);
+            g2d.drawString(aiLabel, x + (TROLL_SIZE - labelWidth) / 2, y - 5);
         }
     }
 
@@ -805,59 +807,60 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * Dibuja la etiqueta del enemigo controlado (P2 o AI).
-     */
-    private void drawEnemyLabel(Graphics2D g2d, int x, int y) {
-        if (numberOfPlayers == 2) {
-            g2d.setColor(new Color(0, 255, 0, 180));
-            g2d.setFont(fontLoader.getBoldFont(16f));
-            String p2Label = "P2";
-            FontMetrics fm = g2d.getFontMetrics();
-            int labelWidth = fm.stringWidth(p2Label);
-            g2d.drawString(p2Label, x + (TROLL_SIZE - labelWidth) / 2, y - 5);
-        } else if (numberOfPlayers == 0) {
-            g2d.setColor(new Color(255, 165, 0, 180));
-            g2d.setFont(fontLoader.getBoldFont(16f));
-            String aiLabel = "AI";
-            FontMetrics fm = g2d.getFontMetrics();
-            int labelWidth = fm.stringWidth(aiLabel);
-            g2d.drawString(aiLabel, x + (TROLL_SIZE - labelWidth) / 2, y - 5);
-        }
-    }
-
-    /**
-     * Dibuja el jugador.
+     * Dibuja el jugador 1.
      */
     private void drawPlayer(Graphics2D g2d, int offsetX, int offsetY) {
         PlayerSnapshot playerSnapshot = gameFacade.getPlayerSnapshot();
         if (playerSnapshot.isActive()) {
-            String direction = playerSnapshot.getDirection();
-            boolean playerIsMoving = playerSnapshot.isMoving();
-            boolean playerIsSneezing = playerSnapshot.isSneezing();
-            boolean playerIsKicking = playerSnapshot.isKicking();
-            boolean playerIsDying = playerSnapshot.isDying();
-            boolean playerIsCelebrating = playerSnapshot.isCelebrating();
-            String characterType = playerSnapshot.getCharacterType();
+            drawPlayerEntity(g2d, playerSnapshot, currentPixelX, currentPixelY, offsetX, offsetY, "P1");
+        }
+    }
 
-            ImageIcon playerGif = resources.getPlayerGif(characterType, direction, playerIsMoving,
-                    playerIsSneezing, playerIsKicking,
-                    playerIsDying, playerIsCelebrating);
+    /**
+     * Dibuja el jugador 2.
+     */
+    private void drawPlayer2(Graphics2D g2d, int offsetX, int offsetY) {
+        PlayerSnapshot playerSnapshot = gameFacade.getPlayer2Snapshot();
+        if (playerSnapshot != null && playerSnapshot.isActive()) {
+            drawPlayerEntity(g2d, playerSnapshot, player2CurrentPixelX, player2CurrentPixelY, offsetX, offsetY, "P2");
+        }
+    }
 
-            if (playerGif != null) {
-                int playerX = offsetX + (int) currentPixelX + (CELL_SIZE - PLAYER_SIZE) / 2;
-                int playerY = offsetY + (int) currentPixelY + (CELL_SIZE - PLAYER_SIZE) / 2;
+    private void drawPlayerEntity(Graphics2D g2d, PlayerSnapshot snapshot, float pixelX, float pixelY, int offsetX,
+            int offsetY, String label) {
+        String direction = snapshot.getDirection();
+        boolean playerIsMoving = snapshot.isMoving();
+        boolean playerIsSneezing = snapshot.isSneezing();
+        boolean playerIsKicking = snapshot.isKicking();
+        boolean playerIsDying = snapshot.isDying();
+        boolean playerIsCelebrating = snapshot.isCelebrating();
+        String characterType = snapshot.getCharacterType();
 
-                Image playerImage = playerGif.getImage();
-                g2d.drawImage(playerImage, playerX, playerY, PLAYER_SIZE, PLAYER_SIZE, this);
+        ImageIcon playerGif = resources.getPlayerGif(characterType, direction, playerIsMoving,
+                playerIsSneezing, playerIsKicking,
+                playerIsDying, playerIsCelebrating);
 
-                if (numberOfPlayers == 0) {
-                    g2d.setColor(new Color(0, 191, 255, 180));
-                    g2d.setFont(fontLoader.getBoldFont(16f));
-                    String aiLabel = "AI";
-                    FontMetrics fm = g2d.getFontMetrics();
-                    int labelWidth = fm.stringWidth(aiLabel);
-                    g2d.drawString(aiLabel, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
-                }
+        if (playerGif != null) {
+            int playerX = offsetX + (int) pixelX + (CELL_SIZE - PLAYER_SIZE) / 2;
+            int playerY = offsetY + (int) pixelY + (CELL_SIZE - PLAYER_SIZE) / 2;
+
+            Image playerImage = playerGif.getImage();
+            g2d.drawImage(playerImage, playerX, playerY, PLAYER_SIZE, PLAYER_SIZE, this);
+
+            // Label P1/P2/AI
+            if (numberOfPlayers == 0) {
+                g2d.setColor(new Color(0, 191, 255, 180));
+                g2d.setFont(fontLoader.getBoldFont(16f));
+                String aiLabel = "AI";
+                FontMetrics fm = g2d.getFontMetrics();
+                int labelWidth = fm.stringWidth(aiLabel);
+                g2d.drawString(aiLabel, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
+            } else if (numberOfPlayers == 2) {
+                g2d.setColor(label.equals("P1") ? new Color(100, 200, 255, 180) : new Color(255, 100, 100, 180));
+                g2d.setFont(fontLoader.getBoldFont(16f));
+                FontMetrics fm = g2d.getFontMetrics();
+                int labelWidth = fm.stringWidth(label);
+                g2d.drawString(label, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
             }
         }
     }
@@ -870,13 +873,8 @@ public class GamePanel extends JPanel {
         if (numberOfPlayers == 2) {
             g2d.setColor(Color.WHITE);
             g2d.drawString("P1: WASD + SPACE", 10, 20);
-            g2d.setColor(new Color(0, 255, 0));
-
-            if (gameFacade.canPlayer2BreakIce()) {
-                g2d.drawString("P2: Flechas + M (Romper Hielo)", 10, 40);
-            } else {
-                g2d.drawString("P2: Flechas", 10, 40);
-            }
+            g2d.setColor(new Color(255, 100, 100)); // Reddish for P2
+            g2d.drawString("P2: Flechas + M", 10, 40);
         } else if (numberOfPlayers == 0) {
             g2d.setColor(new Color(255, 215, 0));
             g2d.drawString("Modo: MACHINE vs MACHINE", 10, 20);
@@ -1004,6 +1002,24 @@ public class GamePanel extends JPanel {
         FontMetrics fmScoreVal = g2d.getFontMetrics();
         int scoreValWidth = fmScoreVal.stringWidth(scoreText);
         g2d.drawString(scoreText, sidebarX + (SIDEBAR_WIDTH - scoreValWidth) / 2, currentY);
+
+        // P2 Score if applicable
+        if (numberOfPlayers == 2) {
+            currentY += 40;
+            int score2 = gameFacade.getScorePlayer2();
+            String scoreText2 = String.valueOf(score2);
+            g2d.setColor(new Color(255, 100, 100)); // Reddish
+            FontMetrics fmScoreVal2 = g2d.getFontMetrics();
+            int scoreValWidth2 = fmScoreVal2.stringWidth(scoreText2);
+            g2d.drawString(scoreText2, sidebarX + (SIDEBAR_WIDTH - scoreValWidth2) / 2, currentY);
+
+            // Labels P1/P2 next to scores
+            g2d.setFont(fontLoader.getBoldFont(14f));
+            g2d.setColor(new Color(255, 215, 0));
+            g2d.drawString("P1", sidebarX + 20, currentY - 40);
+            g2d.setColor(new Color(255, 100, 100));
+            g2d.drawString("P2", sidebarX + 20, currentY);
+        }
 
         // ==================== ADVERTENCIA DE TIEMPO ====================
         if (timeInMs <= 30000 && timeInMs > 0) {

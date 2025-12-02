@@ -31,6 +31,13 @@ public class GameFacade {
      * @param numberOfPlayers Número de jugadores (0=IA vs IA, 1=1P, 2=2P)
      */
     public GameFacade(String characterType, int level, int numberOfPlayers) {
+        // Note: For 2 players, we need the second character type.
+        // For now, we initialize with default and let the caller set it or handle it
+        // via a new constructor later if needed.
+        // But since we are in the middle of refactoring, let's assume the caller will
+        // handle P2 setup or we default it.
+        // The GameState constructor initializes P2 with "Vainilla" as placeholder if 2
+        // players.
         this.gameState = new GameState(characterType, level, numberOfPlayers);
         this.gameLogic = new GameLogic(gameState);
         this.persistenceService = new PersistenceService();
@@ -38,6 +45,23 @@ public class GameFacade {
         this.paused = false;
 
         initializeLevel(level, numberOfPlayers);
+    }
+
+    /**
+     * Sets the character type for Player 2.
+     * Should be called immediately after construction if P2 type is known.
+     */
+    public void setPlayer2CharacterType(String characterType) {
+        if (gameState.getPlayer2() != null) {
+            // We need to recreate the player to set the type properly if it's immutable or
+            // just set it
+            // Player class doesn't have a setter for type usually, let's check.
+            // Assuming we can just create a new Player or we need to add a setter.
+            // Let's re-create P2 with the same position but new type.
+            Point pos = gameState.getPlayer2().getPosition();
+            Player p2 = new Player(pos, characterType);
+            gameState.setPlayer2(p2);
+        }
     }
 
     // ==================== CONTROL DE PAUSA ====================
@@ -83,7 +107,14 @@ public class GameFacade {
         int level = gameState.getLevel();
         int players = gameState.getNumberOfPlayers();
 
+        // Preserve P2 type if exists
+        String charType2 = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getCharacterType() : "Vainilla";
+
         this.gameState = new GameState(charType, level, players);
+        if (players == 2) {
+            setPlayer2CharacterType(charType2);
+        }
+
         this.gameLogic = new GameLogic(gameState);
         this.paused = false;
         this.lastUpdateTime = System.currentTimeMillis();
@@ -114,7 +145,6 @@ public class GameFacade {
             }
         } catch (BadDopoException e) {
             BadDopoLogger.logError("Error al inicializar el nivel: " + e.getMessage(), e);
-            // En un caso real, podríamos querer propagar esto o manejarlo de otra manera
             System.err.println(e.getMessage());
         } catch (Exception e) {
             BadDopoLogger.logError("Error inesperado al inicializar el nivel", e);
@@ -137,29 +167,19 @@ public class GameFacade {
             occupiedPositions.add(icePos);
         }
 
+        // Spawn Player 2 if applicable
+        if (numberOfPlayers == 2 && gameState.getPlayer2() != null) {
+            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
+            gameState.getPlayer2().setPosition(p2Pos);
+            occupiedPositions.add(p2Pos);
+        }
+
         // Agregar 2 trolls
         for (int i = 0; i < 2; i++) {
             Point trollPos = getRandomFreePosition(random, occupiedPositions);
             Enemy troll = new Enemy(trollPos, EnemyType.TROLL);
             gameState.addEnemy(troll);
             occupiedPositions.add(trollPos);
-        }
-
-        // Asignar control de enemigo si es necesario
-        if (numberOfPlayers == 2) {
-            List<Enemy> enemies = gameState.getEnemies();
-            if (!enemies.isEmpty()) {
-                int randomIndex = random.nextInt(enemies.size());
-                enemies.get(randomIndex).setControlledByPlayer(true);
-                System.out.println("✓ Jugador 2 controlará el troll #" + (randomIndex + 1));
-            }
-        } else if (numberOfPlayers == 0) {
-            List<Enemy> enemies = gameState.getEnemies();
-            if (!enemies.isEmpty()) {
-                int randomIndex = random.nextInt(enemies.size());
-                enemies.get(randomIndex).setControlledByPlayer(true);
-                System.out.println("✓ IA controlará el troll #" + (randomIndex + 1));
-            }
         }
 
         // Agregar 8 uvas
@@ -192,20 +212,18 @@ public class GameFacade {
             occupiedPositions.add(icePos);
         }
 
+        // Spawn Player 2 if applicable
+        if (numberOfPlayers == 2 && gameState.getPlayer2() != null) {
+            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
+            gameState.getPlayer2().setPosition(p2Pos);
+            occupiedPositions.add(p2Pos);
+        }
+
         // Agregar 1 maceta
         Point macetaPos = getRandomFreePosition(random, occupiedPositions);
         Enemy maceta = new Enemy(macetaPos, EnemyType.MACETA);
         gameState.addEnemy(maceta);
         occupiedPositions.add(macetaPos);
-
-        // Asignar control
-        if (numberOfPlayers == 2) {
-            maceta.setControlledByPlayer(true);
-            System.out.println("✓ Jugador 2 controlará la maceta");
-        } else if (numberOfPlayers == 0) {
-            maceta.setControlledByPlayer(true);
-            System.out.println("✓ IA controlará la maceta");
-        }
 
         // Agregar 8 piñas (se mueven aleatoriamente)
         for (int i = 0; i < 8; i++) {
@@ -237,20 +255,18 @@ public class GameFacade {
             occupiedPositions.add(icePos);
         }
 
+        // Spawn Player 2 if applicable
+        if (numberOfPlayers == 2 && gameState.getPlayer2() != null) {
+            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
+            gameState.getPlayer2().setPosition(p2Pos);
+            occupiedPositions.add(p2Pos);
+        }
+
         // Agregar 1 calamar
         Point calamarPos = getRandomFreePosition(random, occupiedPositions);
         Enemy calamar = new Enemy(calamarPos, EnemyType.CALAMAR);
         gameState.addEnemy(calamar);
         occupiedPositions.add(calamarPos);
-
-        // Asignar control
-        if (numberOfPlayers == 2) {
-            calamar.setControlledByPlayer(true);
-            System.out.println("✓ Jugador 2 controlará el calamar");
-        } else if (numberOfPlayers == 0) {
-            calamar.setControlledByPlayer(true);
-            System.out.println("✓ IA controlará el calamar");
-        }
 
         // Agregar 8 piñas (se mueven aleatoriamente)
         for (int i = 0; i < 8; i++) {
@@ -450,31 +466,33 @@ public class GameFacade {
 
     public void movePlayer2Up() {
         if (!paused)
-            gameLogic.movePlayerControlledEnemy(Direction.UP);
+            gameLogic.movePlayer2(Direction.UP);
     }
 
     public void movePlayer2Down() {
         if (!paused)
-            gameLogic.movePlayerControlledEnemy(Direction.DOWN);
+            gameLogic.movePlayer2(Direction.DOWN);
     }
 
     public void movePlayer2Left() {
         if (!paused)
-            gameLogic.movePlayerControlledEnemy(Direction.LEFT);
+            gameLogic.movePlayer2(Direction.LEFT);
     }
 
     public void movePlayer2Right() {
         if (!paused)
-            gameLogic.movePlayerControlledEnemy(Direction.RIGHT);
+            gameLogic.movePlayer2(Direction.RIGHT);
+    }
+
+    public void stopPlayer2() {
+        if (!paused)
+            gameLogic.stopPlayer2();
     }
 
     // ==================== ACCIONES DEL JUGADOR ====================
 
     /**
-     * Ejecuta la acción del jugador al presionar SPACE.
-     * Decide automáticamente entre kick (si hay hielo) o sneeze (crear hielo).
-     *
-     * @return Lista de posiciones afectadas (hielo roto o hielo creado)
+     * Ejecuta la acción del jugador 1.
      */
     public List<Point> performSpaceAction() {
         if (paused)
@@ -483,25 +501,12 @@ public class GameFacade {
     }
 
     /**
-     * Intenta romper hielo con el enemigo controlado (solo si es CALAMAR).
-     *
-     * @return Posición del hielo roto, o null si no se pudo romper
+     * Ejecuta la acción del jugador 2.
      */
-    public Point performPlayer2IceBreak() {
+    public List<Point> performActionPlayer2() {
         if (paused)
-            return null;
-        return gameLogic.performPlayer2IceBreak();
-    }
-
-    /**
-     * Verifica si Player 2 puede romper hielo (solo CALAMAR).
-     *
-     * @return true si puede romper hielo
-     */
-    public boolean canPlayer2BreakIce() {
-        if (paused)
-            return false;
-        return gameLogic.canPlayer2BreakIce();
+            return new ArrayList<>();
+        return gameLogic.performActionPlayer2();
     }
 
     // ==================== ACTUALIZACIÓN DEL JUEGO ====================
@@ -532,6 +537,18 @@ public class GameFacade {
     }
 
     /**
+     * Obtiene snapshot del jugador 2 para renderizado.
+     *
+     * @return Snapshot del jugador 2 o null
+     */
+    public PlayerSnapshot getPlayer2Snapshot() {
+        if (gameState.getPlayer2() != null) {
+            return PlayerSnapshot.from(gameState.getPlayer2());
+        }
+        return null;
+    }
+
+    /**
      * Obtiene snapshots de todos los enemigos para renderizado.
      *
      * @return Lista de snapshots de enemigos
@@ -542,20 +559,6 @@ public class GameFacade {
             snapshots.add(EnemySnapshot.from(enemy));
         }
         return snapshots;
-    }
-
-    /**
-     * Obtiene snapshot del enemigo controlado (P2/IA) si existe.
-     *
-     * @return Snapshot del enemigo controlado o null
-     */
-    public EnemySnapshot getControlledEnemySnapshot() {
-        for (Enemy enemy : gameState.getEnemies()) {
-            if (enemy.isControlledByPlayer()) {
-                return EnemySnapshot.from(enemy);
-            }
-        }
-        return null;
     }
 
     /**
@@ -629,7 +632,17 @@ public class GameFacade {
      */
     public boolean isDeathAnimationComplete() {
         Player player = gameState.getPlayer();
-        return !player.isDying() && !player.isAlive();
+        Player player2 = gameState.getPlayer2();
+
+        boolean p1Dead = !player.isDying() && !player.isAlive();
+        boolean p2Dead = (player2 != null) && !player2.isDying() && !player2.isAlive();
+
+        // In PvP, game over if both die? Or just one?
+        // Usually if both are dead, level restarts.
+        if (gameState.getNumberOfPlayers() == 2) {
+            return p1Dead && p2Dead;
+        }
+        return p1Dead;
     }
 
     /**
@@ -689,6 +702,10 @@ public class GameFacade {
 
     public int getScore() {
         return gameState.getScore();
+    }
+
+    public int getScorePlayer2() {
+        return gameState.getScorePlayer2();
     }
 
     // ==================== CONTEO DE FRUTAS ====================

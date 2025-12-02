@@ -16,7 +16,11 @@ public class CharacterSelectionPanel extends JPanel {
     private int numberOfPlayers;
 
     private String hoveredCharacter = null;
-    private String selectedCharacter = null;
+
+    // Selection state
+    private String selectedCharacterP1 = null;
+    private String selectedCharacterP2 = null;
+    private boolean isSelectingP2 = false; // False = Selecting P1, True = Selecting P2
 
     // Áreas de los personajes (clickeables)
     private Rectangle chocolateArea;
@@ -75,19 +79,22 @@ public class CharacterSelectionPanel extends JPanel {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
-                if (showingVictory) return;
+                if (showingVictory)
+                    return;
 
                 Point clickPoint = e.getPoint();
+                String clickedChar = null;
 
                 if (chocolateArea.contains(clickPoint)) {
-                    selectedCharacter = "Chocolate";
-                    confirmSelection();
+                    clickedChar = "Chocolate";
                 } else if (fresaArea.contains(clickPoint)) {
-                    selectedCharacter = "Fresa";
-                    confirmSelection();
+                    clickedChar = "Fresa";
                 } else if (vainillaArea.contains(clickPoint)) {
-                    selectedCharacter = "Vainilla";
-                    confirmSelection();
+                    clickedChar = "Vainilla";
+                }
+
+                if (clickedChar != null) {
+                    handleSelection(clickedChar);
                 }
             }
         });
@@ -95,7 +102,8 @@ public class CharacterSelectionPanel extends JPanel {
         addMouseMotionListener(new MouseAdapter() {
             @Override
             public void mouseMoved(MouseEvent e) {
-                if (showingVictory) return;
+                if (showingVictory)
+                    return;
 
                 Point mousePoint = e.getPoint();
                 String previousHovered = hoveredCharacter;
@@ -142,34 +150,58 @@ public class CharacterSelectionPanel extends JPanel {
         animationTimer.start();
     }
 
-    private void confirmSelection() {
-        // Determinar el mensaje según el modo de juego
-        String modeMessage;
-        if (numberOfPlayers == 0) {
-            modeMessage = "Modo: Machine vs Machine";
-        } else if (numberOfPlayers == 1) {
-            modeMessage = "Modo: 1 Jugador";
+    private void handleSelection(String character) {
+        if (numberOfPlayers == 2) {
+            if (!isSelectingP2) {
+                // P1 selection
+                int response = JOptionPane.showConfirmDialog(
+                        this,
+                        "Jugador 1: ¿Elegir a " + character + "?",
+                        "Confirmar Jugador 1",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
+                if (response == JOptionPane.YES_OPTION) {
+                    selectedCharacterP1 = character;
+                    isSelectingP2 = true;
+                    // Reset hover/animations if needed, or just repaint with new prompt
+                    repaint();
+                }
+            } else {
+                // P2 selection
+                int response = JOptionPane.showConfirmDialog(
+                        this,
+                        "Jugador 2: ¿Elegir a " + character + "?",
+                        "Confirmar Jugador 2",
+                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.QUESTION_MESSAGE);
+
+                if (response == JOptionPane.YES_OPTION) {
+                    selectedCharacterP2 = character;
+                    showVictoryAnimation(character); // Show victory for P2's choice then start
+                }
+            }
         } else {
-            modeMessage = "Modo: 2 Jugadores";
-        }
+            // Single player or Machine vs Machine (P1 selects for P1 or for the "Player"
+            // slot)
+            int response = JOptionPane.showConfirmDialog(
+                    this,
+                    "¿Estás seguro de elegir a " + character + "?",
+                    "Confirmar selección",
+                    JOptionPane.YES_NO_OPTION,
+                    JOptionPane.QUESTION_MESSAGE);
 
-        int response = JOptionPane.showConfirmDialog(
-                this,
-                "¿Estás seguro de elegir a " + selectedCharacter + "?\n" + modeMessage,
-                "Confirmar selección",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.QUESTION_MESSAGE
-        );
-
-        if (response == JOptionPane.YES_OPTION) {
-            showVictoryAnimation();
+            if (response == JOptionPane.YES_OPTION) {
+                selectedCharacterP1 = character;
+                showVictoryAnimation(character);
+            }
         }
     }
 
-    private void showVictoryAnimation() {
+    private void showVictoryAnimation(String character) {
         showingVictory = true;
 
-        switch (selectedCharacter) {
+        switch (character) {
             case "Chocolate":
                 victoryGif = resources.chocolateVictoryGif;
                 victoryArea = chocolateArea;
@@ -197,8 +229,10 @@ public class CharacterSelectionPanel extends JPanel {
         int backButtonWidthHover = 220;
         int backButtonHeightHover = 110;
 
-        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight, Image.SCALE_SMOOTH);
-        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover, Image.SCALE_SMOOTH);
+        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight,
+                Image.SCALE_SMOOTH);
+        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover,
+                Image.SCALE_SMOOTH);
 
         JLabel backButton = new JLabel(new ImageIcon(normalButton));
         int backX = 30;
@@ -213,7 +247,14 @@ public class CharacterSelectionPanel extends JPanel {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (!showingVictory) {
-                    goBackToLevelSelection();
+                    if (isSelectingP2) {
+                        // Go back to P1 selection
+                        isSelectingP2 = false;
+                        selectedCharacterP1 = null;
+                        repaint();
+                    } else {
+                        goBackToLevelSelection();
+                    }
                 }
             }
 
@@ -238,7 +279,11 @@ public class CharacterSelectionPanel extends JPanel {
     }
 
     private void startGame() {
-        System.out.println("Starting game with character: " + selectedCharacter + ", Level: " + selectedLevel + ", Mode: " + numberOfPlayers);
+        System.out.println("Starting game...");
+        System.out.println("P1: " + selectedCharacterP1);
+        if (numberOfPlayers == 2) {
+            System.out.println("P2: " + selectedCharacterP2);
+        }
 
         cleanup();
 
@@ -247,7 +292,12 @@ public class CharacterSelectionPanel extends JPanel {
             JFrame frame = (JFrame) window;
             frame.dispose();
 
-            new GameWindow(selectedCharacter, selectedLevel, numberOfPlayers, resources);
+            // Pass both characters if 2 players, otherwise just P1 (P2 will be
+            // null/ignored)
+            String p2Char = (numberOfPlayers == 2) ? selectedCharacterP2 : null;
+
+            // Note: We need to update GameWindow constructor to accept p2Char
+            new GameWindow(selectedCharacterP1, p2Char, selectedLevel, numberOfPlayers, resources);
         }
     }
 
@@ -288,10 +338,28 @@ public class CharacterSelectionPanel extends JPanel {
             g2d.drawImage(titleImage, titleX, titleY, titleWidth, titleHeight, this);
         }
 
+        // Draw prompt for current player
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(fontLoader.getBoldFont(32f));
+        String prompt = "Selecciona tu personaje";
+        if (numberOfPlayers == 2) {
+            if (!isSelectingP2) {
+                prompt = "Jugador 1: Selecciona tu personaje";
+                g2d.setColor(new Color(100, 200, 255)); // Blueish for P1
+            } else {
+                prompt = "Jugador 2: Selecciona tu personaje";
+                g2d.setColor(new Color(255, 100, 100)); // Reddish for P2
+            }
+        }
+        FontMetrics fmPrompt = g2d.getFontMetrics();
+        int promptWidth = fmPrompt.stringWidth(prompt);
+        g2d.drawString(prompt, (WINDOW_WIDTH - promptWidth) / 2, 220);
+
         if (showingVictory && victoryGif != null && victoryArea != null) {
             // Dibujar el marco del personaje seleccionado
             if (resources.marcoSeleccionImage != null) {
-                g2d.drawImage(resources.marcoSeleccionImage, victoryArea.x, victoryArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                g2d.drawImage(resources.marcoSeleccionImage, victoryArea.x, victoryArea.y, MARCO_SIZE, MARCO_SIZE,
+                        this);
             }
 
             // Dibujar la animación de victoria centrada
@@ -310,16 +378,11 @@ public class CharacterSelectionPanel extends JPanel {
             g2d.setColor(Color.WHITE);
             g2d.setFont(fontLoader.getBoldFont(28f));
             FontMetrics fm = g2d.getFontMetrics();
-            int textWidth = fm.stringWidth(selectedCharacter);
-            g2d.drawString(selectedCharacter, victoryArea.x + (MARCO_SIZE - textWidth) / 2, victoryArea.y + MARCO_SIZE + 40);
-
-            // Mensaje de confirmación con fuente personalizada
-            g2d.setFont(fontLoader.getBoldFont(36f));
-            String confirmMessage = "¡" + selectedCharacter + " seleccionado!";
-            FontMetrics fmConfirm = g2d.getFontMetrics();
-            int confirmWidth = fmConfirm.stringWidth(confirmMessage);
-            g2d.setColor(new Color(255, 255, 100));
-            g2d.drawString(confirmMessage, (WINDOW_WIDTH - confirmWidth) / 2, 250);
+            String charName = (isSelectingP2) ? selectedCharacterP2 : selectedCharacterP1;
+            if (charName == null)
+                charName = ""; // Safety check
+            int textWidth = fm.stringWidth(charName);
+            g2d.drawString(charName, victoryArea.x + (MARCO_SIZE - textWidth) / 2, victoryArea.y + MARCO_SIZE + 40);
 
         } else {
             // Mostrar todos los personajes normalmente
@@ -327,15 +390,16 @@ public class CharacterSelectionPanel extends JPanel {
             // Dibujar marcos
             if (resources.marcoSeleccionImage != null) {
                 if ("Chocolate".equals(hoveredCharacter)) {
-                    g2d.drawImage(resources.marcoSeleccionImage, chocolateArea.x, chocolateArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                    g2d.drawImage(resources.marcoSeleccionImage, chocolateArea.x, chocolateArea.y, MARCO_SIZE,
+                            MARCO_SIZE, this);
                 }
-
                 if ("Fresa".equals(hoveredCharacter)) {
-                    g2d.drawImage(resources.marcoSeleccionImage, fresaArea.x, fresaArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                    g2d.drawImage(resources.marcoSeleccionImage, fresaArea.x, fresaArea.y, MARCO_SIZE, MARCO_SIZE,
+                            this);
                 }
-
                 if ("Vainilla".equals(hoveredCharacter)) {
-                    g2d.drawImage(resources.marcoSeleccionImage, vainillaArea.x, vainillaArea.y, MARCO_SIZE, MARCO_SIZE, this);
+                    g2d.drawImage(resources.marcoSeleccionImage, vainillaArea.x, vainillaArea.y, MARCO_SIZE, MARCO_SIZE,
+                            this);
                 }
             }
 
@@ -373,6 +437,26 @@ public class CharacterSelectionPanel extends JPanel {
                         this);
             }
 
+            // Draw "P1" or "P2" badges on selected characters if in 2 player mode
+            if (numberOfPlayers == 2 && selectedCharacterP1 != null) {
+                // Find which area corresponds to P1 selection
+                Rectangle p1Area = null;
+                if ("Chocolate".equals(selectedCharacterP1))
+                    p1Area = chocolateArea;
+                else if ("Fresa".equals(selectedCharacterP1))
+                    p1Area = fresaArea;
+                else if ("Vainilla".equals(selectedCharacterP1))
+                    p1Area = vainillaArea;
+
+                if (p1Area != null) {
+                    g2d.setColor(new Color(100, 200, 255, 200));
+                    g2d.fillOval(p1Area.x + 10, p1Area.y + 10, 40, 40);
+                    g2d.setColor(Color.WHITE);
+                    g2d.setFont(fontLoader.getBoldFont(20f));
+                    g2d.drawString("P1", p1Area.x + 18, p1Area.y + 38);
+                }
+            }
+
             // Dibujar nombres con fuente personalizada
             g2d.setColor(Color.WHITE);
             g2d.setFont(fontLoader.getBoldFont(24f));
@@ -381,7 +465,8 @@ public class CharacterSelectionPanel extends JPanel {
 
             String chocolateText = "Chocolate";
             int chocolateTextWidth = fm.stringWidth(chocolateText);
-            g2d.drawString(chocolateText, chocolateArea.x + (MARCO_SIZE - chocolateTextWidth) / 2, chocolateArea.y + MARCO_SIZE + 40);
+            g2d.drawString(chocolateText, chocolateArea.x + (MARCO_SIZE - chocolateTextWidth) / 2,
+                    chocolateArea.y + MARCO_SIZE + 40);
 
             String fresaText = "Fresa";
             int fresaTextWidth = fm.stringWidth(fresaText);
@@ -389,7 +474,8 @@ public class CharacterSelectionPanel extends JPanel {
 
             String vainillaText = "Vainilla";
             int vainillaTextWidth = fm.stringWidth(vainillaText);
-            g2d.drawString(vainillaText, vainillaArea.x + (MARCO_SIZE - vainillaTextWidth) / 2, vainillaArea.y + MARCO_SIZE + 40);
+            g2d.drawString(vainillaText, vainillaArea.x + (MARCO_SIZE - vainillaTextWidth) / 2,
+                    vainillaArea.y + MARCO_SIZE + 40);
         }
     }
 

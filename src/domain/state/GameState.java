@@ -16,6 +16,7 @@ public class GameState implements Serializable {
     private static final int TIME_LIMIT = 180000; // 3 minutos en milisegundos
 
     private Player player;
+    private Player player2;
     private List<Enemy> enemies;
     private List<Fruit> fruits;
     private List<IceBlock> iceBlocks;
@@ -26,6 +27,7 @@ public class GameState implements Serializable {
     private long timeRemaining;
     private boolean timeUp;
     private int score;
+    private int scorePlayer2;
 
     /**
      * Constructor del estado del juego.
@@ -36,6 +38,10 @@ public class GameState implements Serializable {
      */
     public GameState(String characterType, int level, int numberOfPlayers) {
         this.player = new Player(new Point(6, 6), characterType);
+        if (numberOfPlayers == 2) {
+            // Player 2 will be properly initialized/positioned by GameFacade
+            this.player2 = new Player(new Point(0, 0), "Vainilla");
+        }
         this.enemies = new ArrayList<>();
         this.fruits = new ArrayList<>();
         this.iceBlocks = new ArrayList<>();
@@ -46,6 +52,7 @@ public class GameState implements Serializable {
         this.timeRemaining = TIME_LIMIT;
         this.timeUp = false;
         this.score = 0;
+        this.scorePlayer2 = 0;
     }
 
     // ==================== GETTERS ESTÁTICOS ====================
@@ -61,6 +68,14 @@ public class GameState implements Serializable {
 
     public Player getPlayer() {
         return player;
+    }
+
+    public Player getPlayer2() {
+        return player2;
+    }
+
+    public void setPlayer2(Player player2) {
+        this.player2 = player2;
     }
 
     public List<Enemy> getEnemies() {
@@ -139,6 +154,14 @@ public class GameState implements Serializable {
 
     public void addScore(int points) {
         this.score += points;
+    }
+
+    public int getScorePlayer2() {
+        return scorePlayer2;
+    }
+
+    public void addScorePlayer2(int points) {
+        this.scorePlayer2 += points;
     }
 
     // ==================== TEMPORIZADOR ====================
