@@ -7,7 +7,7 @@ import java.util.*;
 
 /**
  * Controlador de inteligencia artificial para el modo Machine vs Machine.
- * Gestiona el comportamiento automático del jugador y del enemigo controlado.
+ * Gestiona el comportamiento automático de dos jugadores (helados).
  */
 public class AIController {
 
@@ -15,24 +15,25 @@ public class AIController {
     private GameLogic gameLogic;
     private Random aiRandom;
 
-    // IA - Jugador
-    private int aiPlayerMoveTimer;
-    private int aiActionTimer;
-    private Point aiPlayerTarget;
-    private Point aiLastPlayerPosition;
-    private Point aiPreviousPlayerPosition;
-    private int aiStuckCounter;
-    private int aiConsecutiveFailedMoves;
-    private List<Point> aiRecentPositions;
+    // IA - Jugador 1
+    private int aiPlayer1MoveTimer;
+    private int aiPlayer1ActionTimer;
+    private Point aiPlayer1Target;
+    private Point aiPreviousPlayer1Position;
+    private int aiPlayer1ConsecutiveFailedMoves;
+    private List<Point> aiPlayer1RecentPositions;
 
-    // IA - Enemigo
-    private int aiEnemyMoveTimer;
-    private int aiEnemyActionTimer;
+    // IA - Jugador 2
+    private int aiPlayer2MoveTimer;
+    private int aiPlayer2ActionTimer;
+    private Point aiPlayer2Target;
+    private Point aiPreviousPlayer2Position;
+    private int aiPlayer2ConsecutiveFailedMoves;
+    private List<Point> aiPlayer2RecentPositions;
 
     // Constantes
     private static final int AI_MOVE_INTERVAL = 400;
     private static final int AI_ACTION_INTERVAL = 800;
-    private static final int AI_ENEMY_ACTION_INTERVAL = 1200;
 
     /**
      * Constructor del controlador de IA.
@@ -45,219 +46,198 @@ public class AIController {
         this.gameLogic = gameLogic;
         this.aiRandom = new Random();
 
-        // Inicializar variables IA Jugador
-        this.aiPlayerMoveTimer = 0;
-        this.aiActionTimer = 0;
-        this.aiPlayerTarget = null;
-        this.aiLastPlayerPosition = new Point(gameState.getPlayer().getPosition());
-        this.aiPreviousPlayerPosition = new Point(gameState.getPlayer().getPosition());
-        this.aiStuckCounter = 0;
-        this.aiConsecutiveFailedMoves = 0;
-        this.aiRecentPositions = new ArrayList<>();
+        // Inicializar variables IA Jugador 1
+        this.aiPlayer1MoveTimer = 0;
+        this.aiPlayer1ActionTimer = 0;
+        this.aiPlayer1Target = null;
+        this.aiPreviousPlayer1Position = new Point(gameState.getPlayer().getPosition());
+        this.aiPlayer1ConsecutiveFailedMoves = 0;
+        this.aiPlayer1RecentPositions = new ArrayList<>();
 
-        // Inicializar variables IA Enemigo
-        this.aiEnemyMoveTimer = 0;
-        this.aiEnemyActionTimer = 0;
+        // Inicializar variables IA Jugador 2
+        this.aiPlayer2MoveTimer = 0;
+        this.aiPlayer2ActionTimer = 0;
+        this.aiPlayer2Target = null;
+        if (gameState.getPlayer2() != null) {
+            this.aiPreviousPlayer2Position = new Point(gameState.getPlayer2().getPosition());
+        }
+        this.aiPlayer2ConsecutiveFailedMoves = 0;
+        this.aiPlayer2RecentPositions = new ArrayList<>();
     }
 
     /**
-     * Actualiza la IA del jugador y del enemigo.
+     * Actualiza la IA de ambos jugadores.
      */
     public void updateAI(int deltaTime) {
-        updateAIPlayer(deltaTime);
-        updateAIEnemy(deltaTime);
+        updateAIPlayer1(deltaTime);
+        updateAIPlayer2(deltaTime);
     }
 
-    // ==================== IA - JUGADOR ====================
+    // ==================== IA - JUGADOR 1 ====================
 
-    /**
-     * Actualiza el comportamiento de IA del jugador.
-     */
-    private void updateAIPlayer(int deltaTime) {
+    private void updateAIPlayer1(int deltaTime) {
         Player player = gameState.getPlayer();
-        if (!player.isAlive() || player.isDying()) return;
+        if (!player.isAlive() || player.isDying())
+            return;
 
-        aiPlayerMoveTimer += deltaTime;
+        aiPlayer1MoveTimer += deltaTime;
 
-        if (aiPlayerMoveTimer >= AI_MOVE_INTERVAL) {
-            aiPlayerMoveTimer = 0;
-
-            Point playerPos = player.getPosition();
-
-            // Detectar si está atascado
-            if (aiPreviousPlayerPosition != null) {
-                if (aiPreviousPlayerPosition.equals(playerPos)) {
-                    aiConsecutiveFailedMoves++;
-                } else {
-                    aiConsecutiveFailedMoves = 0;
-                }
-            }
-
-            // Guardar historial de posiciones
-            aiRecentPositions.add(new Point(playerPos));
-            if (aiRecentPositions.size() > 8) {
-                aiRecentPositions.remove(0);
-            }
-
-            boolean inLoop = detectPositionLoop();
-            aiPreviousPlayerPosition = new Point(playerPos);
-
-            // Si está muy atascado, movimiento aleatorio
-            if (aiConsecutiveFailedMoves > 4 || inLoop) {
-                System.out.println("✓ IA detectó atasco - movimiento aleatorio");
-                moveAIPlayerRandom();
-                aiConsecutiveFailedMoves = 0;
-                aiRecentPositions.clear();
-                return;
-            }
-
-            int currentLevel = gameState.getLevel();
-
-            // Estrategia por nivel
-            if (currentLevel == 1) {
-                processAILevel1Movement(playerPos);
-            } else if (currentLevel == 2) {
-                processAILevel2Movement(playerPos);
-            } else if (currentLevel == 3) {
-                processAILevel3Movement(playerPos);
-            }
+        if (aiPlayer1MoveTimer >= AI_MOVE_INTERVAL) {
+            aiPlayer1MoveTimer = 0;
+            processAIPlayerLogic(player, true);
         }
 
-        // Procesar acciones IA
-        updateAIPlayerActions(deltaTime);
+        updateAIPlayer1Actions(deltaTime);
     }
 
-    /**
-     * Actualiza las acciones de la IA del jugador (romper/crear hielo).
-     */
-    private void updateAIPlayerActions(int deltaTime) {
-        aiActionTimer += deltaTime;
-
-        if (aiActionTimer >= AI_ACTION_INTERVAL) {
-            aiActionTimer = 0;
-
-            Point playerPos = gameState.getPlayer().getPosition();
-
-            if (shouldBreakIce(playerPos)) {
-                List<Point> brokenIce = gameLogic.performIceKick();
-                if (!brokenIce.isEmpty()) {
-                    System.out.println("✓ IA rompió hielo para despejar camino");
-                }
-            } else if (gameState.getLevel() == 2 && shouldCreateIce(playerPos)) {
-                gameLogic.performIceSneeze();
-                System.out.println("✓ IA creó barrera de hielo defensiva");
-            }
+    private void updateAIPlayer1Actions(int deltaTime) {
+        aiPlayer1ActionTimer += deltaTime;
+        if (aiPlayer1ActionTimer >= AI_ACTION_INTERVAL) {
+            aiPlayer1ActionTimer = 0;
+            processAIPlayerActions(gameState.getPlayer(), true);
         }
     }
 
-    // ==================== ESTRATEGIAS POR NIVEL ====================
+    // ==================== IA - JUGADOR 2 ====================
 
-    /**
-     * Estrategia nivel 1: Evitar trolls y recolectar frutas.
-     */
-    private void processAILevel1Movement(Point playerPos) {
+    private void updateAIPlayer2(int deltaTime) {
+        Player player2 = gameState.getPlayer2();
+        if (player2 == null || !player2.isAlive() || player2.isDying())
+            return;
+
+        aiPlayer2MoveTimer += deltaTime;
+
+        if (aiPlayer2MoveTimer >= AI_MOVE_INTERVAL) {
+            aiPlayer2MoveTimer = 0;
+            processAIPlayerLogic(player2, false);
+        }
+
+        updateAIPlayer2Actions(deltaTime);
+    }
+
+    private void updateAIPlayer2Actions(int deltaTime) {
+        aiPlayer2ActionTimer += deltaTime;
+        if (aiPlayer2ActionTimer >= AI_ACTION_INTERVAL) {
+            aiPlayer2ActionTimer = 0;
+            processAIPlayerActions(gameState.getPlayer2(), false);
+        }
+    }
+
+    // ==================== LÓGICA COMÚN DE IA ====================
+
+    private void processAIPlayerLogic(Player player, boolean isPlayer1) {
+        Point playerPos = player.getPosition();
+        Point prevPos = isPlayer1 ? aiPreviousPlayer1Position : aiPreviousPlayer2Position;
+        int failedMoves = isPlayer1 ? aiPlayer1ConsecutiveFailedMoves : aiPlayer2ConsecutiveFailedMoves;
+        List<Point> recentPositions = isPlayer1 ? aiPlayer1RecentPositions : aiPlayer2RecentPositions;
+
+        // Detectar atasco
+        if (prevPos != null) {
+            if (prevPos.equals(playerPos)) {
+                failedMoves++;
+            } else {
+                failedMoves = 0;
+            }
+        }
+
+        // Actualizar estado
+        if (isPlayer1) {
+            aiPreviousPlayer1Position = new Point(playerPos);
+            aiPlayer1ConsecutiveFailedMoves = failedMoves;
+        } else {
+            aiPreviousPlayer2Position = new Point(playerPos);
+            aiPlayer2ConsecutiveFailedMoves = failedMoves;
+        }
+
+        // Historial de posiciones
+        recentPositions.add(new Point(playerPos));
+        if (recentPositions.size() > 8) {
+            recentPositions.remove(0);
+        }
+
+        boolean inLoop = detectPositionLoop(recentPositions);
+
+        // Si está atascado, movimiento aleatorio
+        if (failedMoves > 4 || inLoop) {
+            moveRandomly(isPlayer1);
+            if (isPlayer1) {
+                aiPlayer1ConsecutiveFailedMoves = 0;
+                aiPlayer1RecentPositions.clear();
+            } else {
+                aiPlayer2ConsecutiveFailedMoves = 0;
+                aiPlayer2RecentPositions.clear();
+            }
+            return;
+        }
+
+        // Estrategia general: Evitar enemigos y buscar frutas
+        processGeneralStrategy(player, isPlayer1, failedMoves);
+    }
+
+    private void processGeneralStrategy(Player player, boolean isPlayer1, int failedMoves) {
+        Point playerPos = player.getPosition();
         Enemy nearestEnemy = findNearestEnemy(playerPos);
 
+        // 1. Evitar enemigos cercanos
         if (nearestEnemy != null) {
             int distance = manhattanDistance(playerPos, nearestEnemy.getPosition());
-
             if (distance <= 3) {
-                moveAIPlayerAwayFrom(playerPos, nearestEnemy.getPosition());
+                moveAwayFrom(playerPos, nearestEnemy.getPosition(), isPlayer1);
                 return;
             }
         }
 
+        // 2. Buscar fruta más cercana
         Fruit closestFruit = findClosestFruit(playerPos);
-
         if (closestFruit != null) {
-            aiPlayerTarget = closestFruit.getPosition();
+            Point target = closestFruit.getPosition();
+            if (isPlayer1)
+                aiPlayer1Target = target;
+            else
+                aiPlayer2Target = target;
 
-            if (aiConsecutiveFailedMoves > 3) {
-                moveAIPlayerAlternative(playerPos, aiPlayerTarget);
-                aiConsecutiveFailedMoves = 0;
+            if (failedMoves > 2) {
+                moveAlternative(playerPos, target, isPlayer1);
             } else {
-                moveAIPlayerTowardsTarget(playerPos, aiPlayerTarget);
+                moveTowards(playerPos, target, isPlayer1);
             }
+        } else {
+            // No hay frutas, moverse aleatoriamente
+            moveRandomly(isPlayer1);
         }
     }
 
-    /**
-     * Estrategia nivel 2: Evitar maceta y usar hielo defensivo.
-     */
-    private void processAILevel2Movement(Point playerPos) {
-        Enemy maceta = findEnemyOfType(EnemyType.MACETA);
+    private void processAIPlayerActions(Player player, boolean isPlayer1) {
+        Point playerPos = player.getPosition();
+        Point target = isPlayer1 ? aiPlayer1Target : aiPlayer2Target;
 
-        if (maceta != null) {
-            int distance = manhattanDistance(playerPos, maceta.getPosition());
+        if (target == null)
+            return;
 
-            if (distance <= 4) {
-                moveAIPlayerAwayFrom(playerPos, maceta.getPosition());
-                return;
-            }
+        // Decidir si romper hielo
+        if (shouldBreakIce(player, target)) {
+            if (isPlayer1)
+                gameLogic.performIceKick(player);
+            else
+                gameLogic.performIceKick(player); // GameLogic supports passing player
         }
-
-        Fruit closestFruit = findClosestFruit(playerPos);
-
-        if (closestFruit != null) {
-            aiPlayerTarget = closestFruit.getPosition();
-
-            if (aiConsecutiveFailedMoves > 2) {
-                if (maceta != null && manhattanDistance(playerPos, maceta.getPosition()) <= 6) {
-                    gameLogic.performIceSneeze();
-                }
-                moveAIPlayerAlternative(playerPos, aiPlayerTarget);
-                aiConsecutiveFailedMoves = 0;
-            } else {
-                moveAIPlayerTowardsTarget(playerPos, aiPlayerTarget);
-            }
+        // Decidir si crear hielo (defensivo)
+        else if (shouldCreateIce(player)) {
+            if (isPlayer1)
+                gameLogic.performIceSneeze(player);
+            else
+                gameLogic.performIceSneeze(player);
         }
     }
 
-    /**
-     * Estrategia nivel 3: Evitar calamar y recolectar frutas móviles.
-     */
-    private void processAILevel3Movement(Point playerPos) {
-        Enemy calamar = findEnemyOfType(EnemyType.CALAMAR);
+    // ==================== MOVIMIENTOS ====================
 
-        if (calamar != null) {
-            int distance = manhattanDistance(playerPos, calamar.getPosition());
-
-            if (distance <= 5) {
-                moveAIPlayerAwayFrom(playerPos, calamar.getPosition());
-                return;
-            }
-        }
-
-        Fruit closestFruit = findClosestFruit(playerPos);
-
-        if (closestFruit != null) {
-            aiPlayerTarget = closestFruit.getPosition();
-
-            if (aiConsecutiveFailedMoves > 2) {
-                moveAIPlayerAlternative(playerPos, aiPlayerTarget);
-                aiConsecutiveFailedMoves = 0;
-            } else {
-                moveAIPlayerTowardsTarget(playerPos, aiPlayerTarget);
-            }
-        }
+    private void moveRandomly(boolean isPlayer1) {
+        Direction dir = Direction.values()[aiRandom.nextInt(4)];
+        executeMove(dir, isPlayer1);
     }
 
-    // ==================== MOVIMIENTOS DE IA JUGADOR ====================
-
-    /**
-     * Mueve la IA del jugador de forma aleatoria.
-     */
-    private void moveAIPlayerRandom() {
-        Direction randomDirection = Direction.values()[aiRandom.nextInt(4)];
-        gameLogic.movePlayer(randomDirection);
-    }
-
-    /**
-     * Mueve la IA del jugador hacia un objetivo.
-     */
-    private void moveAIPlayerTowardsTarget(Point from, Point to) {
-        Point oldPos = new Point(from);
-
+    private void moveTowards(Point from, Point to, boolean isPlayer1) {
         int dx = to.x - from.x;
         int dy = to.y - from.y;
 
@@ -267,23 +247,12 @@ public class AIController {
         } else if (Math.abs(dy) > 0) {
             direction = (dy > 0) ? Direction.DOWN : Direction.UP;
         } else {
-            return; // Ya está en el objetivo
+            return;
         }
-
-        gameLogic.movePlayer(direction);
-
-        Point newPos = gameState.getPlayer().getPosition();
-        if (oldPos.equals(newPos)) {
-            aiConsecutiveFailedMoves++;
-        }
+        executeMove(direction, isPlayer1);
     }
 
-    /**
-     * Mueve la IA del jugador alejándose de un peligro.
-     */
-    private void moveAIPlayerAwayFrom(Point from, Point dangerPos) {
-        Point oldPos = new Point(from);
-
+    private void moveAwayFrom(Point from, Point dangerPos, boolean isPlayer1) {
         int dx = from.x - dangerPos.x;
         int dy = from.y - dangerPos.y;
 
@@ -293,275 +262,93 @@ public class AIController {
         } else {
             direction = (dy > 0) ? Direction.DOWN : Direction.UP;
         }
-
-        gameLogic.movePlayer(direction);
-
-        Point newPos = gameState.getPlayer().getPosition();
-        if (oldPos.equals(newPos)) {
-            aiConsecutiveFailedMoves++;
-        }
+        executeMove(direction, isPlayer1);
     }
 
-    /**
-     * Mueve la IA del jugador con estrategia alternativa (para salir de atascos).
-     */
-    private void moveAIPlayerAlternative(Point from, Point to) {
-        Point oldPos = new Point(from);
-
-        List<Direction> directions = new ArrayList<>();
-        directions.add(Direction.UP);
-        directions.add(Direction.DOWN);
-        directions.add(Direction.LEFT);
-        directions.add(Direction.RIGHT);
-
+    private void moveAlternative(Point from, Point to, boolean isPlayer1) {
+        List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
         Collections.shuffle(directions);
+        executeMove(directions.get(0), isPlayer1);
+    }
 
-        for (Direction dir : directions) {
+    private void executeMove(Direction dir, boolean isPlayer1) {
+        if (isPlayer1) {
             gameLogic.movePlayer(dir);
-
-            Point testPos = gameState.getPlayer().getPosition();
-            if (!testPos.equals(oldPos)) {
-                aiConsecutiveFailedMoves = 0;
-                return;
-            }
-        }
-
-        aiConsecutiveFailedMoves++;
-    }
-
-    // ==================== DECISIONES DE ACCIONES ====================
-
-    /**
-     * Decide si la IA debe romper hielo.
-     */
-    private boolean shouldBreakIce(Point playerPos) {
-        if (aiPlayerTarget == null) return false;
-
-        Direction playerDir = gameState.getPlayer().getFacingDirection();
-        Point checkPos = new Point(
-                playerPos.x + playerDir.getDeltaX(),
-                playerPos.y + playerDir.getDeltaY()
-        );
-
-        if (hasIceAt(checkPos)) {
-            int distanceWithIce = manhattanDistance(playerPos, aiPlayerTarget);
-            int distanceAfterBreak = manhattanDistance(checkPos, aiPlayerTarget);
-
-            return distanceAfterBreak < distanceWithIce;
-        }
-
-        return false;
-    }
-
-    /**
-     * Decide si la IA debe crear hielo defensivo.
-     */
-    private boolean shouldCreateIce(Point playerPos) {
-        Enemy maceta = findEnemyOfType(EnemyType.MACETA);
-
-        if (maceta != null) {
-            Point enemyPos = maceta.getPosition();
-            int distance = manhattanDistance(playerPos, enemyPos);
-
-            if (distance >= 4 && distance <= 6) {
-                if (playerPos.x == enemyPos.x || playerPos.y == enemyPos.y) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Detecta si la IA está en un loop de posiciones.
-     */
-    private boolean detectPositionLoop() {
-        if (aiRecentPositions.size() < 6) return false;
-
-        int recentSize = aiRecentPositions.size();
-        Point pos1 = aiRecentPositions.get(recentSize - 1);
-        Point pos2 = aiRecentPositions.get(recentSize - 2);
-        Point pos3 = aiRecentPositions.get(recentSize - 3);
-
-        int repeatCount = 0;
-        for (int i = 0; i < recentSize - 3; i++) {
-            if (aiRecentPositions.get(i).equals(pos1) ||
-                    aiRecentPositions.get(i).equals(pos2) ||
-                    aiRecentPositions.get(i).equals(pos3)) {
-                repeatCount++;
-            }
-        }
-
-        return repeatCount >= 3;
-    }
-
-    // ==================== IA - ENEMIGO ====================
-
-    /**
-     * Actualiza el comportamiento de IA del enemigo controlado.
-     */
-    private void updateAIEnemy(int deltaTime) {
-        Enemy controlledEnemy = getPlayerControlledEnemy();
-        if (controlledEnemy == null) return;
-
-        aiEnemyMoveTimer += deltaTime;
-
-        if (aiEnemyMoveTimer >= AI_MOVE_INTERVAL) {
-            aiEnemyMoveTimer = 0;
-
-            Point enemyPos = controlledEnemy.getPosition();
-            Point playerPos = gameState.getPlayer().getPosition();
-
-            int currentLevel = gameState.getLevel();
-
-            if (currentLevel == 1) {
-                // Nivel 1: 40% persecución, 60% aleatorio
-                if (aiRandom.nextDouble() < 0.4) {
-                    moveAIEnemyTowardsTarget(enemyPos, playerPos);
-                } else {
-                    moveAIEnemyRandom();
-                }
-            } else if (currentLevel == 2 || currentLevel == 3) {
-                // Niveles 2 y 3: persecución activa
-                moveAIEnemyTowardsTarget(enemyPos, playerPos);
-            }
-        }
-
-        // Acciones especiales del enemigo (romper hielo - Calamar)
-        updateAIEnemyActions(deltaTime, controlledEnemy);
-    }
-
-    /**
-     * Actualiza las acciones del enemigo controlado por IA.
-     */
-    private void updateAIEnemyActions(int deltaTime, Enemy controlledEnemy) {
-        if (!controlledEnemy.getType().canBreakIce()) return;
-
-        aiEnemyActionTimer += deltaTime;
-
-        if (aiEnemyActionTimer >= AI_ENEMY_ACTION_INTERVAL) {
-            aiEnemyActionTimer = 0;
-
-            Point brokenIce = gameLogic.performPlayer2IceBreak();
-            if (brokenIce != null) {
-                System.out.println("✓ IA (Calamar) rompió hielo estratégicamente");
-            }
-        }
-    }
-
-    /**
-     * Mueve el enemigo controlado de forma aleatoria.
-     */
-    private void moveAIEnemyRandom() {
-        Direction randomDirection = Direction.values()[aiRandom.nextInt(4)];
-        gameLogic.movePlayerControlledEnemy(randomDirection);
-    }
-
-    /**
-     * Mueve el enemigo controlado hacia un objetivo.
-     */
-    private void moveAIEnemyTowardsTarget(Point from, Point to) {
-        int dx = to.x - from.x;
-        int dy = to.y - from.y;
-
-        Direction direction;
-        if (Math.abs(dx) > Math.abs(dy)) {
-            direction = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
-        } else if (Math.abs(dy) > 0) {
-            direction = (dy > 0) ? Direction.DOWN : Direction.UP;
         } else {
-            return; // Ya está en el objetivo
+            gameLogic.movePlayer2(dir);
         }
-
-        gameLogic.movePlayerControlledEnemy(direction);
     }
 
     // ==================== UTILIDADES ====================
 
-    /**
-     * Encuentra la fruta más cercana no recolectada.
-     */
+    private boolean shouldBreakIce(Player player, Point target) {
+        Direction dir = player.getFacingDirection();
+        Point checkPos = new Point(
+                player.getPosition().x + dir.getDeltaX(),
+                player.getPosition().y + dir.getDeltaY());
+        // Simplificación: si hay hielo enfrente y nos acerca al objetivo
+        return hasIceAt(checkPos);
+    }
+
+    private boolean shouldCreateIce(Player player) {
+        // Crear hielo si hay un enemigo cerca en línea recta (simplificado)
+        Enemy enemy = findNearestEnemy(player.getPosition());
+        if (enemy != null && manhattanDistance(player.getPosition(), enemy.getPosition()) < 4) {
+            return true;
+        }
+        return false;
+    }
+
+    private boolean detectPositionLoop(List<Point> history) {
+        if (history.size() < 6)
+            return false;
+        Point last = history.get(history.size() - 1);
+        int count = 0;
+        for (Point p : history) {
+            if (p.equals(last))
+                count++;
+        }
+        return count >= 3;
+    }
+
     private Fruit findClosestFruit(Point from) {
         Fruit closest = null;
-        int minDistance = Integer.MAX_VALUE;
-
-        for (Fruit fruit : gameState.getFruits()) {
-            if (!fruit.isCollected()) {
-                Point fruitPos = fruit.getPosition();
-                int distance = manhattanDistance(from, fruitPos);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    closest = fruit;
+        int minDist = Integer.MAX_VALUE;
+        for (Fruit f : gameState.getFruits()) {
+            if (!f.isCollected()) {
+                int d = manhattanDistance(from, f.getPosition());
+                if (d < minDist) {
+                    minDist = d;
+                    closest = f;
                 }
             }
         }
-
         return closest;
     }
 
-    /**
-     * Encuentra el enemigo más cercano (excluyendo el controlado).
-     */
     private Enemy findNearestEnemy(Point from) {
         Enemy nearest = null;
-        int minDistance = Integer.MAX_VALUE;
-
-        for (Enemy enemy : gameState.getEnemies()) {
-            if (enemy.isActive() && !enemy.isControlledByPlayer()) {
-                Point enemyPos = enemy.getPosition();
-                int distance = manhattanDistance(from, enemyPos);
-
-                if (distance < minDistance) {
-                    minDistance = distance;
-                    nearest = enemy;
+        int minDist = Integer.MAX_VALUE;
+        for (Enemy e : gameState.getEnemies()) {
+            if (e.isActive()) {
+                int d = manhattanDistance(from, e.getPosition());
+                if (d < minDist) {
+                    minDist = d;
+                    nearest = e;
                 }
             }
         }
-
         return nearest;
     }
 
-    /**
-     * Encuentra un enemigo del tipo especificado.
-     */
-    private Enemy findEnemyOfType(EnemyType type) {
-        for (Enemy enemy : gameState.getEnemies()) {
-            if (enemy.isActive() && enemy.getType() == type) {
-                return enemy;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Obtiene el enemigo controlado por el jugador/IA.
-     */
-    private Enemy getPlayerControlledEnemy() {
-        for (Enemy enemy : gameState.getEnemies()) {
-            if (enemy.isControlledByPlayer()) {
-                return enemy;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * Calcula la distancia Manhattan entre dos puntos.
-     */
     private int manhattanDistance(Point a, Point b) {
         return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
     }
 
-    /**
-     * Verifica si hay hielo en una posición.
-     */
     private boolean hasIceAt(Point pos) {
         for (IceBlock ice : gameState.getIceBlocks()) {
-            if (ice.isAt(pos)) {
+            if (ice.isAt(pos))
                 return true;
-            }
         }
         return false;
     }

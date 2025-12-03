@@ -37,7 +37,7 @@ public class GameFacade {
         // But since we are in the middle of refactoring, let's assume the caller will
         // handle P2 setup or we default it.
         // The GameState constructor initializes P2 with "Vainilla" as placeholder if 2
-        // players.
+        // players or Machine vs Machine (0 players).
         this.gameState = new GameState(characterType, level, numberOfPlayers);
         this.gameLogic = new GameLogic(gameState);
         this.persistenceService = new PersistenceService();
@@ -167,8 +167,8 @@ public class GameFacade {
             occupiedPositions.add(icePos);
         }
 
-        // Spawn Player 2 if applicable
-        if (numberOfPlayers == 2 && gameState.getPlayer2() != null) {
+        // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
+        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
             Point p2Pos = getRandomFreePosition(random, occupiedPositions);
             gameState.getPlayer2().setPosition(p2Pos);
             occupiedPositions.add(p2Pos);
@@ -212,8 +212,8 @@ public class GameFacade {
             occupiedPositions.add(icePos);
         }
 
-        // Spawn Player 2 if applicable
-        if (numberOfPlayers == 2 && gameState.getPlayer2() != null) {
+        // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
+        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
             Point p2Pos = getRandomFreePosition(random, occupiedPositions);
             gameState.getPlayer2().setPosition(p2Pos);
             occupiedPositions.add(p2Pos);
@@ -255,8 +255,8 @@ public class GameFacade {
             occupiedPositions.add(icePos);
         }
 
-        // Spawn Player 2 if applicable
-        if (numberOfPlayers == 2 && gameState.getPlayer2() != null) {
+        // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
+        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
             Point p2Pos = getRandomFreePosition(random, occupiedPositions);
             gameState.getPlayer2().setPosition(p2Pos);
             occupiedPositions.add(p2Pos);

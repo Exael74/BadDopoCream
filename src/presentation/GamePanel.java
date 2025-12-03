@@ -158,21 +158,12 @@ public class GamePanel extends JPanel {
             this.player2IsMoving = false;
         }
 
-        setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
-        setLayout(null);
-        setFocusable(true);
-        requestFocusInWindow();
-
-        if (numberOfPlayers != 0) {
-            setupKeyListeners();
-        }
-
-        setupMouseListeners();
-
-        startTimers();
-
         String modeText = numberOfPlayers == 0 ? "Machine vs Machine" : numberOfPlayers + " player(s)";
         System.out.println("GamePanel initialized for level " + level + " with " + modeText);
+
+        setupKeyListeners();
+        setupMouseListeners();
+        startTimers();
     }
 
     // Constructor for backwards compatibility (if needed)
@@ -281,26 +272,18 @@ public class GamePanel extends JPanel {
         icePlacementTimer.start();
     }
 
-    // ==================== PROCESAMIENTO DE MOVIMIENTO ====================
-
-    /**
-     * Procesa el movimiento de los jugadores humanos.
-     */
     private void processMovement() {
-        if (!gameFacade.isPlayerAlive() || gameFacade.isPlayerDying())
-            return;
-
-        if (numberOfPlayers == 1) {
+        if (numberOfPlayers == 0) {
+            updatePlayerAnimation();
+            updatePlayer2Animation();
+        } else {
             processHumanPlayerMovement();
-        } else if (numberOfPlayers == 2) {
-            processHumanPlayerMovement();
-            processHumanPlayer2Movement();
+            if (numberOfPlayers == 2) {
+                processHumanPlayer2Movement();
+            }
         }
     }
 
-    /**
-     * Procesa el movimiento del jugador 1 (WASD).
-     */
     private void processHumanPlayerMovement() {
         if (!isMoving) {
             boolean moved = false;
@@ -377,57 +360,6 @@ public class GamePanel extends JPanel {
             if (!newGridPos.equals(player2TargetGridPosition)) {
                 player2TargetGridPosition = new Point(newGridPos);
                 player2IsMoving = true;
-            }
-        }
-    }
-
-    // ==================== ACTUALIZACIÓN DE ANIMACIONES ====================
-
-    /**
-     * Actualiza todas las animaciones suaves de las entidades.
-     */
-    private void updateAnimation() {
-        // Actualizar animación del jugador 1
-        updatePlayerPixelPosition();
-
-        // Actualizar animación del jugador 2
-        updatePlayer2PixelPosition();
-
-        // Actualizar animación de enemigos
-        updateEnemiesPixelPosition();
-
-        // Actualizar animación de hielo (fade in)
-        updateIceAnimationProgress();
-
-        // Sincronizar animaciones con los cambios del dominio (para Machine vs Machine)
-        if (numberOfPlayers == 0) {
-            syncPlayerAnimationWithDomain();
-            // P2 logic for AI vs AI if implemented later
-        }
-    }
-
-    /**
-     * Actualiza la posición en píxeles del jugador 1.
-     */
-    private void updatePlayerPixelPosition() {
-        if (isMoving && !gameFacade.isPlayerDying()) {
-            float targetPixelX = targetGridPosition.x * CELL_SIZE;
-            float targetPixelY = targetGridPosition.y * CELL_SIZE;
-
-            float deltaX = targetPixelX - currentPixelX;
-            float deltaY = targetPixelY - currentPixelY;
-
-            if (Math.abs(deltaX) < ANIMATION_SPEED && Math.abs(deltaY) < ANIMATION_SPEED) {
-                currentPixelX = targetPixelX;
-                currentPixelY = targetPixelY;
-                isMoving = false;
-            } else {
-                if (Math.abs(deltaX) > 0.5f) {
-                    currentPixelX += Math.signum(deltaX) * ANIMATION_SPEED;
-                }
-                if (Math.abs(deltaY) > 0.5f) {
-                    currentPixelY += Math.signum(deltaY) * ANIMATION_SPEED;
-                }
             }
         }
     }
@@ -537,19 +469,6 @@ public class GamePanel extends JPanel {
     }
 
     /**
-     * Sincroniza la posición visual del jugador con el dominio (para IA).
-     */
-    private void syncPlayerAnimationWithDomain() {
-        Point domainPos = gameFacade.getPlayerPosition();
-        if (!domainPos.equals(targetGridPosition)) {
-            targetGridPosition = new Point(domainPos);
-            isMoving = true;
-        }
-    }
-
-    // ==================== TIMERS ====================
-
-    /**
      * Inicia los timers del juego y de animación.
      */
     private void startTimers() {
@@ -583,6 +502,36 @@ public class GamePanel extends JPanel {
 
         animationTimer = new javax.swing.Timer(FRAME_DELAY, e -> repaint());
         animationTimer.start();
+    }
+
+    /**
+     * Actualiza la animación del juego (interpolación).
+     */
+    private void updateAnimation() {
+        if (isMoving) {
+            float targetPixelX = targetGridPosition.x * CELL_SIZE;
+            float targetPixelY = targetGridPosition.y * CELL_SIZE;
+
+            float deltaX = targetPixelX - currentPixelX;
+            float deltaY = targetPixelY - currentPixelY;
+
+            if (Math.abs(deltaX) < ANIMATION_SPEED && Math.abs(deltaY) < ANIMATION_SPEED) {
+                currentPixelX = targetPixelX;
+                currentPixelY = targetPixelY;
+                isMoving = false;
+            } else {
+                if (Math.abs(deltaX) > 0.5f) {
+                    currentPixelX += Math.signum(deltaX) * ANIMATION_SPEED;
+                }
+                if (Math.abs(deltaY) > 0.5f) {
+                    currentPixelY += Math.signum(deltaY) * ANIMATION_SPEED;
+                }
+            }
+        }
+
+        updatePlayer2PixelPosition();
+        updateEnemiesPixelPosition();
+        updateIceAnimationProgress();
     }
 
     /**

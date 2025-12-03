@@ -38,7 +38,7 @@ public class GameState implements Serializable {
      */
     public GameState(String characterType, int level, int numberOfPlayers) {
         this.player = new Player(new Point(6, 6), characterType);
-        if (numberOfPlayers == 2) {
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
             // Player 2 will be properly initialized/positioned by GameFacade
             this.player2 = new Player(new Point(0, 0), "Vainilla");
         }

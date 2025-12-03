@@ -151,13 +151,17 @@ public class CharacterSelectionPanel extends JPanel {
     }
 
     private void handleSelection(String character) {
-        if (numberOfPlayers == 2) {
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
             if (!isSelectingP2) {
                 // P1 selection
+                String title = (numberOfPlayers == 0) ? "Confirmar Máquina 1" : "Confirmar Jugador 1";
+                String msg = (numberOfPlayers == 0) ? "Máquina 1: ¿Elegir a " + character + "?"
+                        : "Jugador 1: ¿Elegir a " + character + "?";
+
                 int response = JOptionPane.showConfirmDialog(
                         this,
-                        "Jugador 1: ¿Elegir a " + character + "?",
-                        "Confirmar Jugador 1",
+                        msg,
+                        title,
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
 
@@ -169,10 +173,14 @@ public class CharacterSelectionPanel extends JPanel {
                 }
             } else {
                 // P2 selection
+                String title = (numberOfPlayers == 0) ? "Confirmar Máquina 2" : "Confirmar Jugador 2";
+                String msg = (numberOfPlayers == 0) ? "Máquina 2: ¿Elegir a " + character + "?"
+                        : "Jugador 2: ¿Elegir a " + character + "?";
+
                 int response = JOptionPane.showConfirmDialog(
                         this,
-                        "Jugador 2: ¿Elegir a " + character + "?",
-                        "Confirmar Jugador 2",
+                        msg,
+                        title,
                         JOptionPane.YES_NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
 
@@ -182,8 +190,7 @@ public class CharacterSelectionPanel extends JPanel {
                 }
             }
         } else {
-            // Single player or Machine vs Machine (P1 selects for P1 or for the "Player"
-            // slot)
+            // Single player
             int response = JOptionPane.showConfirmDialog(
                     this,
                     "¿Estás seguro de elegir a " + character + "?",
@@ -281,7 +288,7 @@ public class CharacterSelectionPanel extends JPanel {
     private void startGame() {
         System.out.println("Starting game...");
         System.out.println("P1: " + selectedCharacterP1);
-        if (numberOfPlayers == 2) {
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
             System.out.println("P2: " + selectedCharacterP2);
         }
 
@@ -292,9 +299,8 @@ public class CharacterSelectionPanel extends JPanel {
             JFrame frame = (JFrame) window;
             frame.dispose();
 
-            // Pass both characters if 2 players, otherwise just P1 (P2 will be
-            // null/ignored)
-            String p2Char = (numberOfPlayers == 2) ? selectedCharacterP2 : null;
+            // Pass both characters if 2 players or Machine vs Machine, otherwise just P1
+            String p2Char = (numberOfPlayers == 2 || numberOfPlayers == 0) ? selectedCharacterP2 : null;
 
             // Note: We need to update GameWindow constructor to accept p2Char
             new GameWindow(selectedCharacterP1, p2Char, selectedLevel, numberOfPlayers, resources);
@@ -342,12 +348,14 @@ public class CharacterSelectionPanel extends JPanel {
         g2d.setColor(Color.WHITE);
         g2d.setFont(fontLoader.getBoldFont(32f));
         String prompt = "Selecciona tu personaje";
-        if (numberOfPlayers == 2) {
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
             if (!isSelectingP2) {
-                prompt = "Jugador 1: Selecciona tu personaje";
+                prompt = (numberOfPlayers == 0) ? "Máquina 1: Selecciona personaje"
+                        : "Jugador 1: Selecciona tu personaje";
                 g2d.setColor(new Color(100, 200, 255)); // Blueish for P1
             } else {
-                prompt = "Jugador 2: Selecciona tu personaje";
+                prompt = (numberOfPlayers == 0) ? "Máquina 2: Selecciona personaje"
+                        : "Jugador 2: Selecciona tu personaje";
                 g2d.setColor(new Color(255, 100, 100)); // Reddish for P2
             }
         }
@@ -438,7 +446,7 @@ public class CharacterSelectionPanel extends JPanel {
             }
 
             // Draw "P1" or "P2" badges on selected characters if in 2 player mode
-            if (numberOfPlayers == 2 && selectedCharacterP1 != null) {
+            if ((numberOfPlayers == 2 || numberOfPlayers == 0) && selectedCharacterP1 != null) {
                 // Find which area corresponds to P1 selection
                 Rectangle p1Area = null;
                 if ("Chocolate".equals(selectedCharacterP1))
