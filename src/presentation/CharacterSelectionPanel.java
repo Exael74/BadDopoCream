@@ -20,6 +20,8 @@ public class CharacterSelectionPanel extends JPanel {
     // Selection state
     private String selectedCharacterP1 = null;
     private String selectedCharacterP2 = null;
+    private String p1Name = "P1";
+    private String p2Name = "P2";
     private boolean isSelectingP2 = false; // False = Selecting P1, True = Selecting P2
 
     // Áreas de los personajes (clickeables)
@@ -162,13 +164,20 @@ public class CharacterSelectionPanel extends JPanel {
                         this,
                         msg,
                         title,
-                        JOptionPane.YES_NO_OPTION,
+                        JOptionPane.NO_OPTION,
                         JOptionPane.QUESTION_MESSAGE);
 
                 if (response == JOptionPane.YES_OPTION) {
                     selectedCharacterP1 = character;
+
+                    // Ask for name if Machine vs Machine OR PvP
+                    String defaultName = (numberOfPlayers == 0) ? "Máquina 1" : "Jugador 1";
+                    String inputName = JOptionPane.showInputDialog(this, "Nombre para " + defaultName + ":", "P1");
+                    if (inputName != null && !inputName.trim().isEmpty()) {
+                        p1Name = inputName.trim();
+                    }
+
                     isSelectingP2 = true;
-                    // Reset hover/animations if needed, or just repaint with new prompt
                     repaint();
                 }
             } else {
@@ -186,6 +195,14 @@ public class CharacterSelectionPanel extends JPanel {
 
                 if (response == JOptionPane.YES_OPTION) {
                     selectedCharacterP2 = character;
+
+                    // Ask for name if Machine vs Machine OR PvP
+                    String defaultName = (numberOfPlayers == 0) ? "Máquina 2" : "Jugador 2";
+                    String inputName = JOptionPane.showInputDialog(this, "Nombre para " + defaultName + ":", "P2");
+                    if (inputName != null && !inputName.trim().isEmpty()) {
+                        p2Name = inputName.trim();
+                    }
+
                     showVictoryAnimation(character); // Show victory for P2's choice then start
                 }
             }
@@ -200,6 +217,13 @@ public class CharacterSelectionPanel extends JPanel {
 
             if (response == JOptionPane.YES_OPTION) {
                 selectedCharacterP1 = character;
+
+                // Ask for name for Single Player
+                String inputName = JOptionPane.showInputDialog(this, "Nombre para Jugador 1:", "P1");
+                if (inputName != null && !inputName.trim().isEmpty()) {
+                    p1Name = inputName.trim();
+                }
+
                 showVictoryAnimation(character);
             }
         }
@@ -287,9 +311,9 @@ public class CharacterSelectionPanel extends JPanel {
 
     private void startGame() {
         System.out.println("Starting game...");
-        System.out.println("P1: " + selectedCharacterP1);
+        System.out.println("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
         if (numberOfPlayers == 2 || numberOfPlayers == 0) {
-            System.out.println("P2: " + selectedCharacterP2);
+            System.out.println("P2: " + selectedCharacterP2 + " (" + p2Name + ")");
         }
 
         cleanup();
@@ -302,8 +326,8 @@ public class CharacterSelectionPanel extends JPanel {
             // Pass both characters if 2 players or Machine vs Machine, otherwise just P1
             String p2Char = (numberOfPlayers == 2 || numberOfPlayers == 0) ? selectedCharacterP2 : null;
 
-            // Note: We need to update GameWindow constructor to accept p2Char
-            new GameWindow(selectedCharacterP1, p2Char, selectedLevel, numberOfPlayers, resources);
+            // Note: We need to update GameWindow constructor to accept p2Char and names
+            new GameWindow(selectedCharacterP1, p2Char, p1Name, p2Name, selectedLevel, numberOfPlayers, resources);
         }
     }
 

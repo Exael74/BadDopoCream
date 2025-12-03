@@ -30,21 +30,29 @@ public class GameFacade {
      * @param level           Nivel a jugar (1, 2, 3)
      * @param numberOfPlayers Número de jugadores (0=IA vs IA, 1=1P, 2=2P)
      */
-    public GameFacade(String characterType, int level, int numberOfPlayers) {
-        // Note: For 2 players, we need the second character type.
-        // For now, we initialize with default and let the caller set it or handle it
-        // via a new constructor later if needed.
-        // But since we are in the middle of refactoring, let's assume the caller will
-        // handle P2 setup or we default it.
-        // The GameState constructor initializes P2 with "Vainilla" as placeholder if 2
-        // players or Machine vs Machine (0 players).
+    public GameFacade(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
+            int numberOfPlayers) {
         this.gameState = new GameState(characterType, level, numberOfPlayers);
+
+        // Set Player 2 character type if applicable
+        if (gameState.getPlayer2() != null && characterTypeP2 != null) {
+            Point pos = gameState.getPlayer2().getPosition();
+            Player p2 = new Player(pos, characterTypeP2);
+            gameState.setPlayer2(p2);
+        }
+
+        this.gameState.setPlayerNames(p1Name, p2Name);
+
         this.gameLogic = new GameLogic(gameState);
         this.persistenceService = new PersistenceService();
         this.lastUpdateTime = System.currentTimeMillis();
         this.paused = false;
 
         initializeLevel(level, numberOfPlayers);
+    }
+
+    public GameFacade(String characterType, int level, int numberOfPlayers) {
+        this(characterType, null, "P1", "P2", level, numberOfPlayers);
     }
 
     /**
@@ -109,11 +117,14 @@ public class GameFacade {
 
         // Preserve P2 type if exists
         String charType2 = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getCharacterType() : "Vainilla";
+        String name1 = gameState.getPlayer().getName();
+        String name2 = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getName() : "P2";
 
         this.gameState = new GameState(charType, level, players);
-        if (players == 2) {
+        if (players == 2 || players == 0) {
             setPlayer2CharacterType(charType2);
         }
+        this.gameState.setPlayerNames(name1, name2);
 
         this.gameLogic = new GameLogic(gameState);
         this.paused = false;

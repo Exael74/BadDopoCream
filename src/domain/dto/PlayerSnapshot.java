@@ -9,6 +9,7 @@ import domain.entity.Direction;
 public class PlayerSnapshot extends EntitySnapshot {
 
     private String characterType;
+    private String name;
     private String direction;
     private boolean moving;
     private boolean sneezing;
@@ -23,6 +24,7 @@ public class PlayerSnapshot extends EntitySnapshot {
         this.position = builder.position;
         this.active = builder.active;
         this.characterType = builder.characterType;
+        this.name = builder.name;
         this.direction = builder.direction;
         this.moving = builder.moving;
         this.sneezing = builder.sneezing;
@@ -52,6 +54,7 @@ public class PlayerSnapshot extends EntitySnapshot {
                 .position(player.getPosition())
                 .active(player.isAlive() || player.isDying())
                 .characterType(player.getCharacterType())
+                .name(player.getName())
                 .direction(dir.toString())
                 .moving(player.getCurrentDirection() != Direction.IDLE)
                 .sneezing(player.isSneezing())
@@ -65,6 +68,10 @@ public class PlayerSnapshot extends EntitySnapshot {
 
     public String getCharacterType() {
         return characterType;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public String getDirection() {
@@ -100,6 +107,7 @@ public class PlayerSnapshot extends EntitySnapshot {
         private java.awt.Point position;
         private boolean active;
         private String characterType;
+        private String name;
         private String direction;
         private boolean moving;
         private boolean sneezing;
@@ -119,6 +127,11 @@ public class PlayerSnapshot extends EntitySnapshot {
 
         public Builder characterType(String characterType) {
             this.characterType = characterType;
+            return this;
+        }
+
+        public Builder name(String name) {
+            this.name = name;
             return this;
         }
 

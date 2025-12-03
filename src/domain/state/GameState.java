@@ -202,4 +202,13 @@ public class GameState implements Serializable {
         seconds = seconds % 60;
         return String.format("%02d:%02d", minutes, seconds);
     }
+
+    public void setPlayerNames(String p1Name, String p2Name) {
+        if (player != null && p1Name != null) {
+            player.setName(p1Name);
+        }
+        if (player2 != null && p2Name != null) {
+            player2.setName(p2Name);
+        }
+    }
 }

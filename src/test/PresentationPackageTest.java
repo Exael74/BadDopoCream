@@ -26,7 +26,7 @@ public class PresentationPackageTest {
     @Test
     public void testGamePanelInitializationSinglePlayer() throws Exception {
         ResourceLoader rl = new ResourceLoader();
-        GamePanel gp = new GamePanel("Chocolate", null, 1, 1, rl);
+        GamePanel gp = new GamePanel("Chocolate", null, "P1", "P2", 1, 1, rl);
         assertNotNull(gp);
         gp.cleanup();
     }
@@ -34,8 +34,9 @@ public class PresentationPackageTest {
     @Test
     public void testGamePanelInitializationTwoPlayers() throws Exception {
         ResourceLoader rl = new ResourceLoader();
-        // Use signature (character, characterP2, level, numberOfPlayers, resources)
-        GamePanel gp = new GamePanel("Chocolate", "Vainilla", 1, 2, rl);
+        // Use signature (character, characterP2, p1Name, p2Name, level,
+        // numberOfPlayers, resources)
+        GamePanel gp = new GamePanel("Chocolate", "Vainilla", "P1", "P2", 1, 2, rl);
         assertNotNull(gp);
         gp.cleanup();
     }
@@ -43,7 +44,7 @@ public class PresentationPackageTest {
     @Test
     public void testGamePanelCreateAndCleanup() {
         ResourceLoader rl = new ResourceLoader();
-        GamePanel gp = new GamePanel("Chocolate", null, 1, 1, rl);
+        GamePanel gp = new GamePanel("Chocolate", null, "P1", "P2", 1, 1, rl);
         gp.cleanup();
     }
 
@@ -81,7 +82,7 @@ public class PresentationPackageTest {
     @Test
     public void testGameWindowConstruction() {
         ResourceLoader rl = new ResourceLoader();
-        GameWindow gw = new GameWindow("Chocolate", null, 1, 1, rl);
+        GameWindow gw = new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl);
         assertNotNull(gw);
         gw.dispose();
     }
@@ -122,7 +123,7 @@ public class PresentationPackageTest {
     @Test
     public void testGamePanelHelpersDoNotThrow() {
         ResourceLoader rl = new ResourceLoader();
-        GamePanel gp = new GamePanel("Chocolate", null, 1, 1, rl);
+        GamePanel gp = new GamePanel("Chocolate", null, "P1", "P2", 1, 1, rl);
         try {
             gp.getPreferredSize();
         } finally {
@@ -135,7 +136,7 @@ public class PresentationPackageTest {
         ResourceLoader rl = new ResourceLoader();
         WelcomeScreen ws = new WelcomeScreen();
         ws.dispose();
-        new GameWindow("Chocolate", null, 1, 1, rl).dispose();
+        new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl).dispose();
     }
 
     @Test
@@ -143,7 +144,7 @@ public class PresentationPackageTest {
         WelcomeScreen ws = new WelcomeScreen();
         ws.dispose();
         ResourceLoader rl = new ResourceLoader();
-        GameWindow gw = new GameWindow("Chocolate", null, 1, 1, rl);
+        GameWindow gw = new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl);
         gw.dispose();
     }
 

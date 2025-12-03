@@ -103,21 +103,20 @@ public class GamePanel extends JPanel {
      *
      * @param character       Personaje seleccionado P1
      * @param characterP2     Personaje seleccionado P2 (puede ser null)
+     * @param p1Name          Nombre del Jugador 1 / Máquina 1
+     * @param p2Name          Nombre del Jugador 2 / Máquina 2
      * @param level           Nivel a jugar
      * @param numberOfPlayers Número de jugadores
      * @param resources       Recursos cargados
      */
-    public GamePanel(String character, String characterP2, int level, int numberOfPlayers, ResourceLoader resources) {
+    public GamePanel(String character, String characterP2, String p1Name, String p2Name, int level, int numberOfPlayers,
+            ResourceLoader resources) {
         this.resources = resources;
         this.fontLoader = FontLoader.getInstance();
         this.selectedCharacter = character;
         this.currentLevel = level;
         this.numberOfPlayers = numberOfPlayers;
-        this.gameFacade = new GameFacade(character, level, numberOfPlayers);
-
-        if (numberOfPlayers == 2 && characterP2 != null) {
-            this.gameFacade.setPlayer2CharacterType(characterP2);
-        }
+        this.gameFacade = new GameFacade(character, characterP2, p1Name, p2Name, level, numberOfPlayers);
 
         this.pressedKeys = new HashSet<>();
         this.spaceWasPressed = false;
@@ -168,7 +167,7 @@ public class GamePanel extends JPanel {
 
     // Constructor for backwards compatibility (if needed)
     public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
-        this(character, null, level, numberOfPlayers, resources);
+        this(character, null, "P1", "P2", level, numberOfPlayers, resources);
     }
 
     // ==================== CONFIGURACIÓN DE LISTENERS ====================
@@ -555,16 +554,19 @@ public class GamePanel extends JPanel {
                     frame.getContentPane().removeAll();
 
                     System.out.println("✓ Creando nuevo panel de juego...");
-                    // P2 character type is preserved in GameFacade logic, but here we might need to
-                    // retrieve it or just pass null and let Facade handle it?
-                    // Facade restart logic handles preserving types. But we are creating a NEW
-                    // GamePanel.
-                    // We should pass the original types.
+
                     String p2Char = (gameFacade.getPlayer2Snapshot() != null)
                             ? gameFacade.getPlayer2Snapshot().getCharacterType()
                             : null;
 
-                    GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, currentLevel, numberOfPlayers,
+                    // Retrieve names from current facade/snapshots
+                    String p1Name = gameFacade.getPlayerSnapshot().getName();
+                    String p2Name = (gameFacade.getPlayer2Snapshot() != null)
+                            ? gameFacade.getPlayer2Snapshot().getName()
+                            : "P2";
+
+                    GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, p1Name, p2Name, currentLevel,
+                            numberOfPlayers,
                             resources);
                     frame.add(newGamePanel);
                     frame.revalidate();
@@ -797,19 +799,22 @@ public class GamePanel extends JPanel {
             g2d.drawImage(playerImage, playerX, playerY, PLAYER_SIZE, PLAYER_SIZE, this);
 
             // Label P1/P2/AI
-            if (numberOfPlayers == 0) {
-                g2d.setColor(new Color(0, 191, 255, 180));
+            if (numberOfPlayers == 0 || numberOfPlayers == 2) {
+                String name = snapshot.getName();
+                if (name == null || name.isEmpty()) {
+                    name = (numberOfPlayers == 0) ? "AI" : label;
+                }
+
+                if (numberOfPlayers == 0) {
+                    g2d.setColor(label.equals("P1") ? new Color(0, 191, 255, 180) : new Color(255, 165, 0, 180));
+                } else {
+                    g2d.setColor(label.equals("P1") ? new Color(100, 200, 255, 180) : new Color(255, 100, 100, 180));
+                }
+
                 g2d.setFont(fontLoader.getBoldFont(16f));
-                String aiLabel = "AI";
                 FontMetrics fm = g2d.getFontMetrics();
-                int labelWidth = fm.stringWidth(aiLabel);
-                g2d.drawString(aiLabel, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
-            } else if (numberOfPlayers == 2) {
-                g2d.setColor(label.equals("P1") ? new Color(100, 200, 255, 180) : new Color(255, 100, 100, 180));
-                g2d.setFont(fontLoader.getBoldFont(16f));
-                FontMetrics fm = g2d.getFontMetrics();
-                int labelWidth = fm.stringWidth(label);
-                g2d.drawString(label, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
+                int labelWidth = fm.stringWidth(name);
+                g2d.drawString(name, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
             }
         }
     }

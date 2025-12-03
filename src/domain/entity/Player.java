@@ -6,7 +6,8 @@ import java.awt.Point;
 
 /**
  * Entidad que representa al jugador en el juego.
- * Maneja movimiento, direcciones, estados (sneezing, kicking, dying) y animaciones.
+ * Maneja movimiento, direcciones, estados (sneezing, kicking, dying) y
+ * animaciones.
  */
 public class Player extends Entity {
 
@@ -14,6 +15,7 @@ public class Player extends Entity {
     private Direction facingDirection;
     private boolean alive;
     private String characterType;
+    private String name;
 
     // Estados de animación
     private boolean sneezing;
@@ -33,11 +35,12 @@ public class Player extends Entity {
      * Constructor del jugador.
      *
      * @param initialPosition Posición inicial en el grid
-     * @param characterType Tipo de personaje ("Chocolate", "Fresa", "Vainilla")
+     * @param characterType   Tipo de personaje ("Chocolate", "Fresa", "Vainilla")
      */
     public Player(Point initialPosition, String characterType) {
         super(initialPosition);
         this.characterType = characterType;
+        this.name = "Player";
         this.currentDirection = Direction.IDLE;
         this.facingDirection = Direction.DOWN;
         this.alive = true;
@@ -75,7 +78,8 @@ public class Player extends Entity {
      * @param direction Dirección del movimiento
      */
     public void move(Direction direction) {
-        if (!alive || sneezing || kicking || dying || celebrating) return;
+        if (!alive || sneezing || kicking || dying || celebrating)
+            return;
 
         this.currentDirection = direction;
 
@@ -219,5 +223,13 @@ public class Player extends Entity {
      */
     public boolean isBusy() {
         return sneezing || kicking || dying || celebrating;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 }
