@@ -476,19 +476,42 @@ public class GamePanel extends JPanel {
             if (gameFacade.isPaused())
                 return; // No actualizar lógica si está pausado
 
+            // Debug prints (remove later)
+            if (gameFacade.isGameOver()) {
+                System.out.println("DEBUG: GameOver=true, RestartLevel=" + gameFacade.shouldRestartLevel() +
+                        ", DeathAnimComplete=" + gameFacade.isDeathAnimationComplete() +
+                        ", RestartScheduled=" + restartScheduled);
+            }
+
             // Verificar victoria
-            if (gameFacade.isVictory() && !restartScheduled) {
-                restartScheduled = true;
-                isVictory = true;
-                menuState = MenuState.SUMMARY;
-                repaint();
+            if (gameFacade.isVictory()) {
+                // Ensure local victory flag is synced with facade
+                if (!isVictory) {
+                    isVictory = true;
+                }
+
+                if (!restartScheduled) {
+                    System.out.println("DEBUG: Victory detected! Setting menuState to SUMMARY.");
+                    restartScheduled = true;
+                    menuState = MenuState.SUMMARY;
+                    repaint();
+                } else {
+                    // Failsafe: ensure menu is showing
+                    if (menuState != MenuState.SUMMARY) {
+                        System.out.println("DEBUG: Victory is true, restartScheduled is true, BUT menuState is "
+                                + menuState + ". Forcing SUMMARY.");
+                        menuState = MenuState.SUMMARY;
+                        repaint();
+                    }
+                }
                 return;
             }
 
             // Verificar derrota (tiempo agotado o jugador muerto)
             if (gameFacade.shouldRestartLevel() && !restartScheduled) {
+                System.out.println("DEBUG: Triggering Game Over Menu");
                 restartScheduled = true;
-                isVictory = false;
+                isVictory = false; // Si alguien muere o se acaba el tiempo, es derrota (Game Over)
                 menuState = MenuState.SUMMARY;
                 repaint();
                 return;
