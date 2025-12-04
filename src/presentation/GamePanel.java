@@ -85,9 +85,9 @@ public class GamePanel extends JPanel {
     // Control de reinicio
     private boolean restartScheduled;
 
-    // Menú de Pausa
+    // Menú de Pausa y Resumen
     private enum MenuState {
-        NONE, MAIN, SAVE, LOAD
+        NONE, MAIN, SAVE, LOAD, SUMMARY
     }
 
     private MenuState menuState = MenuState.NONE;
@@ -97,6 +97,10 @@ public class GamePanel extends JPanel {
     private Rectangle resumeButtonRect, saveButtonRect, loadButtonRect, restartButtonRect, exitButtonRect;
     private List<Rectangle> loadGameButtonRects = new ArrayList<>();
     private Rectangle backButtonRect;
+
+    // Botones del menú de resumen
+    private Rectangle summaryRestartButton, summaryMenuButton, summaryNextLevelButton;
+    private boolean isVictory = false;
 
     /**
      * Constructor del panel de juego.
@@ -172,9 +176,6 @@ public class GamePanel extends JPanel {
 
     // ==================== CONFIGURACIÓN DE LISTENERS ====================
 
-    /**
-     * Configura los listeners de teclado para capturar inputs del jugador.
-     */
     private void setupKeyListeners() {
         addKeyListener(new KeyAdapter() {
             @Override
@@ -475,31 +476,36 @@ public class GamePanel extends JPanel {
             if (gameFacade.isPaused())
                 return; // No actualizar lógica si está pausado
 
-            processMovement();
-            updateAnimation();
-            gameFacade.update(); // ← Aquí se ejecuta la IA automáticamente si numberOfPlayers == 0
+            // Verificar victoria
+            if (gameFacade.isVictory() && !restartScheduled) {
+                restartScheduled = true;
+                isVictory = true;
+                menuState = MenuState.SUMMARY;
+                repaint();
+                return;
+            }
 
-            // Verificar si se debe reiniciar (lógica en el dominio)
+            // Verificar derrota (tiempo agotado o jugador muerto)
             if (gameFacade.shouldRestartLevel() && !restartScheduled) {
                 restartScheduled = true;
-
-                if (gameFacade.isTimeUp()) {
-                    System.out.println("✗ ¡Tiempo agotado! Reiniciando nivel...");
-                } else {
-                    System.out.println("✗ Jugador murió. Reiniciando nivel...");
-                }
-
-                // Pequeño delay para que se vea el mensaje
-                javax.swing.Timer delayTimer = new javax.swing.Timer(1500, evt -> {
-                    handleLevelRestart();
-                });
-                delayTimer.setRepeats(false);
-                delayTimer.start();
+                isVictory = false;
+                menuState = MenuState.SUMMARY;
+                repaint();
+                return;
             }
+
+            gameFacade.update();
+            processMovement();
+            repaint();
         });
         gameTimer.start();
 
-        animationTimer = new javax.swing.Timer(FRAME_DELAY, e -> repaint());
+        animationTimer = new javax.swing.Timer(FRAME_DELAY, e -> {
+            if (gameFacade.isPaused())
+                return;
+            updateAnimation();
+            repaint();
+        });
         animationTimer.start();
     }
 
@@ -622,6 +628,8 @@ public class GamePanel extends JPanel {
         // Dibujar menú de pausa si es necesario
         if (gameFacade.isPaused()) {
             drawPauseMenu(g2d);
+        } else if (menuState == MenuState.SUMMARY) {
+            drawSummaryMenu(g2d);
         }
     }
 
@@ -1003,27 +1011,32 @@ public class GamePanel extends JPanel {
             icePlacementTimer.stop();
     }
 
-    // ==================== MENÚ DE PAUSA ====================
-
     private void setupMouseListeners() {
         addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (gameFacade.isPaused()) {
                     handlePauseMenuClick(e.getPoint());
+                } else if (menuState == MenuState.SUMMARY) {
+                    handleSummaryMenuClick(e.getPoint());
                 }
             }
         });
     }
 
     private void handleEscapeAction() {
-        gameFacade.togglePause();
-        if (gameFacade.isPaused()) {
+        if (menuState == MenuState.NONE) {
+            gameFacade.togglePause();
             menuState = MenuState.MAIN;
-        } else {
+            repaint();
+        } else if (menuState == MenuState.MAIN) {
+            gameFacade.togglePause();
             menuState = MenuState.NONE;
+            repaint();
+        } else if (menuState == MenuState.LOAD || menuState == MenuState.SAVE) {
+            menuState = MenuState.MAIN;
+            repaint();
         }
-        repaint();
     }
 
     private void drawPauseMenu(Graphics2D g2d) {
@@ -1164,10 +1177,97 @@ public class GamePanel extends JPanel {
                         } catch (BadDopoException e) {
                             JOptionPane.showMessageDialog(this, "Error al cargar: " + e.getMessage());
                         }
-                        return;
                     }
                 }
             }
+        }
+        repaint();
+    }
+
+    private void drawSummaryMenu(Graphics2D g2d) {
+        // Fondo semitransparente
+        g2d.setColor(new Color(0, 0, 0, 220));
+        g2d.fillRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        int centerX = WINDOW_WIDTH / 2;
+        int startY = 150;
+        int buttonWidth = 300;
+        int buttonHeight = 50;
+        int spacing = 20;
+
+        // Título
+        g2d.setFont(fontLoader.getBoldFont(60f));
+        String title = isVictory ? "¡VICTORIA!" : "GAME OVER";
+        Color titleColor = isVictory ? new Color(255, 215, 0) : new Color(255, 50, 50);
+        g2d.setColor(titleColor);
+        FontMetrics fm = g2d.getFontMetrics();
+        g2d.drawString(title, centerX - fm.stringWidth(title) / 2, 120);
+
+        // Puntuación / Ganador
+        g2d.setFont(fontLoader.getBoldFont(30f));
+        g2d.setColor(Color.WHITE);
+        fm = g2d.getFontMetrics();
+
+        int scoreY = 200;
+        if (numberOfPlayers == 0) {
+            // Machine vs Machine
+            String winnerText = "Ganador: "
+                    + (gameFacade.getScore() > gameFacade.getScorePlayer2() ? "Máquina 1" : "Máquina 2");
+            if (gameFacade.getScore() == gameFacade.getScorePlayer2())
+                winnerText = "¡Empate!";
+            g2d.drawString(winnerText, centerX - fm.stringWidth(winnerText) / 2, scoreY);
+            scoreY += 40;
+            String scoreText = "M1: " + gameFacade.getScore() + " - M2: " + gameFacade.getScorePlayer2();
+            g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
+        } else if (numberOfPlayers == 2) {
+            // PvP
+            String winnerText = "Ganador: "
+                    + (gameFacade.getScore() > gameFacade.getScorePlayer2() ? "Jugador 1" : "Jugador 2");
+            if (gameFacade.getScore() == gameFacade.getScorePlayer2())
+                winnerText = "¡Empate!";
+            g2d.drawString(winnerText, centerX - fm.stringWidth(winnerText) / 2, scoreY);
+            scoreY += 40;
+            String scoreText = "P1: " + gameFacade.getScore() + " - P2: " + gameFacade.getScorePlayer2();
+            g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
+        } else {
+            // Single Player
+            String scoreText = "Puntuación Final: " + gameFacade.getScore();
+            g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
+        }
+
+        // Botones
+        int buttonY = 350;
+        g2d.setFont(fontLoader.getBoldFont(24f));
+
+        summaryRestartButton = drawButton(g2d, "REINICIAR NIVEL", centerX, buttonY, buttonWidth, buttonHeight);
+        buttonY += buttonHeight + spacing;
+
+        if (isVictory) {
+            summaryNextLevelButton = drawButton(g2d, "SIGUIENTE NIVEL", centerX, buttonY, buttonWidth, buttonHeight);
+            buttonY += buttonHeight + spacing;
+        } else {
+            summaryNextLevelButton = null;
+        }
+
+        summaryMenuButton = drawButton(g2d, "MENÚ PRINCIPAL", centerX, buttonY, buttonWidth, buttonHeight);
+    }
+
+    private void handleSummaryMenuClick(Point clickPoint) {
+        if (summaryRestartButton != null && summaryRestartButton.contains(clickPoint)) {
+            gameFacade.restartLevel();
+            menuState = MenuState.NONE;
+            startTimers(); // Reiniciar timers
+        } else if (summaryMenuButton != null && summaryMenuButton.contains(clickPoint)) {
+            // Volver al menú de selección de nivel (o personaje)
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window != null) {
+                window.dispose();
+                // Aquí idealmente volveríamos a LevelSelectionPanel, pero por ahora reiniciamos
+                // app o cerramos
+                Main.main(new String[] {});
+            }
+        } else if (summaryNextLevelButton != null && summaryNextLevelButton.contains(clickPoint)) {
+            JOptionPane.showMessageDialog(this, "Próximamente: Siguiente Nivel");
         }
         repaint();
     }
