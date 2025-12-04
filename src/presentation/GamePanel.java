@@ -1209,25 +1209,33 @@ public class GamePanel extends JPanel {
         fm = g2d.getFontMetrics();
 
         int scoreY = 200;
-        if (numberOfPlayers == 0) {
-            // Machine vs Machine
-            String winnerText = "Ganador: "
-                    + (gameFacade.getScore() > gameFacade.getScorePlayer2() ? "Máquina 1" : "Máquina 2");
-            if (gameFacade.getScore() == gameFacade.getScorePlayer2())
-                winnerText = "¡Empate!";
+        if (numberOfPlayers == 0 || numberOfPlayers == 2) {
+            // PvP or Machine vs Machine
+            String p1Name = (numberOfPlayers == 0) ? "Máquina 1" : "Jugador 1";
+            String p2Name = (numberOfPlayers == 0) ? "Máquina 2" : "Jugador 2";
+            String winnerText = "¡Empate!";
+
+            boolean p1Alive = gameFacade.isPlayerAlive();
+            boolean p2Alive = gameFacade.isPlayer2Alive();
+
+            if (p1Alive && !p2Alive) {
+                winnerText = "Ganador: " + p1Name;
+            } else if (!p1Alive && p2Alive) {
+                winnerText = "Ganador: " + p2Name;
+            } else {
+                // Both alive (Time up) or both dead (Draw) -> Decide by score
+                if (gameFacade.getScore() > gameFacade.getScorePlayer2()) {
+                    winnerText = "Ganador: " + p1Name;
+                } else if (gameFacade.getScorePlayer2() > gameFacade.getScore()) {
+                    winnerText = "Ganador: " + p2Name;
+                }
+            }
+
             g2d.drawString(winnerText, centerX - fm.stringWidth(winnerText) / 2, scoreY);
             scoreY += 40;
-            String scoreText = "M1: " + gameFacade.getScore() + " - M2: " + gameFacade.getScorePlayer2();
-            g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
-        } else if (numberOfPlayers == 2) {
-            // PvP
-            String winnerText = "Ganador: "
-                    + (gameFacade.getScore() > gameFacade.getScorePlayer2() ? "Jugador 1" : "Jugador 2");
-            if (gameFacade.getScore() == gameFacade.getScorePlayer2())
-                winnerText = "¡Empate!";
-            g2d.drawString(winnerText, centerX - fm.stringWidth(winnerText) / 2, scoreY);
-            scoreY += 40;
-            String scoreText = "P1: " + gameFacade.getScore() + " - P2: " + gameFacade.getScorePlayer2();
+
+            String scoreText = p1Name + ": " + gameFacade.getScore() + " - " + p2Name + ": "
+                    + gameFacade.getScorePlayer2();
             g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
         } else {
             // Single Player

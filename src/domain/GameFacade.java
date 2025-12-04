@@ -636,6 +636,10 @@ public class GameFacade {
         return gameState.getPlayer().isAlive();
     }
 
+    public boolean isPlayer2Alive() {
+        return gameState.getPlayer2() == null || gameState.getPlayer2().isAlive();
+    }
+
     /**
      * Verifica si la animación de muerte ha terminado completamente.
      *
@@ -648,10 +652,9 @@ public class GameFacade {
         boolean p1Dead = !player.isDying() && !player.isAlive();
         boolean p2Dead = (player2 != null) && !player2.isDying() && !player2.isAlive();
 
-        // In PvP, game over if both die? Or just one?
-        // Usually if both are dead, level restarts.
-        if (gameState.getNumberOfPlayers() == 2) {
-            return p1Dead && p2Dead;
+        // In PvP/MvM, game over if ANY player dies.
+        if (gameState.getNumberOfPlayers() == 2 || gameState.getNumberOfPlayers() == 0) {
+            return p1Dead || p2Dead;
         }
         return p1Dead;
     }
@@ -752,4 +755,7 @@ public class GameFacade {
         }
         return types;
     }
+
 }
+
+    
