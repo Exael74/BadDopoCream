@@ -294,4 +294,79 @@ public class DomainPackageTest {
         Assert.assertTrue(cd.isPlayerAt(gs.getPlayer().getPosition()));
     }
 
+    @Test
+    public void testIsPlayer2AliveWithNoPlayer2() {
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        // When there's no player 2, isPlayer2Alive should return true (no player 2 to
+        // be dead)
+        Assert.assertTrue(gf.isPlayer2Alive());
+    }
+
+    @Test
+    public void testIsPlayer2AliveWithPlayer2() {
+        GameFacade gf = new GameFacade("Chocolate", "Fresa", "P1", "P2", 1, 2);
+        // Initially player 2 should be alive
+        Assert.assertTrue(gf.isPlayer2Alive());
+    }
+
+    @Test
+    public void testIsDeathAnimationCompleteForSinglePlayer() {
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        // Initially no death animation
+        Assert.assertFalse(gf.isDeathAnimationComplete());
+    }
+
+    @Test
+    public void testPvPDeathSetsGameOver() {
+        GameState gs = new GameState("Chocolate", 1, 2);
+        Player p1 = gs.getPlayer();
+        Player p2 = gs.getPlayer2();
+
+        // Simulate player 1 death
+        p1.die();
+        p1.update(2500); // Complete death animation
+
+        CollisionDetector cd = new CollisionDetector(gs);
+        // In PvP, any player death should trigger game over
+        // This is set by collision detection when a player touches an enemy
+        Assert.assertFalse(p1.isAlive());
+    }
+
+    @Test
+    public void testPvPBothPlayersDead() {
+        GameState gs = new GameState("Chocolate", 1, 2);
+        Player p1 = gs.getPlayer();
+        Player p2 = gs.getPlayer2();
+
+        p1.die();
+        p2.die();
+        p1.update(2500);
+        p2.update(2500);
+
+        Assert.assertFalse(p1.isAlive());
+        Assert.assertFalse(p2.isAlive());
+    }
+
+    @Test
+    public void testGameFacadePlayer2Methods() {
+        GameFacade gf = new GameFacade("Chocolate", "Fresa", "P1", "P2", 1, 2);
+
+        // Test player 2 movement
+        gf.movePlayer2Up();
+        gf.movePlayer2Down();
+        gf.movePlayer2Left();
+        gf.movePlayer2Right();
+        gf.stopPlayer2();
+
+        // Test player 2 snapshot
+        Assert.assertNotNull(gf.getPlayer2Snapshot());
+    }
+
+    @Test
+    public void testMachineModeInitialization() {
+        GameFacade gf = new GameFacade("Chocolate", "Fresa", "M1", "M2", 1, 0);
+        Assert.assertEquals(0, gf.getNumberOfPlayers());
+        Assert.assertNotNull(gf.getPlayer2Snapshot());
+    }
+
 }

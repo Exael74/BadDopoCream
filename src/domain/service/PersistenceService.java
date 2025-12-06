@@ -52,11 +52,22 @@ public class PersistenceService {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
         String filename = "save_" + timestamp + SAVE_EXTENSION;
         Path path = Paths.get(SAVE_DIRECTORY, filename);
+        return saveGame(gameState, path.toFile());
+    }
 
-        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(path.toFile()))) {
+    /**
+     * Guarda el estado actual del juego en un archivo específico.
+     *
+     * @param gameState Estado del juego a guardar
+     * @param file      Archivo donde guardar
+     * @return Nombre del archivo guardado
+     * @throws BadDopoException Si hay error al guardar
+     */
+    public String saveGame(GameState gameState, File file) throws BadDopoException {
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream(file))) {
             oos.writeObject(gameState);
-            BadDopoLogger.logInfo("Partida guardada exitosamente: " + filename);
-            return filename;
+            BadDopoLogger.logInfo("Partida guardada exitosamente: " + file.getName());
+            return file.getName();
         } catch (IOException e) {
             throw new BadDopoException("Error al guardar la partida: " + e.getMessage());
         }

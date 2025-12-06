@@ -6,6 +6,7 @@ import domain.service.GameLogic;
 import domain.service.PersistenceService;
 import domain.state.GameState;
 import java.awt.Point;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -90,6 +91,10 @@ public class GameFacade {
 
     public void saveGame() throws BadDopoException {
         persistenceService.saveGame(gameState);
+    }
+
+    public void saveGame(File file) throws BadDopoException {
+        persistenceService.saveGame(gameState, file);
     }
 
     public void loadGame(String filename) throws BadDopoException {
@@ -757,5 +762,3 @@ public class GameFacade {
     }
 
 }
-
-    

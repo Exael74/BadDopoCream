@@ -10,6 +10,8 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
+import java.io.File;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 /**
  * Panel principal del juego que maneja renderizado y captura de inputs.
@@ -565,49 +567,6 @@ public class GamePanel extends JPanel {
     /**
      * Maneja el reinicio del nivel.
      */
-    private void handleLevelRestart() {
-        if (gameTimer != null)
-            gameTimer.stop();
-        if (animationTimer != null)
-            animationTimer.stop();
-        if (icePlacementTimer != null)
-            icePlacementTimer.stop();
-
-        System.out.println("✓ Timers detenidos");
-
-        javax.swing.Timer restartTimer = new javax.swing.Timer(500, e -> {
-            SwingUtilities.invokeLater(() -> {
-                Window window = SwingUtilities.getWindowAncestor(this);
-                if (window instanceof JFrame) {
-                    JFrame frame = (JFrame) window;
-                    frame.getContentPane().removeAll();
-
-                    System.out.println("✓ Creando nuevo panel de juego...");
-
-                    String p2Char = (gameFacade.getPlayer2Snapshot() != null)
-                            ? gameFacade.getPlayer2Snapshot().getCharacterType()
-                            : null;
-
-                    // Retrieve names from current facade/snapshots
-                    String p1Name = gameFacade.getPlayerSnapshot().getName();
-                    String p2Name = (gameFacade.getPlayer2Snapshot() != null)
-                            ? gameFacade.getPlayer2Snapshot().getName()
-                            : "P2";
-
-                    GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, p1Name, p2Name, currentLevel,
-                            numberOfPlayers,
-                            resources);
-                    frame.add(newGamePanel);
-                    frame.revalidate();
-                    frame.repaint();
-                    newGamePanel.requestFocusInWindow();
-                    System.out.println("✓ Nivel reiniciado exitosamente!");
-                }
-            });
-        });
-        restartTimer.setRepeats(false);
-        restartTimer.start();
-    }
 
     // ==================== RENDERING ====================
 
@@ -830,23 +789,22 @@ public class GamePanel extends JPanel {
             g2d.drawImage(playerImage, playerX, playerY, PLAYER_SIZE, PLAYER_SIZE, this);
 
             // Label P1/P2/AI
-            if (numberOfPlayers == 0 || numberOfPlayers == 2) {
-                String name = snapshot.getName();
-                if (name == null || name.isEmpty()) {
-                    name = (numberOfPlayers == 0) ? "AI" : label;
-                }
-
-                if (numberOfPlayers == 0) {
-                    g2d.setColor(label.equals("P1") ? new Color(0, 191, 255, 180) : new Color(255, 165, 0, 180));
-                } else {
-                    g2d.setColor(label.equals("P1") ? new Color(100, 200, 255, 180) : new Color(255, 100, 100, 180));
-                }
-
-                g2d.setFont(fontLoader.getBoldFont(16f));
-                FontMetrics fm = g2d.getFontMetrics();
-                int labelWidth = fm.stringWidth(name);
-                g2d.drawString(name, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
+            // Label P1/P2/AI
+            String name = snapshot.getName();
+            if (name == null || name.isEmpty()) {
+                name = (numberOfPlayers == 0) ? "AI" : label;
             }
+
+            if (numberOfPlayers == 0) {
+                g2d.setColor(label.equals("P1") ? new Color(0, 191, 255, 180) : new Color(255, 165, 0, 180));
+            } else {
+                g2d.setColor(label.equals("P1") ? new Color(100, 200, 255, 180) : new Color(255, 100, 100, 180));
+            }
+
+            g2d.setFont(fontLoader.getBoldFont(16f));
+            FontMetrics fm = g2d.getFontMetrics();
+            int labelWidth = fm.stringWidth(name);
+            g2d.drawString(name, playerX + (PLAYER_SIZE - labelWidth) / 2, playerY - 5);
         }
     }
 
@@ -1165,11 +1123,22 @@ public class GamePanel extends JPanel {
                 gameFacade.togglePause();
                 menuState = MenuState.NONE;
             } else if (saveButtonRect != null && saveButtonRect.contains(clickPoint)) {
-                try {
-                    gameFacade.saveGame();
-                    JOptionPane.showMessageDialog(this, "Partida guardada exitosamente.");
-                } catch (BadDopoException e) {
-                    JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage());
+                JFileChooser fileChooser = new JFileChooser();
+                fileChooser.setCurrentDirectory(new File("saves"));
+                fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos de guardado (*.dat)", "dat"));
+
+                int result = fileChooser.showSaveDialog(this);
+                if (result == JFileChooser.APPROVE_OPTION) {
+                    File selectedFile = fileChooser.getSelectedFile();
+                    if (!selectedFile.getName().toLowerCase().endsWith(".dat")) {
+                        selectedFile = new File(selectedFile.getParentFile(), selectedFile.getName() + ".dat");
+                    }
+                    try {
+                        gameFacade.saveGame(selectedFile);
+                        JOptionPane.showMessageDialog(this, "Partida guardada exitosamente.");
+                    } catch (BadDopoException e) {
+                        JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage());
+                    }
                 }
             } else if (loadButtonRect != null && loadButtonRect.contains(clickPoint)) {
                 savedGamesList = gameFacade.getSavedGames();
@@ -1270,7 +1239,8 @@ public class GamePanel extends JPanel {
         int buttonY = 350;
         g2d.setFont(fontLoader.getBoldFont(24f));
 
-        summaryRestartButton = drawButton(g2d, "REINICIAR NIVEL", centerX, buttonY, buttonWidth, buttonHeight);
+        String restartText = isVictory ? "REINICIAR NIVEL" : "REINICIAR JUEGO";
+        summaryRestartButton = drawButton(g2d, restartText, centerX, buttonY, buttonWidth, buttonHeight);
         buttonY += buttonHeight + spacing;
 
         if (isVictory) {
@@ -1285,21 +1255,69 @@ public class GamePanel extends JPanel {
 
     private void handleSummaryMenuClick(Point clickPoint) {
         if (summaryRestartButton != null && summaryRestartButton.contains(clickPoint)) {
-            gameFacade.restartLevel();
-            menuState = MenuState.NONE;
-            startTimers(); // Reiniciar timers
+            if (isVictory) {
+                // Victory: Restart current level
+                gameFacade.restartLevel();
+                menuState = MenuState.NONE;
+                startTimers(); // Reiniciar timers
+            } else {
+                // Defeat: Restart game from Level 1
+                startNewGameLevel(1);
+            }
         } else if (summaryMenuButton != null && summaryMenuButton.contains(clickPoint)) {
             // Volver al menú de selección de nivel (o personaje)
             Window window = SwingUtilities.getWindowAncestor(this);
             if (window != null) {
                 window.dispose();
-                // Aquí idealmente volveríamos a LevelSelectionPanel, pero por ahora reiniciamos
-                // app o cerramos
+                // Reiniciar la app
                 Main.main(new String[] {});
             }
         } else if (summaryNextLevelButton != null && summaryNextLevelButton.contains(clickPoint)) {
-            JOptionPane.showMessageDialog(this, "Próximamente: Siguiente Nivel");
+            if (currentLevel < 3) {
+                // Go to next level
+                startNewGameLevel(currentLevel + 1);
+            } else {
+                // Level 3 finished
+                JOptionPane.showMessageDialog(this, "¡Próximamente más niveles!", "Próximamente",
+                        JOptionPane.INFORMATION_MESSAGE);
+            }
         }
         repaint();
+    }
+
+    /**
+     * Helper method to start a new game level with preserved settings.
+     */
+    private void startNewGameLevel(int targetLevel) {
+        if (gameTimer != null)
+            gameTimer.stop();
+        if (animationTimer != null)
+            animationTimer.stop();
+        if (icePlacementTimer != null)
+            icePlacementTimer.stop();
+
+        SwingUtilities.invokeLater(() -> {
+            Window window = SwingUtilities.getWindowAncestor(this);
+            if (window instanceof JFrame) {
+                JFrame frame = (JFrame) window;
+                frame.getContentPane().removeAll();
+
+                String p2Char = (gameFacade.getPlayer2Snapshot() != null)
+                        ? gameFacade.getPlayer2Snapshot().getCharacterType()
+                        : null;
+
+                String p1Name = gameFacade.getPlayerSnapshot().getName();
+                String p2Name = (gameFacade.getPlayer2Snapshot() != null)
+                        ? gameFacade.getPlayer2Snapshot().getName()
+                        : "P2";
+
+                GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, p1Name, p2Name, targetLevel,
+                        numberOfPlayers, resources);
+                frame.add(newGamePanel);
+                frame.revalidate();
+                frame.repaint();
+                newGamePanel.requestFocusInWindow();
+            }
+        });
     }
 }

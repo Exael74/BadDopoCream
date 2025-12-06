@@ -269,4 +269,50 @@ public class PresentationPackageTest {
         assertNotNull(rl.getCalamarGif("DOWN", true));
     }
 
+    @Test
+    public void testGamePanelPvPMode() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp = new GamePanel("Chocolate", "Fresa", "Player 1", "Player 2", 1, 2, rl);
+        assertNotNull(gp);
+        gp.cleanup();
+    }
+
+    @Test
+    public void testGamePanelMachineModeInitialization() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp = new GamePanel("Chocolate", "Vainilla", "Machine 1", "Machine 2", 1, 0, rl);
+        assertNotNull(gp);
+        gp.cleanup();
+    }
+
+    @Test
+    public void testGameWindowPvPMode() {
+        ResourceLoader rl = new ResourceLoader();
+        GameWindow gw = new GameWindow("Chocolate", "Fresa", "P1", "P2", 1, 2, rl);
+        assertNotNull(gw);
+        gw.dispose();
+    }
+
+    @Test
+    public void testGameWindowMachineMode() {
+        ResourceLoader rl = new ResourceLoader();
+        GameWindow gw = new GameWindow("Chocolate", "Vainilla", "M1", "M2", 1, 0, rl);
+        assertNotNull(gw);
+        gw.dispose();
+    }
+
+    @Test
+    public void testCharacterSelectionPanelTwoPlayers() {
+        ResourceLoader rl = new ResourceLoader();
+        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 2, rl);
+        assertNotNull(cp);
+    }
+
+    @Test
+    public void testCharacterSelectionPanelMachineMode() {
+        ResourceLoader rl = new ResourceLoader();
+        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 0, rl);
+        assertNotNull(cp);
+    }
+
 }

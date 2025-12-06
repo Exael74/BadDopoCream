@@ -12,6 +12,8 @@ import java.io.Serializable;
  */
 public class GameState implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     private static final int GRID_SIZE = 13;
     private static final int TIME_LIMIT = 180000; // 3 minutos en milisegundos
 
