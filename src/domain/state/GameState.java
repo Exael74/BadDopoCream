@@ -21,6 +21,7 @@ public class GameState implements Serializable {
     private Player player2;
     private List<Enemy> enemies;
     private List<Fruit> fruits;
+    private List<List<Fruit>> pendingFruitWaves;
     private List<IceBlock> iceBlocks;
     private boolean gameOver;
     private boolean victory;
@@ -46,6 +47,7 @@ public class GameState implements Serializable {
         }
         this.enemies = new ArrayList<>();
         this.fruits = new ArrayList<>();
+        this.pendingFruitWaves = new ArrayList<>();
         this.iceBlocks = new ArrayList<>();
         this.gameOver = false;
         this.victory = false;
@@ -212,5 +214,13 @@ public class GameState implements Serializable {
         if (player2 != null && p2Name != null) {
             player2.setName(p2Name);
         }
+    }
+
+    public List<List<Fruit>> getPendingFruitWaves() {
+        return pendingFruitWaves;
+    }
+
+    public void addFruitWave(List<Fruit> wave) {
+        this.pendingFruitWaves.add(wave);
     }
 }

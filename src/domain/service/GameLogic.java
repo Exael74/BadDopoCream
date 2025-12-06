@@ -484,6 +484,23 @@ public class GameLogic {
         // Actualizar temporizador
         gameState.updateTime(deltaTime);
 
+        // Check for wave completion
+        boolean allCollected = true;
+        for (Fruit fruit : gameState.getFruits()) {
+            if (!fruit.isCollected()) {
+                allCollected = false;
+                break;
+            }
+        }
+
+        if (allCollected && !gameState.getPendingFruitWaves().isEmpty()) {
+            List<Fruit> nextWave = gameState.getPendingFruitWaves().remove(0);
+            for (Fruit fruit : nextWave) {
+                gameState.addFruit(fruit);
+            }
+            System.out.println("✓ Next wave spawned!");
+        }
+
         // Actualizar IA si está activa
         if (aiController != null && !gameState.isGameOver()) {
             aiController.updateAI(deltaTime);

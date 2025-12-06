@@ -117,10 +117,10 @@ public class ResourceLoader {
     public Image iceBlockBrokenImage;
 
     // Frutas
-    public Image uvaImage;
-    public Image platanoImage;
-    public Image pinaImage;
-    public Image cerezaImage;
+    public ImageIcon uvaImage;
+    public ImageIcon platanoImage;
+    public ImageIcon pinaImage;
+    public ImageIcon cerezaImage;
 
     public ResourceLoader() {
         loadAllImages();
@@ -265,10 +265,10 @@ public class ResourceLoader {
             iceBlockBrokenImage = ImageIO.read(new File("Resources/Hielo/GIF/Screenshot 2025-11-23 005304.png"));
 
             // FRUTAS
-            uvaImage = ImageIO.read(new File("Resources/Frutas/GIF/uva.png"));
-            platanoImage = ImageIO.read(new File("Resources/Frutas/GIF/platano.png"));
-            pinaImage = ImageIO.read(new File("Resources/Frutas/GIF/piña.png"));
-            cerezaImage = ImageIO.read(new File("Resources/Frutas/GIF/cereza.png"));
+            uvaImage = new ImageIcon("Resources/Frutas/GIF/uva.gif");
+            platanoImage = new ImageIcon("Resources/Frutas/GIF/platano.gif");
+            pinaImage = new ImageIcon("Resources/Frutas/GIF/piña.gif");
+            cerezaImage = new ImageIcon("Resources/Frutas/GIF/cereza.gif");
 
         } catch (Exception e) {
             domain.BadDopoLogger.logError("Error cargando imágenes: " + e.getMessage(), e);
@@ -425,7 +425,7 @@ public class ResourceLoader {
         }
     }
 
-    public Image getFruitImage(String fruitType) {
+    public ImageIcon getFruitImage(String fruitType) {
         switch (fruitType) {
             case "UVA":
                 return uvaImage;

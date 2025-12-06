@@ -21,7 +21,7 @@ public class GamePanel extends JPanel {
 
     // Constantes del juego
     private static final int WINDOW_WIDTH = 1280;
-    private static final int WINDOW_HEIGHT = 720;
+    private static final int WINDOW_HEIGHT = 768;
     private static final int GRID_SIZE = 13;
     private static final int CELL_SIZE = 50;
 
@@ -33,7 +33,7 @@ public class GamePanel extends JPanel {
     // Tamaños de los sprites
     private static final int PLAYER_SIZE = 45;
     private static final int TROLL_SIZE = 45;
-    private static final int FRUIT_SIZE = 35;
+    private static final int FRUIT_SIZE = 40;
     private static final int ICE_SIZE = 40;
 
     // Velocidad de movimiento
@@ -474,6 +474,11 @@ public class GamePanel extends JPanel {
      * Inicia los timers del juego y de animación.
      */
     private void startTimers() {
+        if (gameTimer != null)
+            gameTimer.stop();
+        if (animationTimer != null)
+            animationTimer.stop();
+
         gameTimer = new javax.swing.Timer(FRAME_DELAY, e -> {
             if (gameFacade.isPaused())
                 return; // No actualizar lógica si está pausado
@@ -622,12 +627,21 @@ public class GamePanel extends JPanel {
         for (FruitSnapshot fruitSnapshot : gameFacade.getFruitSnapshots()) {
             if (!fruitSnapshot.isCollected()) {
                 Point pos = fruitSnapshot.getPosition();
-                int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - FRUIT_SIZE) / 2;
-                int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - FRUIT_SIZE) / 2;
-
                 String fruitType = fruitSnapshot.getFruitType();
-                Image fruitImage = resources.getFruitImage(fruitType);
-                g2d.drawImage(fruitImage, x, y, FRUIT_SIZE, FRUIT_SIZE, this);
+
+                // Adjust size based on fruit type to normalize visual appearance
+                int currentFruitSize = FRUIT_SIZE; // Default 40
+                if (fruitType.equals("PLATANO")) {
+                    currentFruitSize = 55;
+                } else if (fruitType.equals("CEREZA")) {
+                    currentFruitSize = 100; // Much larger for cherries due to small GIF content
+                }
+
+                int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - currentFruitSize) / 2;
+                int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - currentFruitSize) / 2;
+
+                ImageIcon fruitImage = resources.getFruitImage(fruitType);
+                g2d.drawImage(fruitImage.getImage(), x, y, currentFruitSize, currentFruitSize, this);
             }
         }
     }
@@ -900,9 +914,9 @@ public class GamePanel extends JPanel {
             int remainingCount = gameFacade.countRemainingFruits(fruitType);
 
             // Dibujar imagen de la fruta
-            Image fruitImage = resources.getFruitImage(fruitType);
+            ImageIcon fruitImage = resources.getFruitImage(fruitType);
             int fruitX = sidebarX + 30;
-            g2d.drawImage(fruitImage, fruitX, currentY, SIDEBAR_FRUIT_SIZE, SIDEBAR_FRUIT_SIZE, this);
+            g2d.drawImage(fruitImage.getImage(), fruitX, currentY, SIDEBAR_FRUIT_SIZE, SIDEBAR_FRUIT_SIZE, this);
 
             // Dibujar contador
             g2d.setFont(fontLoader.getBoldFont(24f));
@@ -1164,6 +1178,11 @@ public class GamePanel extends JPanel {
                         String saveFile = savedGamesList.get(i);
                         try {
                             gameFacade.loadGame(saveFile);
+
+                            // Prevent ghost movement and sync level
+                            resetAnimationState();
+                            currentLevel = gameFacade.getLevel();
+
                             menuState = MenuState.NONE;
                             JOptionPane.showMessageDialog(this, "Partida cargada exitosamente.");
                         } catch (BadDopoException e) {
@@ -1258,6 +1277,7 @@ public class GamePanel extends JPanel {
             if (isVictory) {
                 // Victory: Restart current level
                 gameFacade.restartLevel();
+                resetAnimationState(); // Reset visible positions
                 menuState = MenuState.NONE;
                 startTimers(); // Reiniciar timers
             } else {
@@ -1283,6 +1303,52 @@ public class GamePanel extends JPanel {
             }
         }
         repaint();
+    }
+
+    /**
+     * Resets visual animation state to match current game state.
+     * Prevents "ghosting" movement after level restart.
+     */
+    private void resetAnimationState() {
+        // Reset Player 1
+        Point p1Pos = gameFacade.getPlayerPosition();
+        this.targetGridPosition = new Point(p1Pos);
+        this.currentPixelX = p1Pos.x * CELL_SIZE;
+        this.currentPixelY = p1Pos.y * CELL_SIZE;
+        this.isMoving = false;
+
+        // Reset Player 2
+        PlayerSnapshot p2Snapshot = gameFacade.getPlayer2Snapshot();
+        if (p2Snapshot != null) {
+            Point p2Pos = p2Snapshot.getPosition();
+            this.player2TargetGridPosition = new Point(p2Pos);
+            this.player2CurrentPixelX = p2Pos.x * CELL_SIZE;
+            this.player2CurrentPixelY = p2Pos.y * CELL_SIZE;
+            this.player2IsMoving = false;
+        }
+
+        // Reset Enemies
+        this.enemyTargetPositions.clear();
+        this.enemyCurrentPixelX.clear();
+        this.enemyCurrentPixelY.clear();
+        this.enemyIsMoving.clear();
+
+        for (EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
+            Point pos = enemySnapshot.getPosition();
+            enemyTargetPositions.put(pos, new Point(pos));
+            enemyCurrentPixelX.put(pos, (float) (pos.x * CELL_SIZE));
+            enemyCurrentPixelY.put(pos, (float) (pos.y * CELL_SIZE));
+            enemyIsMoving.put(pos, false);
+        }
+
+        // Reset Input State
+        this.pressedKeys.clear();
+        this.spaceWasPressed = false;
+        this.mWasPressed = false;
+
+        // Reset Ice Animation
+        this.iceAnimationProgress.clear();
+        this.icePlacementQueue.clear();
     }
 
     /**

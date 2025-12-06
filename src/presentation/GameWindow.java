@@ -7,7 +7,7 @@ import java.awt.event.WindowEvent;
 public class GameWindow extends JFrame {
 
     private static final int WINDOW_WIDTH = 1280;
-    private static final int WINDOW_HEIGHT = 720;
+    private static final int WINDOW_HEIGHT = 768;
 
     private GamePanel gamePanel;
 

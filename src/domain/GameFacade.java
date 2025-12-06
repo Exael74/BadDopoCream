@@ -198,19 +198,21 @@ public class GameFacade {
             occupiedPositions.add(trollPos);
         }
 
-        // Agregar 8 uvas
-        for (int i = 0; i < 8; i++) {
+        // Wave 1: 16 Uvas (Initial)
+        for (int i = 0; i < 16; i++) {
             Point uvaPos = getRandomFreePosition(random, occupiedPositions);
             gameState.addFruit(new Fruit(uvaPos, FruitType.UVA));
             occupiedPositions.add(uvaPos);
         }
 
-        // Agregar 8 plátanos
-        for (int i = 0; i < 8; i++) {
+        // Wave 2: 16 Plátanos (Pending)
+        List<Fruit> wave2 = new ArrayList<>();
+        for (int i = 0; i < 16; i++) {
             Point platanoPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(platanoPos, FruitType.PLATANO));
+            wave2.add(new Fruit(platanoPos, FruitType.PLATANO));
             occupiedPositions.add(platanoPos);
         }
+        gameState.addFruitWave(wave2);
     }
 
     /**
@@ -241,19 +243,21 @@ public class GameFacade {
         gameState.addEnemy(maceta);
         occupiedPositions.add(macetaPos);
 
-        // Agregar 8 piñas (se mueven aleatoriamente)
-        for (int i = 0; i < 8; i++) {
+        // Wave 1: 16 Piñas (Initial)
+        for (int i = 0; i < 16; i++) {
             Point pinaPos = getRandomFreePosition(random, occupiedPositions);
             gameState.addFruit(new Fruit(pinaPos, FruitType.PIÑA));
             occupiedPositions.add(pinaPos);
         }
 
-        // Agregar 8 plátanos (estáticos)
-        for (int i = 0; i < 8; i++) {
+        // Wave 2: 16 Plátanos (Pending)
+        List<Fruit> wave2 = new ArrayList<>();
+        for (int i = 0; i < 16; i++) {
             Point platanoPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(platanoPos, FruitType.PLATANO));
+            wave2.add(new Fruit(platanoPos, FruitType.PLATANO));
             occupiedPositions.add(platanoPos);
         }
+        gameState.addFruitWave(wave2);
     }
 
     /**
@@ -284,19 +288,21 @@ public class GameFacade {
         gameState.addEnemy(calamar);
         occupiedPositions.add(calamarPos);
 
-        // Agregar 8 piñas (se mueven aleatoriamente)
-        for (int i = 0; i < 8; i++) {
+        // Wave 1: 16 Piñas (Initial)
+        for (int i = 0; i < 16; i++) {
             Point pinaPos = getRandomFreePosition(random, occupiedPositions);
             gameState.addFruit(new Fruit(pinaPos, FruitType.PIÑA));
             occupiedPositions.add(pinaPos);
         }
 
-        // Agregar 8 cerezas (se teletransportan)
-        for (int i = 0; i < 8; i++) {
+        // Wave 2: 16 Cerezas (Pending)
+        List<Fruit> wave2 = new ArrayList<>();
+        for (int i = 0; i < 16; i++) {
             Point cerezaPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(cerezaPos, FruitType.CEREZA));
+            wave2.add(new Fruit(cerezaPos, FruitType.CEREZA));
             occupiedPositions.add(cerezaPos);
         }
+        gameState.addFruitWave(wave2);
     }
 
     // ==================== PATRONES DE HIELO ====================
@@ -695,6 +701,10 @@ public class GameFacade {
     public boolean shouldRestartLevel() {
         return gameState.isTimeUp() ||
                 (gameState.isGameOver() && isDeathAnimationComplete());
+    }
+
+    public int getLevel() {
+        return gameState.getLevel();
     }
 
     public int getNumberOfPlayers() {
