@@ -23,6 +23,9 @@ public class GameState implements Serializable {
     private List<Fruit> fruits;
     private List<List<Fruit>> pendingFruitWaves;
     private List<IceBlock> iceBlocks;
+    private List<HotTile> hotTiles;
+    private Iglu iglu;
+    private List<UnbreakableBlock> unbreakableBlocks;
     private boolean gameOver;
     private boolean victory;
     private int level;
@@ -49,6 +52,9 @@ public class GameState implements Serializable {
         this.fruits = new ArrayList<>();
         this.pendingFruitWaves = new ArrayList<>();
         this.iceBlocks = new ArrayList<>();
+        this.hotTiles = new ArrayList<>();
+        this.iglu = null;
+        this.unbreakableBlocks = new ArrayList<>();
         this.gameOver = false;
         this.victory = false;
         this.level = level;
@@ -94,6 +100,10 @@ public class GameState implements Serializable {
         return iceBlocks;
     }
 
+    public List<HotTile> getHotTiles() {
+        return hotTiles;
+    }
+
     // ==================== GESTIÓN DE ENTIDADES ====================
 
     /**
@@ -122,6 +132,32 @@ public class GameState implements Serializable {
      */
     public void removeIceBlock(IceBlock iceBlock) {
         iceBlocks.remove(iceBlock);
+    }
+
+    /**
+     * Agrega una baldosa caliente al juego.
+     */
+    /**
+     * Agrega una baldosa caliente al juego.
+     */
+    public void addHotTile(HotTile hotTile) {
+        hotTiles.add(hotTile);
+    }
+
+    public Iglu getIglu() {
+        return iglu;
+    }
+
+    public void setIglu(Iglu iglu) {
+        this.iglu = iglu;
+    }
+
+    public List<UnbreakableBlock> getUnbreakableBlocks() {
+        return unbreakableBlocks;
+    }
+
+    public void addUnbreakableBlock(UnbreakableBlock block) {
+        unbreakableBlocks.add(block);
     }
 
     // ==================== ESTADO DEL JUEGO ====================

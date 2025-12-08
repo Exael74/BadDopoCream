@@ -60,7 +60,23 @@ public class CollisionDetector {
      */
     public boolean hasIceAt(Point position) {
         for (IceBlock ice : gameState.getIceBlocks()) {
-            if (ice.isAt(position)) {
+            if (ice.getPosition().equals(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasIgluAt(Point position) {
+        if (gameState.getIglu() != null) {
+            return gameState.getIglu().collidesWith(position);
+        }
+        return false;
+    }
+
+    public boolean hasUnbreakableBlockAt(Point position) {
+        for (UnbreakableBlock block : gameState.getUnbreakableBlocks()) {
+            if (block.getPosition().equals(position)) {
                 return true;
             }
         }
@@ -114,7 +130,7 @@ public class CollisionDetector {
      * @return true si la posición está bloqueada
      */
     public boolean isPositionBlocked(Point position) {
-        return hasIceAt(position);
+        return hasIceAt(position) || hasIgluAt(position) || hasUnbreakableBlockAt(position);
     }
 
     /**

@@ -174,13 +174,44 @@ public class GameFacade {
     private void initializeLevel1(int numberOfPlayers) {
         Random random = new Random();
         List<Point> occupiedPositions = new ArrayList<>();
+
+        // Fix Player 1 Position (Move out of center)
+        gameState.getPlayer().setPosition(new Point(1, 1));
         occupiedPositions.add(gameState.getPlayer().getPosition());
 
-        // Agregar hielos predeterminados del nivel 1
+        // Create Central Iglu
+        gameState.setIglu(new Iglu(new Point(5, 5))); // 3x3 Iglu at center
+
+        // Add Unbreakable Blocks at borders
+        for (int x = 0; x < GameState.getGridSize(); x++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0))); // Top
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1))); // Bottom
+            occupiedPositions.add(new Point(x, 0));
+            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
+        }
+        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y))); // Left
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y))); // Right
+            occupiedPositions.add(new Point(0, y));
+            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
+        }
+
+        // Agregar hielos predeterminados del nivel 1 (Avoid center and borders)
         List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel1();
         for (Point icePos : predeterminedIcePositions) {
-            gameState.addIceBlock(new IceBlock(icePos, false));
-            occupiedPositions.add(icePos);
+            if (!gameState.getIglu().collidesWith(icePos)) {
+                gameState.addIceBlock(new IceBlock(icePos, false));
+                occupiedPositions.add(icePos);
+            }
+        }
+
+        // Agregar baldosas calientes (Nivel 1: pocas) - AVOID ICE positions per user
+        List<Point> hotTilePositions = List.of(new Point(2, 2), new Point(10, 10), new Point(2, 10), new Point(10, 2));
+        for (Point pos : hotTilePositions) {
+            if (!isPositionOccupied(pos, occupiedPositions) && !gameState.getIglu().collidesWith(pos)) {
+                gameState.addHotTile(new HotTile(pos));
+                occupiedPositions.add(pos);
+            }
         }
 
         // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
@@ -221,13 +252,48 @@ public class GameFacade {
     private void initializeLevel2(int numberOfPlayers) {
         Random random = new Random();
         List<Point> occupiedPositions = new ArrayList<>();
+
+        // Fix Player 1 Position
+        gameState.getPlayer().setPosition(new Point(1, 1));
         occupiedPositions.add(gameState.getPlayer().getPosition());
 
-        // Patrón de hielo DIFERENTE para nivel 2
+        // Create Central Iglu
+        gameState.setIglu(new Iglu(new Point(5, 5)));
+
+        // Add Unbreakable Blocks at borders
+        for (int x = 0; x < GameState.getGridSize(); x++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0)));
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1)));
+            occupiedPositions.add(new Point(x, 0));
+            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
+        }
+        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y)));
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y)));
+            occupiedPositions.add(new Point(0, y));
+            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
+        }
+
+        // Patrón de hielo DIFERENTE para nivel 2 (Avoid center/borders)
         List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel2();
         for (Point icePos : predeterminedIcePositions) {
-            gameState.addIceBlock(new IceBlock(icePos, false));
-            occupiedPositions.add(icePos);
+            if (!gameState.getIglu().collidesWith(icePos)) {
+                gameState.addIceBlock(new IceBlock(icePos, false));
+                occupiedPositions.add(icePos);
+            }
+        }
+
+        // Agregar baldosas calientes (Nivel 2: moderadas)
+        List<Point> hotTilePositions = List.of(
+                new Point(4, 4), new Point(8, 8), new Point(4, 8), new Point(8, 4),
+                new Point(6, 2), new Point(6, 10)); // Some of these might collide with Iglu (4,4 - 8,8).
+
+        // Filter hot tiles that collide with Iglu
+        for (Point pos : hotTilePositions) {
+            if (!gameState.getIglu().collidesWith(pos) && !isPositionOccupied(pos, occupiedPositions)) {
+                gameState.addHotTile(new HotTile(pos));
+                occupiedPositions.add(pos);
+            }
         }
 
         // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
@@ -266,13 +332,47 @@ public class GameFacade {
     private void initializeLevel3(int numberOfPlayers) {
         Random random = new Random();
         List<Point> occupiedPositions = new ArrayList<>();
+
+        // Fix Player 1 Position
+        gameState.getPlayer().setPosition(new Point(1, 1));
         occupiedPositions.add(gameState.getPlayer().getPosition());
+
+        // Create Central Iglu
+        gameState.setIglu(new Iglu(new Point(5, 5)));
+
+        // Add Unbreakable Blocks at borders
+        for (int x = 0; x < GameState.getGridSize(); x++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0)));
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1)));
+            occupiedPositions.add(new Point(x, 0));
+            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
+        }
+        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y)));
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y)));
+            occupiedPositions.add(new Point(0, y));
+            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
+        }
 
         // Patrón de hielo DIFERENTE para nivel 3
         List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel3();
         for (Point icePos : predeterminedIcePositions) {
-            gameState.addIceBlock(new IceBlock(icePos, false));
-            occupiedPositions.add(icePos);
+            if (!gameState.getIglu().collidesWith(icePos) && !isPositionOccupied(icePos, occupiedPositions)) {
+                gameState.addIceBlock(new IceBlock(icePos, false));
+                occupiedPositions.add(icePos);
+            }
+        }
+
+        // Agregar baldosas calientes (Nivel 3: muchas)
+        List<Point> hotTilePositions = List.of(
+                new Point(2, 2), new Point(10, 10), new Point(2, 10), new Point(10, 2),
+                new Point(6, 4), new Point(6, 8), new Point(4, 6), new Point(8, 6)); // 6,4 and 6,8 collide with Iglu
+
+        for (Point pos : hotTilePositions) {
+            if (!gameState.getIglu().collidesWith(pos) && !isPositionOccupied(pos, occupiedPositions)) {
+                gameState.addHotTile(new HotTile(pos));
+                occupiedPositions.add(pos);
+            }
         }
 
         // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
@@ -354,34 +454,62 @@ public class GameFacade {
     private List<Point> getPredeterminedIcePositionsLevel2() {
         List<Point> icePositions = new ArrayList<>();
 
-        // Cruz central
+        // Cruz central (alrededor del Iglú de 3x3 que está en 5,5)
+        // Iglu covers 5,5 to 7,7. We place ice around it.
+
+        // Arriba del Iglu
+        icePositions.add(new Point(5, 4));
         icePositions.add(new Point(6, 4));
-        icePositions.add(new Point(6, 5));
-        icePositions.add(new Point(6, 6));
-        icePositions.add(new Point(6, 7));
+        icePositions.add(new Point(7, 4));
+
+        // Abajo del Iglu
+        icePositions.add(new Point(5, 8));
         icePositions.add(new Point(6, 8));
+        icePositions.add(new Point(7, 8));
 
+        // Izquierda del Iglu
+        icePositions.add(new Point(4, 5));
         icePositions.add(new Point(4, 6));
-        icePositions.add(new Point(5, 6));
-        icePositions.add(new Point(7, 6));
+        icePositions.add(new Point(4, 7));
+
+        // Derecha del Iglu
+        icePositions.add(new Point(8, 5));
         icePositions.add(new Point(8, 6));
+        icePositions.add(new Point(8, 7));
 
-        // Bloques en esquinas
-        icePositions.add(new Point(1, 1));
+        // Bloques en esquinas (Evitando Spawn 1,1)
+        // Top-Left
         icePositions.add(new Point(2, 1));
+        icePositions.add(new Point(3, 1));
         icePositions.add(new Point(1, 2));
+        icePositions.add(new Point(1, 3));
 
+        // Top-Right
+        icePositions.add(new Point(9, 1));
         icePositions.add(new Point(10, 1));
         icePositions.add(new Point(11, 1));
         icePositions.add(new Point(11, 2));
+        icePositions.add(new Point(11, 3));
 
+        // Bottom-Left
+        icePositions.add(new Point(1, 9));
         icePositions.add(new Point(1, 10));
         icePositions.add(new Point(1, 11));
         icePositions.add(new Point(2, 11));
+        icePositions.add(new Point(3, 11));
 
+        // Bottom-Right
+        icePositions.add(new Point(9, 11));
         icePositions.add(new Point(10, 11));
-        icePositions.add(new Point(11, 10));
         icePositions.add(new Point(11, 11));
+        icePositions.add(new Point(11, 10));
+        icePositions.add(new Point(11, 9));
+
+        // Extra scattered blocks for complexity
+        icePositions.add(new Point(3, 3));
+        icePositions.add(new Point(9, 3));
+        icePositions.add(new Point(3, 9));
+        icePositions.add(new Point(9, 9));
 
         return icePositions;
     }
@@ -449,6 +577,9 @@ public class GameFacade {
      * Verifica si una posición está ocupada.
      */
     private boolean isPositionOccupied(Point position, List<Point> occupiedPositions) {
+        if (gameState.getIglu() != null && gameState.getIglu().collidesWith(position)) {
+            return true;
+        }
         for (Point occupied : occupiedPositions) {
             if (occupied.x == position.x && occupied.y == position.y) {
                 return true;
@@ -605,6 +736,31 @@ public class GameFacade {
         List<IceBlockSnapshot> snapshots = new ArrayList<>();
         for (IceBlock ice : gameState.getIceBlocks()) {
             snapshots.add(IceBlockSnapshot.from(ice));
+        }
+        return snapshots;
+    }
+
+    /**
+     * Obtiene snapshots de todas las baldosas calientes para renderizado.
+     *
+     * @return Lista de snapshots de baldosas calientes
+     */
+    public List<HotTileSnapshot> getHotTileSnapshots() {
+        List<HotTileSnapshot> snapshots = new ArrayList<>();
+        for (HotTile tile : gameState.getHotTiles()) {
+            snapshots.add(HotTileSnapshot.from(tile));
+        }
+        return snapshots;
+    }
+
+    public IgluSnapshot getIgluSnapshot() {
+        return IgluSnapshot.from(gameState.getIglu());
+    }
+
+    public List<UnbreakableBlockSnapshot> getUnbreakableBlockSnapshots() {
+        List<UnbreakableBlockSnapshot> snapshots = new ArrayList<>();
+        for (UnbreakableBlock block : gameState.getUnbreakableBlocks()) {
+            snapshots.add(UnbreakableBlockSnapshot.from(block));
         }
         return snapshots;
     }

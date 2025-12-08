@@ -135,6 +135,12 @@ public class GameLogic {
             return;
         }
 
+        // Check for hot tile collision - kills player
+        if (isHotTile(player.getPosition())) {
+            player.die();
+            return;
+        }
+
         collisionDetector.checkCollisions();
     }
 
@@ -175,7 +181,13 @@ public class GameLogic {
                 playerPos.y + direction.getDeltaY());
 
         while (collisionDetector.isValidPosition(current)) {
-            if (collisionDetector.hasEnemyAt(current) || collisionDetector.hasIceAt(current)) {
+            if (collisionDetector.hasEnemyAt(current) || collisionDetector.hasIceAt(current) ||
+                    collisionDetector.hasIgluAt(current) || collisionDetector.hasUnbreakableBlockAt(current)) {
+                break;
+            }
+
+            // Cannot place ice on hot tiles
+            if (isHotTile(current)) {
                 break;
             }
 
@@ -340,12 +352,15 @@ public class GameLogic {
     /**
      * Procesa movimiento de Maceta (persecución con anti-atasco).
      */
+    /**
+     * Procesa movimiento de Maceta (persecución con anti-atasco).
+     */
     private void processMacetaMovement(Enemy enemy, Point targetPosition) {
         enemy.chasePlayer(targetPosition);
         Point nextPos = enemy.getNextPosition();
 
         if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.hasIceAt(nextPos) &&
+                !collisionDetector.isPositionBlocked(nextPos) &&
                 !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
             enemy.move(nextPos);
         } else {
@@ -357,7 +372,7 @@ public class GameLogic {
                 nextPos = enemy.getNextPosition();
 
                 if (collisionDetector.isValidPosition(nextPos) &&
-                        !collisionDetector.hasIceAt(nextPos) &&
+                        !collisionDetector.isPositionBlocked(nextPos) &&
                         !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
                     enemy.move(nextPos);
                     enemy.resetStuckCounter();
@@ -390,8 +405,11 @@ public class GameLogic {
                 System.out.println("✓ Calamar IA rompió hielo automáticamente");
             }
         }
-        // Si no hay hielo, moverse normalmente
+        // Si no hay hielo, moverse normalmente (pero respetar Iglú y Bloques
+        // Irrompibles)
         else if (collisionDetector.isValidPosition(nextPos) &&
+                !collisionDetector.hasIgluAt(nextPos) &&
+                !collisionDetector.hasUnbreakableBlockAt(nextPos) &&
                 !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
             enemy.move(nextPos);
         } else {
@@ -406,7 +424,7 @@ public class GameLogic {
         Point nextPos = enemy.getNextPosition();
 
         if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.hasIceAt(nextPos) &&
+                !collisionDetector.isPositionBlocked(nextPos) &&
                 !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
             enemy.move(nextPos);
         } else {
@@ -438,10 +456,11 @@ public class GameLogic {
                     Point newPos = fruit.getRandomAdjacentPosition();
 
                     if (collisionDetector.isValidPosition(newPos) &&
-                            !collisionDetector.hasIceAt(newPos) &&
+                            !collisionDetector.isPositionBlocked(newPos) && // Covers Ice, Iglu, Unbreakable
                             !collisionDetector.hasEnemyAt(newPos) &&
                             !collisionDetector.hasFruitAt(newPos) &&
-                            !collisionDetector.isPlayerAt(newPos)) {
+                            !collisionDetector.isPlayerAt(newPos) &&
+                            !isHotTile(newPos)) { // Also avoid Hot Tiles
                         fruit.move(newPos);
                     }
                 }
@@ -516,6 +535,20 @@ public class GameLogic {
             }
             updateIceBlocks(deltaTime);
 
+            // Check if ANY player has finished dying (now dead)
+            // If death animation finished, trigger Game Over logic
+            boolean p1Dead = !player.isAlive() && !player.isDying();
+            boolean p2Dead = (player2 != null) && !player2.isAlive() && !player2.isDying();
+
+            if ((p1Dead || p2Dead) && !gameState.isGameOver()) {
+                // In Co-op or Single Player, if anyone dies -> Game Over
+                // In PvP, we might want different logic, but for now standard rules:
+                // Actually, in PvP, if opponent dies, it's victory.
+                // But wait, GamePanel handles "Victory vs GameOver" via shouldRestartLevel
+                // We just need to ensure the game stops.
+                gameState.setGameOver(true);
+            }
+
             if (!p1Dying && !p2Dying && !gameState.isVictory() && !gameState.isGameOver()) {
                 checkVictory();
             }
@@ -567,7 +600,10 @@ public class GameLogic {
                 if (!collisionDetector.isPlayerAt(pos) &&
                         !collisionDetector.hasEnemyAt(pos) &&
                         !collisionDetector.hasFruitAt(pos) &&
-                        !collisionDetector.hasIceAt(pos)) {
+                        !collisionDetector.hasIceAt(pos) &&
+                        !collisionDetector.hasIgluAt(pos) &&
+                        !collisionDetector.hasUnbreakableBlockAt(pos) &&
+                        !isHotTile(pos)) {
                     emptyPositions.add(pos);
                 }
             }
@@ -577,5 +613,22 @@ public class GameLogic {
             return null;
 
         return emptyPositions.get(random.nextInt(emptyPositions.size()));
+    }
+
+    // ==================== HOT TILE VALIDATION ====================
+
+    /**
+     * Verifica si una posición contiene una baldosa caliente.
+     *
+     * @param position Posición a verificar
+     * @return true si hay una baldosa caliente en esa posición
+     */
+    private boolean isHotTile(Point position) {
+        for (HotTile tile : gameState.getHotTiles()) {
+            if (tile.getPosition().equals(position)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

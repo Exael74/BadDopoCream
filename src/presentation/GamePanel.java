@@ -37,7 +37,8 @@ public class GamePanel extends JPanel {
     private static final int ICE_SIZE = 40;
 
     // Velocidad de movimiento
-    private static final int ANIMATION_SPEED = 4;
+    private static final int PLAYER_ANIMATION_SPEED = 4; // Rápido para respuesta inmediata (Humanos)
+    private static final int SMOOTH_ANIMATION_SPEED = 4; // Lento para suavidad visual (Enemigos/IA)
     private static final int FRAME_DELAY = 16;
 
     // Recursos
@@ -74,10 +75,11 @@ public class GamePanel extends JPanel {
     private boolean player2IsMoving;
 
     // Variables para animación suave de enemigos (mapeadas por posición de grid)
-    private Map<Point, Point> enemyTargetPositions;
-    private Map<Point, Float> enemyCurrentPixelX;
-    private Map<Point, Float> enemyCurrentPixelY;
-    private Map<Point, Boolean> enemyIsMoving;
+    // Variables para animación suave de enemigos (mapeadas por ID de entidad)
+    private Map<String, Point> enemyTargetPositions;
+    private Map<String, Float> enemyCurrentPixelX;
+    private Map<String, Float> enemyCurrentPixelY;
+    private Map<String, Boolean> enemyIsMoving;
 
     // Animación de hielo
     private Map<Point, Integer> iceAnimationProgress;
@@ -139,11 +141,12 @@ public class GamePanel extends JPanel {
 
         // Inicializar posiciones de enemigos usando snapshots
         for (EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
+            String id = enemySnapshot.getId();
             Point pos = enemySnapshot.getPosition();
-            enemyTargetPositions.put(pos, new Point(pos));
-            enemyCurrentPixelX.put(pos, (float) (pos.x * CELL_SIZE));
-            enemyCurrentPixelY.put(pos, (float) (pos.y * CELL_SIZE));
-            enemyIsMoving.put(pos, false);
+            enemyTargetPositions.put(id, new Point(pos));
+            enemyCurrentPixelX.put(id, (float) (pos.x * CELL_SIZE));
+            enemyCurrentPixelY.put(id, (float) (pos.y * CELL_SIZE));
+            enemyIsMoving.put(id, false);
         }
 
         // Inicializar posición de animación del jugador 1
@@ -377,16 +380,19 @@ public class GamePanel extends JPanel {
             float deltaX = targetPixelX - player2CurrentPixelX;
             float deltaY = targetPixelY - player2CurrentPixelY;
 
-            if (Math.abs(deltaX) < ANIMATION_SPEED && Math.abs(deltaY) < ANIMATION_SPEED) {
+            // En MvM (0 players) usar velocidad suave, en PvP usar velocidad rápida
+            int speed = (numberOfPlayers == 0) ? SMOOTH_ANIMATION_SPEED : PLAYER_ANIMATION_SPEED;
+
+            if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
                 player2CurrentPixelX = targetPixelX;
                 player2CurrentPixelY = targetPixelY;
                 player2IsMoving = false;
             } else {
                 if (Math.abs(deltaX) > 0.5f) {
-                    player2CurrentPixelX += Math.signum(deltaX) * ANIMATION_SPEED;
+                    player2CurrentPixelX += Math.signum(deltaX) * speed;
                 }
                 if (Math.abs(deltaY) > 0.5f) {
-                    player2CurrentPixelY += Math.signum(deltaY) * ANIMATION_SPEED;
+                    player2CurrentPixelY += Math.signum(deltaY) * speed;
                 }
             }
         }
@@ -395,62 +401,68 @@ public class GamePanel extends JPanel {
     /**
      * Actualiza la posición en píxeles de enemigos.
      */
+    /**
+     * Actualiza la posición en píxeles de enemigos.
+     */
     private void updateEnemiesPixelPosition() {
         if (!gameFacade.isVictory()) {
             // Limpiar enemigos que ya no existen
-            Set<Point> currentEnemyPositions = new HashSet<>();
+            Set<String> currentEnemyIds = new HashSet<>();
 
             for (EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
                 if (!enemySnapshot.isActive())
                     continue;
 
+                String enemyId = enemySnapshot.getId();
+                currentEnemyIds.add(enemyId);
                 Point actualPosition = enemySnapshot.getPosition();
-                currentEnemyPositions.add(actualPosition);
 
                 // Inicializar si es nuevo enemigo
-                if (!enemyTargetPositions.containsKey(actualPosition)) {
-                    enemyTargetPositions.put(actualPosition, new Point(actualPosition));
-                    enemyCurrentPixelX.put(actualPosition, (float) (actualPosition.x * CELL_SIZE));
-                    enemyCurrentPixelY.put(actualPosition, (float) (actualPosition.y * CELL_SIZE));
-                    enemyIsMoving.put(actualPosition, false);
+                if (!enemyTargetPositions.containsKey(enemyId)) {
+                    enemyTargetPositions.put(enemyId, new Point(actualPosition));
+                    enemyCurrentPixelX.put(enemyId, (float) (actualPosition.x * CELL_SIZE));
+                    enemyCurrentPixelY.put(enemyId, (float) (actualPosition.y * CELL_SIZE));
+                    enemyIsMoving.put(enemyId, false);
                 }
 
-                Point currentTarget = enemyTargetPositions.get(actualPosition);
+                Point currentTarget = enemyTargetPositions.get(enemyId);
 
                 if (!actualPosition.equals(currentTarget)) {
-                    enemyTargetPositions.put(actualPosition, new Point(actualPosition));
-                    enemyIsMoving.put(actualPosition, true);
+                    enemyTargetPositions.put(enemyId, new Point(actualPosition));
+                    enemyIsMoving.put(enemyId, true);
                 }
 
-                if (enemyIsMoving.get(actualPosition)) {
-                    float currentX = enemyCurrentPixelX.get(actualPosition);
-                    float currentY = enemyCurrentPixelY.get(actualPosition);
+                if (enemyIsMoving.get(enemyId)) {
+                    float currentX = enemyCurrentPixelX.get(enemyId);
+                    float currentY = enemyCurrentPixelY.get(enemyId);
                     float targetX = actualPosition.x * CELL_SIZE;
                     float targetY = actualPosition.y * CELL_SIZE;
 
                     float deltaX = targetX - currentX;
                     float deltaY = targetY - currentY;
 
-                    if (Math.abs(deltaX) < ANIMATION_SPEED && Math.abs(deltaY) < ANIMATION_SPEED) {
-                        enemyCurrentPixelX.put(actualPosition, targetX);
-                        enemyCurrentPixelY.put(actualPosition, targetY);
-                        enemyIsMoving.put(actualPosition, false);
+                    int speed = SMOOTH_ANIMATION_SPEED;
+
+                    if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
+                        enemyCurrentPixelX.put(enemyId, targetX);
+                        enemyCurrentPixelY.put(enemyId, targetY);
+                        enemyIsMoving.put(enemyId, false);
                     } else {
                         if (Math.abs(deltaX) > 0.5f) {
-                            enemyCurrentPixelX.put(actualPosition, currentX + Math.signum(deltaX) * ANIMATION_SPEED);
+                            enemyCurrentPixelX.put(enemyId, currentX + Math.signum(deltaX) * speed);
                         }
                         if (Math.abs(deltaY) > 0.5f) {
-                            enemyCurrentPixelY.put(actualPosition, currentY + Math.signum(deltaY) * ANIMATION_SPEED);
+                            enemyCurrentPixelY.put(enemyId, currentY + Math.signum(deltaY) * speed);
                         }
                     }
                 }
             }
 
             // Limpiar posiciones de enemigos que ya no existen
-            enemyTargetPositions.keySet().retainAll(currentEnemyPositions);
-            enemyCurrentPixelX.keySet().retainAll(currentEnemyPositions);
-            enemyCurrentPixelY.keySet().retainAll(currentEnemyPositions);
-            enemyIsMoving.keySet().retainAll(currentEnemyPositions);
+            enemyTargetPositions.keySet().retainAll(currentEnemyIds);
+            enemyCurrentPixelX.keySet().retainAll(currentEnemyIds);
+            enemyCurrentPixelY.keySet().retainAll(currentEnemyIds);
+            enemyIsMoving.keySet().retainAll(currentEnemyIds);
         }
     }
 
@@ -550,16 +562,19 @@ public class GamePanel extends JPanel {
             float deltaX = targetPixelX - currentPixelX;
             float deltaY = targetPixelY - currentPixelY;
 
-            if (Math.abs(deltaX) < ANIMATION_SPEED && Math.abs(deltaY) < ANIMATION_SPEED) {
+            // En MvM (0 players) usar velocidad suave, en PvP/1P usar velocidad rápida
+            int speed = (numberOfPlayers == 0) ? SMOOTH_ANIMATION_SPEED : PLAYER_ANIMATION_SPEED;
+
+            if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
                 currentPixelX = targetPixelX;
                 currentPixelY = targetPixelY;
                 isMoving = false;
             } else {
                 if (Math.abs(deltaX) > 0.5f) {
-                    currentPixelX += Math.signum(deltaX) * ANIMATION_SPEED;
+                    currentPixelX += Math.signum(deltaX) * speed;
                 }
                 if (Math.abs(deltaY) > 0.5f) {
-                    currentPixelY += Math.signum(deltaY) * ANIMATION_SPEED;
+                    currentPixelY += Math.signum(deltaY) * speed;
                 }
             }
         }
@@ -594,8 +609,18 @@ public class GamePanel extends JPanel {
         // Panel lateral
         drawSidebar(g2d, offsetX);
 
+        // Renderizado del fondo:
+        // 1. Iglú Central (antes que entidades)
+        drawIglu(g2d, offsetX, offsetY);
+
+        // 2. Bloques Irrompibles (limites)
+        drawUnbreakableBlocks(g2d, offsetX, offsetY);
+
         // Dibujar frutas usando FruitSnapshot
         drawFruits(g2d, offsetX, offsetY);
+
+        // Dibujar baldosas calientes
+        drawHotTiles(g2d, offsetX, offsetY);
 
         // Dibujar hielo usando IceBlockSnapshot
         drawIceBlocks(g2d, offsetX, offsetY);
@@ -681,6 +706,47 @@ public class GamePanel extends JPanel {
             } else {
                 g2d.drawImage(resources.iceBlockNormalImage, x, y, ICE_SIZE, ICE_SIZE, this);
             }
+        }
+    }
+
+    /**
+     * Dibuja todas las baldosas calientes del juego.
+     */
+    private void drawHotTiles(Graphics2D g2d, int offsetX, int offsetY) {
+        for (HotTileSnapshot tileSnapshot : gameFacade.getHotTileSnapshots()) {
+            Point pos = tileSnapshot.getPosition();
+            int size = ICE_SIZE; // Use ICE_SIZE (40) as requested
+            int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - size) / 2;
+            int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - size) / 2;
+            g2d.drawImage(resources.hotTileImage.getImage(), x, y, size, size, this);
+        }
+    }
+
+    /**
+     * Dibuja el Iglú central.
+     */
+    private void drawIglu(Graphics2D g2d, int offsetX, int offsetY) {
+        IgluSnapshot iglu = gameFacade.getIgluSnapshot();
+        if (iglu != null) {
+            Point pos = iglu.getPosition();
+            int width = iglu.getWidth() * CELL_SIZE;
+            int height = iglu.getHeight() * CELL_SIZE;
+            int x = offsetX + pos.x * CELL_SIZE;
+            int y = offsetY + pos.y * CELL_SIZE;
+            g2d.drawImage(resources.igluImage.getImage(), x, y, width, height, this);
+        }
+    }
+
+    /**
+     * Dibuja los bloques irrompibles.
+     */
+    private void drawUnbreakableBlocks(Graphics2D g2d, int offsetX, int offsetY) {
+        for (UnbreakableBlockSnapshot block : gameFacade.getUnbreakableBlockSnapshots()) {
+            Point pos = block.getPosition();
+            int size = ICE_SIZE; // Matches ice size per requirement (40px)
+            int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - size) / 2;
+            int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - size) / 2;
+            g2d.drawImage(resources.unbreakableBlockImage.getImage(), x, y, size, size, this);
         }
     }
 
@@ -1334,11 +1400,12 @@ public class GamePanel extends JPanel {
         this.enemyIsMoving.clear();
 
         for (EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
+            String id = enemySnapshot.getId();
             Point pos = enemySnapshot.getPosition();
-            enemyTargetPositions.put(pos, new Point(pos));
-            enemyCurrentPixelX.put(pos, (float) (pos.x * CELL_SIZE));
-            enemyCurrentPixelY.put(pos, (float) (pos.y * CELL_SIZE));
-            enemyIsMoving.put(pos, false);
+            enemyTargetPositions.put(id, new Point(pos));
+            enemyCurrentPixelX.put(id, (float) (pos.x * CELL_SIZE));
+            enemyCurrentPixelY.put(id, (float) (pos.y * CELL_SIZE));
+            enemyIsMoving.put(id, false);
         }
 
         // Reset Input State

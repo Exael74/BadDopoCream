@@ -122,6 +122,13 @@ public class ResourceLoader {
     public ImageIcon pinaImage;
     public ImageIcon cerezaImage;
 
+    // Baldosa caliente
+    public ImageIcon hotTileImage;
+
+    // Iglu y Bloques
+    public ImageIcon igluImage;
+    public ImageIcon unbreakableBlockImage;
+
     public ResourceLoader() {
         loadAllImages();
     }
@@ -269,6 +276,13 @@ public class ResourceLoader {
             platanoImage = new ImageIcon("Resources/Frutas/GIF/platano.gif");
             pinaImage = new ImageIcon("Resources/Frutas/GIF/piña.gif");
             cerezaImage = new ImageIcon("Resources/Frutas/GIF/cereza.gif");
+
+            // BALDOSA CALIENTE
+            hotTileImage = new ImageIcon("Resources/Baldosa caliente/baldosa_caliente.gif");
+
+            // IGLU Y BLOQUES
+            igluImage = new ImageIcon("Resources/iglu_wallpaper.png");
+            unbreakableBlockImage = new ImageIcon("Resources/Bloque_Irrompible/Bloque_irrompible.jpg");
 
         } catch (Exception e) {
             domain.BadDopoLogger.logError("Error cargando imágenes: " + e.getMessage(), e);

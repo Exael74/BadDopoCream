@@ -13,6 +13,7 @@ public abstract class Entity implements Serializable {
 
     protected Point position;
     protected boolean active;
+    protected String id;
 
     /**
      * Constructor base para todas las entidades.
@@ -22,6 +23,11 @@ public abstract class Entity implements Serializable {
     public Entity(Point position) {
         this.position = new Point(position);
         this.active = true;
+        this.id = java.util.UUID.randomUUID().toString();
+    }
+
+    public String getId() {
+        return id;
     }
 
     /**

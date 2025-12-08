@@ -22,6 +22,7 @@ public class EnemySnapshot extends EntitySnapshot {
         this.direction = builder.direction;
         this.controlledByPlayer = builder.controlledByPlayer;
         this.breakingIce = builder.breakingIce;
+        this.id = builder.id;
     }
 
     @Override
@@ -37,6 +38,7 @@ public class EnemySnapshot extends EntitySnapshot {
      */
     public static EnemySnapshot from(Enemy enemy) {
         return new Builder()
+                .id(enemy.getId())
                 .position(enemy.getPosition())
                 .active(enemy.isActive())
                 .enemyType(enemy.getType().toString())
@@ -76,6 +78,12 @@ public class EnemySnapshot extends EntitySnapshot {
         private String direction;
         private boolean controlledByPlayer;
         private boolean breakingIce;
+        private String id;
+
+        public Builder id(String id) {
+            this.id = id;
+            return this;
+        }
 
         public Builder position(java.awt.Point position) {
             this.position = new java.awt.Point(position);

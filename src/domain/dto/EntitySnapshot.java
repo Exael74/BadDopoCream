@@ -5,17 +5,20 @@ import java.awt.Point;
 /**
  * Clase abstracta base para todos los snapshots de entidades.
  * Los snapshots son DTOs (Data Transfer Objects) que transfieren información
- * desde el dominio hacia la capa de presentación sin exponer las entidades directamente.
+ * desde el dominio hacia la capa de presentación sin exponer las entidades
+ * directamente.
  */
 public abstract class EntitySnapshot {
 
     protected Point position;
     protected boolean active;
+    protected String id;
 
     /**
      * Constructor protegido para uso de subclases.
      */
-    protected EntitySnapshot() {}
+    protected EntitySnapshot() {
+    }
 
     /**
      * Obtiene el tipo de snapshot.
@@ -42,5 +45,9 @@ public abstract class EntitySnapshot {
      */
     public boolean isActive() {
         return active;
+    }
+
+    public String getId() {
+        return id;
     }
 }
