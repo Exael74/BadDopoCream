@@ -391,21 +391,101 @@ public class GameFacade {
         gameState.addEnemy(calamar);
         occupiedPositions.add(calamarPos);
 
-        // Wave 1: 16 Piñas (Initial)
-        for (int i = 0; i < 16; i++) {
-            Point pinaPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(pinaPos, FruitType.PIÑA));
-            occupiedPositions.add(pinaPos);
-        }
+        // Wave 1: 16 Piñas (Initial) - Removing this block as Level 4 logic below
+        // handles it
+        // and Level 3 logic handles its own. This was a legacy block that might
+        // interfere.
 
-        // Wave 2: 16 Cerezas (Pending)
-        List<Fruit> wave2 = new ArrayList<>();
-        for (int i = 0; i < 16; i++) {
-            Point cerezaPos = getRandomFreePosition(random, occupiedPositions);
-            wave2.add(new Fruit(cerezaPos, FruitType.CEREZA));
-            occupiedPositions.add(cerezaPos);
+        // Initialize specific level logic
+        initializeLevelSpecifics(gameState.getLevel(), occupiedPositions);
+    }
+
+    private void initializeLevelSpecifics(int level, List<Point> occupiedPositions) {
+        Random random = new Random();
+
+        switch (level) {
+            case 1:
+                // Level 1: Uvas (Initial), Platano (Pending)
+                for (int i = 0; i < 20; i++) { // 20 Uvas
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null) {
+                        gameState.addFruit(new Fruit(pos, FruitType.UVA));
+                        occupiedPositions.add(pos);
+                    }
+                }
+                List<Fruit> wave1_2 = new ArrayList<>();
+                for (int i = 0; i < 5; i++) { // 5 Platanos
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null)
+                        wave1_2.add(new Fruit(pos, FruitType.PLATANO));
+                }
+                gameState.addPendingFruitWave(wave1_2);
+                break;
+
+            case 2:
+                // Level 2: Platano (Initial), Piña (Pending)
+                for (int i = 0; i < 15; i++) { // 15 Platanos
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null) {
+                        gameState.addFruit(new Fruit(pos, FruitType.PLATANO));
+                        occupiedPositions.add(pos);
+                    }
+                }
+                List<Fruit> wave2_2 = new ArrayList<>();
+                for (int i = 0; i < 5; i++) { // 5 Piñas
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null)
+                        wave2_2.add(new Fruit(pos, FruitType.PIÑA));
+                }
+                gameState.addPendingFruitWave(wave2_2);
+                break;
+
+            case 3:
+                // Level 3: Piña (Initial), Cereza (Pending)
+                for (int i = 0; i < 15; i++) { // 15 Piñas
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null) {
+                        gameState.addFruit(new Fruit(pos, FruitType.PIÑA));
+                        occupiedPositions.add(pos);
+                    }
+                }
+                List<Fruit> wave3_2 = new ArrayList<>();
+                for (int i = 0; i < 5; i++) { // 5 Cerezas
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null)
+                        wave3_2.add(new Fruit(pos, FruitType.CEREZA));
+                }
+                gameState.addPendingFruitWave(wave3_2);
+                break;
+
+            case 4:
+                // Level 4: Piña (Initial), Cereza (Pending), Cactus (Pending)
+                for (int i = 0; i < 10; i++) { // 10 Piñas
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null) {
+                        gameState.addFruit(new Fruit(pos, FruitType.PIÑA));
+                        occupiedPositions.add(pos);
+                    }
+                }
+                List<Fruit> wave4_2 = new ArrayList<>();
+                for (int i = 0; i < 5; i++) { // 5 Cerezas
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null)
+                        wave4_2.add(new Fruit(pos, FruitType.CEREZA));
+                }
+                gameState.addPendingFruitWave(wave4_2);
+
+                List<Fruit> wave4_3 = new ArrayList<>();
+                for (int i = 0; i < 4; i++) { // 4 Cactus
+                    Point pos = gameLogic.findRandomEmptyPosition();
+                    if (pos != null)
+                        wave4_3.add(new Fruit(pos, FruitType.CACTUS));
+                }
+                gameState.addPendingFruitWave(wave4_3);
+                System.out.println("DEBUG: Level 4 Initialized. Piñas: " + 10 + ", Pending Wave 1 (Cerezas): "
+                        + wave4_2.size() + ", Pending Wave 2 (Cactus): " + wave4_3.size());
+                break;
         }
-        gameState.addFruitWave(wave2);
     }
 
     /**
@@ -472,21 +552,9 @@ public class GameFacade {
         gameState.addEnemy(narval);
         occupiedPositions.add(narvalPos);
 
-        // Wave 0: Piñas (Pineapple) only
-        for (int i = 0; i < 16; i++) {
-            Point pinaPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(pinaPos, FruitType.PIÑA));
-            occupiedPositions.add(pinaPos);
-        }
-
-        // Wave 1: Cerezas (Cherry)
-        List<Fruit> wave1 = new ArrayList<>();
-        for (int i = 0; i < 16; i++) {
-            Point cerezaPos = getRandomFreePosition(random, occupiedPositions);
-            wave1.add(new Fruit(cerezaPos, FruitType.CEREZA));
-            occupiedPositions.add(cerezaPos);
-        }
-        gameState.addFruitWave(wave1);
+        // Initialize specific level logic (Fruits & Waves: Pineapple -> Cherry ->
+        // Cactus)
+        initializeLevelSpecifics(4, occupiedPositions);
     }
 
     // ==================== PATRONES DE HIELO ====================

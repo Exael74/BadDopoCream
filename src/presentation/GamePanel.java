@@ -1,7 +1,9 @@
 package presentation;
 
-import domain.*;
+import domain.GameFacade;
+import domain.BadDopoException;
 import domain.dto.*;
+import domain.entity.*;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
@@ -521,12 +523,14 @@ public class GamePanel extends JPanel {
                     repaint();
                 } else {
                     // Failsafe: ensure menu is showing
-                    if (menuState != MenuState.SUMMARY) {
-                        System.out.println("DEBUG: Victory is true, restartScheduled is true, BUT menuState is "
-                                + menuState + ". Forcing SUMMARY.");
-                        menuState = MenuState.SUMMARY;
-                        repaint();
-                    }
+                    System.out.println("DEBUG: Victory is true, restartScheduled is true, BUT menuState is "
+                            + menuState + ". Forcing SUMMARY.");
+                    menuState = MenuState.SUMMARY;
+                    gameTimer.stop(); // Stop here too
+                    repaint();
+                }
+                if (menuState == MenuState.SUMMARY && gameTimer.isRunning()) {
+                    gameTimer.stop();
                 }
                 return;
             }
@@ -537,6 +541,10 @@ public class GamePanel extends JPanel {
                 restartScheduled = true;
                 isVictory = false; // Si alguien muere o se acaba el tiempo, es derrota (Game Over)
                 menuState = MenuState.SUMMARY;
+
+                // Stop timers to prevent CPU loop
+                gameTimer.stop();
+
                 repaint();
                 return;
             }
@@ -547,7 +555,9 @@ public class GamePanel extends JPanel {
         });
         gameTimer.start();
 
-        animationTimer = new javax.swing.Timer(FRAME_DELAY, e -> {
+        animationTimer = new javax.swing.Timer(FRAME_DELAY, e ->
+
+        {
             if (gameFacade.isPaused())
                 return;
             updateAnimation();
@@ -560,6 +570,18 @@ public class GamePanel extends JPanel {
      * Actualiza la animación del juego (interpolación).
      */
     private void updateAnimation() {
+        if (!isMoving) {
+            // Force sync to prevent ghost sliding after restart
+            float targetPixelX = targetGridPosition.x * CELL_SIZE;
+            float targetPixelY = targetGridPosition.y * CELL_SIZE;
+            if (currentPixelX != targetPixelX || currentPixelY != targetPixelY) {
+                // System.out.println("DEBUG: Forcing pixel sync in updateAnimation"); //
+                // Optional log
+                currentPixelX = targetPixelX;
+                currentPixelY = targetPixelY;
+            }
+        }
+
         if (isMoving) {
             float targetPixelX = targetGridPosition.x * CELL_SIZE;
             float targetPixelY = targetGridPosition.y * CELL_SIZE;
@@ -655,23 +677,28 @@ public class GamePanel extends JPanel {
      */
     private void drawFruits(Graphics2D g2d, int offsetX, int offsetY) {
         for (FruitSnapshot fruitSnapshot : gameFacade.getFruitSnapshots()) {
-            if (!fruitSnapshot.isCollected()) {
-                Point pos = fruitSnapshot.getPosition();
-                String fruitType = fruitSnapshot.getFruitType();
+            // Draw all fruits provided by the snapshot (GameLogic handles
+            // visibility/activity)
+            Point pos = fruitSnapshot.getPosition();
+            String fruitType = fruitSnapshot.getFruitType();
+            String state = fruitSnapshot.getState(); // Now available
 
-                // Adjust size based on fruit type to normalize visual appearance
-                int currentFruitSize = FRUIT_SIZE; // Default 40
-                if (fruitType.equals("PLATANO")) {
-                    currentFruitSize = 55;
-                } else if (fruitType.equals("CEREZA")) {
-                    currentFruitSize = 100; // Much larger for cherries due to small GIF content
-                }
+            // Adjust size based on fruit type to normalize visual appearance
+            int currentFruitSize = FRUIT_SIZE; // Default 40
+            if (fruitType.equals("PLATANO")) {
+                currentFruitSize = 55;
+            } else if (fruitType.equals("CEREZA")) {
+                currentFruitSize = 100; // Much larger for cherries due to small GIF content
+            } else if (fruitType.equals("CACTUS")) {
+                currentFruitSize = 50;
+            }
 
-                int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - currentFruitSize) / 2;
-                int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - currentFruitSize) / 2;
+            int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - currentFruitSize) / 2;
+            int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - currentFruitSize) / 2;
 
-                ImageIcon fruitImage = resources.getFruitImage(fruitType);
-                g2d.drawImage(fruitImage.getImage(), x, y, currentFruitSize, currentFruitSize, this);
+            ImageIcon fruitGif = resources.getFruitGif(fruitType, state);
+            if (fruitGif != null) {
+                g2d.drawImage(fruitGif.getImage(), x, y, currentFruitSize, currentFruitSize, this);
             }
         }
     }
@@ -1238,7 +1265,9 @@ public class GamePanel extends JPanel {
                 savedGamesList = gameFacade.getSavedGames();
                 menuState = MenuState.LOAD;
             } else if (restartButtonRect != null && restartButtonRect.contains(clickPoint)) {
-                gameFacade.restartLevel();
+                // Use startNewGameLevel to ensure a completely fresh state (avoids slide
+                // glitch)
+                startNewGameLevel(currentLevel);
                 menuState = MenuState.NONE;
             } else if (exitButtonRect != null && exitButtonRect.contains(clickPoint)) {
                 // Salir al menú principal (cerrar ventana actual)
@@ -1356,10 +1385,9 @@ public class GamePanel extends JPanel {
         if (summaryRestartButton != null && summaryRestartButton.contains(clickPoint)) {
             if (isVictory) {
                 // Victory: Restart current level
-                gameFacade.restartLevel();
-                resetAnimationState(); // Reset visible positions
-                menuState = MenuState.NONE;
-                startTimers(); // Reiniciar timers
+                // Use startNewGameLevel to ensure a completely fresh state (avoids slide
+                // glitch)
+                startNewGameLevel(currentLevel);
             } else {
                 // Defeat: Restart game from Level 1
                 startNewGameLevel(1);
@@ -1392,10 +1420,16 @@ public class GamePanel extends JPanel {
     private void resetAnimationState() {
         // Reset Player 1
         Point p1Pos = gameFacade.getPlayerPosition();
+        System.out.println("DEBUG: resetAnimationState called. New Logical Pos: " + p1Pos +
+                ", Old Pixel X: " + currentPixelX + ", Old Pixel Y: " + currentPixelY);
+
         this.targetGridPosition = new Point(p1Pos);
         this.currentPixelX = p1Pos.x * CELL_SIZE;
         this.currentPixelY = p1Pos.y * CELL_SIZE;
         this.isMoving = false;
+
+        System.out
+                .println("DEBUG: Reset Complete. Curr Pixel X: " + currentPixelX + ", Curr Pixel Y: " + currentPixelY);
 
         // Reset Player 2
         PlayerSnapshot p2Snapshot = gameFacade.getPlayer2Snapshot();

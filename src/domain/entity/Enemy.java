@@ -73,7 +73,11 @@ public class Enemy extends Entity {
     @Override
     public void update(int deltaTime) {
         if (!controlledByPlayer) {
-            moveTimer += deltaTime;
+            // Only increment move timer if NOT breaking ice
+            // This prevents "running" in place while breaking ice
+            if (!isBreakingIce) {
+                moveTimer += deltaTime;
+            }
         }
 
         // Actualizar animación de romper hielo
@@ -82,6 +86,8 @@ public class Enemy extends Entity {
             if (breakIceTimer >= BREAK_ICE_DURATION) {
                 isBreakingIce = false;
                 breakIceTimer = 0;
+                // Important: Reset move timer so it doesn't instantly move after breaking
+                moveTimer = 0;
             }
         }
     }
@@ -202,9 +208,13 @@ public class Enemy extends Entity {
      * Verifica si el enemigo debe moverse según su intervalo.
      */
     public boolean shouldMove() {
+        // If breaking ice, definitely DO NOT move
+        if (isBreakingIce)
+            return false;
+
         int interval = type.getMoveInterval();
         if (isDrilling) {
-            interval = 120; // Fast charge (halved form 60)
+            interval = 240; // Fast charge (halved again from 120)
         }
         return moveTimer >= interval;
     }

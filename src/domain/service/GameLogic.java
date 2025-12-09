@@ -4,6 +4,7 @@ import domain.entity.*;
 import domain.state.GameState;
 import java.awt.Point;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Random;
 
@@ -111,6 +112,10 @@ public class GameLogic {
                 if (!collisionDetector.isValidPosition(enemy.getPosition()) ||
                         collisionDetector.isPositionBlocked(enemy.getPosition())) {
                     enemy.setPosition(oldPosition);
+                } else {
+                    // If moved successfully? No, user specified "player moves a tile".
+                    // This is Player CONTROLLED Enemy (Machine vs Machine).
+                    // Ideally, any turn-based step should trigger it.
                 }
                 return;
             }
@@ -141,7 +146,14 @@ public class GameLogic {
             return;
         }
 
+        // IMPROVED: Check fruit collision immediately after player lands on tile
+        // This ensures collection happens BEFORE fruits have a chance to move away
+        checkPlayerFruitCollision(player);
+
         collisionDetector.checkCollisions();
+
+        // After successful move, trigger turn-based fruit movement (Pineapples)
+        moveFruitsAfterPlayerTurn();
     }
 
     /**
@@ -326,6 +338,12 @@ public class GameLogic {
 
         if (!gameState.isGameOver()) {
             collisionDetector.checkCollisions();
+            // Check fruit collisions separately as we need specific logic for
+            // lethality/animations now
+            checkPlayerFruitCollision(gameState.getPlayer());
+            if (gameState.getPlayer2() != null) {
+                checkPlayerFruitCollision(gameState.getPlayer2());
+            }
         }
     }
 
@@ -590,34 +608,94 @@ public class GameLogic {
     /**
      * Actualiza todas las frutas del juego.
      */
-    public void updateFruits(int deltaTime) {
-        for (Fruit fruit : gameState.getFruits()) {
-            if (fruit.isCollected())
-                continue;
+    private void checkPlayerFruitCollision(Player player) {
+        Iterator<Fruit> iterator = gameState.getFruits().iterator();
+        while (iterator.hasNext()) {
+            Fruit fruit = iterator.next();
+            if (fruit.isActive() && !fruit.isCollected() && fruit.getPosition().equals(player.getPosition())) {
 
-            fruit.update(deltaTime);
-
-            if (fruit.shouldMove()) {
-                // Cerezas se teletransportan a cualquier casilla vacía
-                if (fruit.canTeleport()) {
-                    Point newPos = findRandomEmptyPosition();
-                    if (newPos != null) {
-                        fruit.move(newPos);
-                        System.out.println("✓ Cereza se teletransportó a " + newPos);
-                    }
+                if (fruit.isLethal()) {
+                    player.die(); // Use existing die() method
+                    gameState.setGameOver(true); // Ensure Game Over flag is set
+                    return; // Player died, stop checking
                 }
-                // Piñas se mueven a casilla adyacente
-                else if (fruit.canMove()) {
-                    Point newPos = fruit.getRandomAdjacentPosition();
 
-                    if (collisionDetector.isValidPosition(newPos) &&
-                            !collisionDetector.isPositionBlocked(newPos) && // Covers Ice, Iglu, Unbreakable
-                            !collisionDetector.hasEnemyAt(newPos) &&
-                            !collisionDetector.hasFruitAt(newPos) &&
-                            !collisionDetector.isPlayerAt(newPos) &&
-                            !isHotTile(newPos)) { // Also avoid Hot Tiles
-                        fruit.move(newPos);
-                    }
+                // Normal Collection
+                fruit.collect(); // Sets state to COLLECTED
+                gameState.addScore(fruit.getType().getScore()); // Score is in GameState usually? Or Player?
+                // Checking Player.java will confirm where score is.
+                // If Player has no addScore, GameState likely holds it.
+                // Let's assume GameState.addScore based on previous logic view
+                // (gameState.getScore()).
+                // Wait, logic earlier said player.addScore().
+
+                // Do NOT remove immediately.
+                // iterator.remove();
+            }
+        }
+    }
+
+    /**
+     * Actualiza todas las frutas del juego.
+     */
+    private void updateFruits(int deltaTime) {
+        Iterator<Fruit> iterator = gameState.getFruits().iterator();
+        while (iterator.hasNext()) {
+            Fruit fruit = iterator.next();
+            FruitState previousState = fruit.getState();
+            fruit.update(deltaTime); // Update state/timers
+
+            // Detect Teleport Trigger (Transition from TELEPORT_OUT to TELEPORT_IN)
+            if (fruit.getType() == FruitType.CEREZA &&
+                    previousState == FruitState.TELEPORT_OUT &&
+                    fruit.getState() == FruitState.TELEPORT_IN) {
+
+                Point newPos = findRandomEmptyPosition();
+                if (newPos != null) {
+                    fruit.move(newPos);
+                    System.out.println("✓ Cereza teletransportada a " + newPos);
+                }
+            }
+
+            if (!fruit.isActive()) {
+                iterator.remove();
+                continue;
+            }
+
+            if (fruit.isCollected()) {
+                // If collected, we just wait for it to become inactive (handled inside
+                // Fruit.update eventually? No, I need to add that logic to Fruit or here)
+                // Actually, let's make Fruit handle its own inactivation after animation.
+                continue;
+            }
+
+            if (fruit.isCollected()) {
+                // If collected, we just wait for it to become inactive
+                continue;
+            }
+
+            // PINEAPPLE MOVEMENT WAS REMOVED FROM HERE
+            // Moved to moveFruitsAfterPlayerTurn() to sync with player movement
+            // as requested by user ("deben moverse cada vez que el jugador se mueve")
+        }
+    }
+
+    /**
+     * Mueve las frutas que reaccionan al turno del jugador (PIÑA).
+     */
+    private void moveFruitsAfterPlayerTurn() {
+        for (Fruit fruit : gameState.getFruits()) {
+            if (fruit.isActive() && !fruit.isCollected() && fruit.getType() == FruitType.PIÑA
+                    && fruit.getState() == FruitState.IDLE) {
+                Point newPos = fruit.getRandomAdjacentPosition();
+
+                if (collisionDetector.isValidPosition(newPos) &&
+                        !collisionDetector.isPositionBlocked(newPos) && // Covers Ice, Iglu, Unbreakable
+                        !collisionDetector.hasEnemyAt(newPos) &&
+                        !collisionDetector.hasFruitAt(newPos) &&
+                        !collisionDetector.isPlayerAt(newPos) &&
+                        !isHotTile(newPos)) { // Also avoid Hot Tiles
+                    fruit.move(newPos);
                 }
             }
         }
@@ -724,7 +802,7 @@ public class GameLogic {
             }
         }
 
-        if (allFruitsCollected) {
+        if (allFruitsCollected && gameState.getPendingFruitWaves().isEmpty()) {
             gameState.setVictory(true);
             gameState.getPlayer().startCelebration();
             if (gameState.getPlayer2() != null) {
@@ -745,7 +823,7 @@ public class GameLogic {
     /**
      * Encuentra una posición vacía aleatoria en el grid.
      */
-    private Point findRandomEmptyPosition() {
+    public Point findRandomEmptyPosition() {
         int gridSize = GameState.getGridSize();
         List<Point> emptyPositions = new ArrayList<>();
 

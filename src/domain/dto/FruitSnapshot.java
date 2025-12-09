@@ -8,6 +8,7 @@ import domain.entity.Fruit;
 public class FruitSnapshot extends EntitySnapshot {
 
     private String fruitType;
+    private String state;
     private boolean collected;
 
     /**
@@ -17,6 +18,7 @@ public class FruitSnapshot extends EntitySnapshot {
         this.position = builder.position;
         this.active = builder.active;
         this.fruitType = builder.fruitType;
+        this.state = builder.state;
         this.collected = builder.collected;
     }
 
@@ -34,8 +36,11 @@ public class FruitSnapshot extends EntitySnapshot {
     public static FruitSnapshot from(Fruit fruit) {
         return new Builder()
                 .position(fruit.getPosition())
-                .active(!fruit.isCollected())
+                .active(!fruit.isCollected() || fruit.getState() == domain.entity.FruitState.COLLECTED) // Keep active
+                                                                                                        // during
+                                                                                                        // animation
                 .fruitType(fruit.getType().toString())
+                .state(fruit.getState().toString())
                 .collected(fruit.isCollected())
                 .build();
     }
@@ -44,6 +49,10 @@ public class FruitSnapshot extends EntitySnapshot {
 
     public String getFruitType() {
         return fruitType;
+    }
+
+    public String getState() {
+        return state;
     }
 
     public boolean isCollected() {
@@ -59,6 +68,7 @@ public class FruitSnapshot extends EntitySnapshot {
         private java.awt.Point position;
         private boolean active;
         private String fruitType;
+        private String state;
         private boolean collected;
 
         public Builder position(java.awt.Point position) {
@@ -73,6 +83,11 @@ public class FruitSnapshot extends EntitySnapshot {
 
         public Builder fruitType(String fruitType) {
             this.fruitType = fruitType;
+            return this;
+        }
+
+        public Builder state(String state) {
+            this.state = state;
             return this;
         }
 

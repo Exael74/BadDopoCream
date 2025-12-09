@@ -4,6 +4,7 @@ import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.io.File;
+import domain.entity.FruitState;
 
 public class ResourceLoader {
 
@@ -131,11 +132,45 @@ public class ResourceLoader {
     public Image iceBlockNormalImage;
     public Image iceBlockBrokenImage;
 
-    // Frutas
+    // Frutas (Animated)
+    private java.util.Map<String, javax.swing.ImageIcon> fruitGifs; // To store dynamic states? No, individual fields
+                                                                    // easier for now.
+
+    // Frutas (Legacy/Backwards Compat)
     public ImageIcon uvaImage;
     public ImageIcon platanoImage;
     public ImageIcon pinaImage;
-    public ImageIcon cerezaImage;
+    public ImageIcon cerezaImage; // Will reuse idle
+
+    // Cactus
+    public javax.swing.ImageIcon cactusSpawnGif;
+    public javax.swing.ImageIcon cactusIdleGif;
+    public javax.swing.ImageIcon cactusSpikesWarningGif; // generando_espinas
+    public javax.swing.ImageIcon cactusSpikesActiveGif; // con_espinas
+    public javax.swing.ImageIcon cactusSpikesCooldownGif; // quitando_espinas
+    public javax.swing.ImageIcon cactusCollectedGif;
+
+    // Cereza
+    public javax.swing.ImageIcon cherrySpawnGif;
+    public javax.swing.ImageIcon cherryIdleGif;
+    public javax.swing.ImageIcon cherryTeleportOutGif;
+    public javax.swing.ImageIcon cherryTeleportInGif; // llegando
+    public javax.swing.ImageIcon cherryCollectedGif;
+
+    // Piña
+    public javax.swing.ImageIcon pineappleSpawnGif;
+    public javax.swing.ImageIcon pineappleIdleGif;
+    public javax.swing.ImageIcon pineappleCollectedGif;
+
+    // Platano
+    public javax.swing.ImageIcon bananaSpawnGif;
+    public javax.swing.ImageIcon bananaIdleGif;
+    public javax.swing.ImageIcon bananaCollectedGif;
+
+    // Uva
+    public javax.swing.ImageIcon grapeSpawnGif;
+    public javax.swing.ImageIcon grapeIdleGif;
+    public javax.swing.ImageIcon grapeCollectedGif;
 
     // Baldosa caliente
     public ImageIcon hotTileImage;
@@ -275,13 +310,13 @@ public class ResourceLoader {
             calamarWalkRightGif = new ImageIcon(
                     "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_caminando_derecha animation.gif");
             calamarBreakUpGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_arriba.gif");
+                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_rompe_hielo_arriba animation.gif");
             calamarBreakDownGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_abajo.gif");
+                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_ropmpe_hielo_abajo animation.gif");
             calamarBreakLeftGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_izquierda.gif");
+                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_rompe_hielo_izquierda animation.gif");
             calamarBreakRightGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_derecha.gif");
+                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_rompe_hielo_derecha animation.gif");
 
             // NARVAL
             narvalWalkUpGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_caminando_arriba.gif");
@@ -306,11 +341,73 @@ public class ResourceLoader {
             iceBlockNormalImage = ImageIO.read(new File("Resources/Hielo/GIF/Screenshot 2025-11-23 005254.png"));
             iceBlockBrokenImage = ImageIO.read(new File("Resources/Hielo/GIF/Screenshot 2025-11-23 005304.png"));
 
-            // FRUTAS
-            uvaImage = new ImageIcon("Resources/Frutas/GIF/uva.gif");
-            platanoImage = new ImageIcon("Resources/Frutas/GIF/platano.gif");
-            pinaImage = new ImageIcon("Resources/Frutas/GIF/piña.gif");
-            cerezaImage = new ImageIcon("Resources/Frutas/GIF/cereza.gif");
+            // FRUTAS - CACTUS
+            cactusSpawnGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_apareciendo.gif");
+            cactusIdleGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_normal.gif");
+            cactusSpikesWarningGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_generando_espinas.gif");
+            cactusSpikesActiveGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_con_espinas.gif");
+            cactusSpikesCooldownGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_quitando_espinas.gif");
+            cactusCollectedGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_recolectado.gif");
+
+            // FRUTAS - CEREZA
+            cherrySpawnGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_apareciendo.gif");
+            cherryIdleGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_normal.gif");
+            cherryTeleportOutGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_teletransportando.gif");
+            cherryTeleportInGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_llegando_teletransporte.gif");
+            cherryCollectedGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_recolectada.gif");
+            cerezaImage = cherryIdleGif; // Backward compat
+
+            // FRUTAS - PIÑA
+            pineappleSpawnGif = new ImageIcon("Resources/Frutas/GIF/Piña/piña_apareciendo.gif");
+            pineappleIdleGif = new ImageIcon("Resources/Frutas/GIF/Piña/piña_normal.gif");
+            pineappleCollectedGif = new ImageIcon("Resources/Frutas/GIF/Piña/piña_recolectado.gif");
+            pinaImage = pineappleIdleGif;
+
+            // FRUTAS - PLATANO
+            bananaSpawnGif = new ImageIcon("Resources/Frutas/GIF/Platano/platano_apareciendo.gif");
+            bananaIdleGif = new ImageIcon("Resources/Frutas/GIF/Platano/platano_normal.gif");
+            bananaCollectedGif = new ImageIcon("Resources/Frutas/GIF/Platano/platano_recolectado.gif");
+            platanoImage = bananaIdleGif;
+
+            // FRUTAS - UVA
+            grapeSpawnGif = new ImageIcon("Resources/Frutas/GIF/Uvas/uva_apareciendo.gif");
+            grapeIdleGif = new ImageIcon("Resources/Frutas/GIF/Uvas/uva_normal.gif");
+            grapeCollectedGif = new ImageIcon("Resources/Frutas/GIF/Uvas/uva_recolectada.gif");
+            uvaImage = grapeIdleGif;
+
+            // FRUTAS - CACTUS
+            cactusSpawnGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_apareciendo.gif");
+            cactusIdleGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_normal.gif");
+            cactusSpikesWarningGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_generando_espinas.gif");
+            cactusSpikesActiveGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_con_espinas.gif");
+            cactusSpikesCooldownGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_quitando_espinas.gif");
+            cactusCollectedGif = new ImageIcon("Resources/Frutas/GIF/Cactus/cactus_recolectado.gif");
+
+            // FRUTAS - CEREZA
+            cherrySpawnGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_apareciendo.gif");
+            cherryIdleGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_normal.gif");
+            cherryTeleportOutGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_teletransportando.gif");
+            cherryTeleportInGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_llegando_teletransporte.gif");
+            cherryCollectedGif = new ImageIcon("Resources/Frutas/GIF/Cereza/cereza_recolectada.gif");
+            cerezaImage = cherryIdleGif; // Backward compat
+
+            // FRUTAS - PIÑA
+            pineappleSpawnGif = new ImageIcon("Resources/Frutas/GIF/Piña/piña_apareciendo.gif");
+            pineappleIdleGif = new ImageIcon("Resources/Frutas/GIF/Piña/piña_normal.gif");
+            pineappleCollectedGif = new ImageIcon("Resources/Frutas/GIF/Piña/piña_recolectado.gif");
+            pinaImage = pineappleIdleGif;
+
+            // FRUTAS - PLATANO
+            bananaSpawnGif = new ImageIcon("Resources/Frutas/GIF/Platano/platano_apareciendo.gif");
+            bananaIdleGif = new ImageIcon("Resources/Frutas/GIF/Platano/platano_normal.gif");
+            bananaCollectedGif = new ImageIcon("Resources/Frutas/GIF/Platano/platano_recolectado.gif");
+            platanoImage = bananaIdleGif;
+
+            // FRUTAS - UVA
+            grapeSpawnGif = new ImageIcon("Resources/Frutas/GIF/Uvas/uva_apareciendo.gif");
+            grapeIdleGif = new ImageIcon("Resources/Frutas/GIF/Uvas/uva_normal.gif");
+            grapeCollectedGif = new ImageIcon("Resources/Frutas/GIF/Uvas/uva_recolectada.gif");
+            uvaImage = grapeIdleGif;
 
             // BALDOSA CALIENTE
             hotTileImage = new ImageIcon("Resources/Baldosa caliente/baldosa_caliente.gif");
@@ -530,6 +627,75 @@ public class ResourceLoader {
                 return pinaImage;
             case "CEREZA":
                 return cerezaImage;
+            default:
+                return uvaImage;
+        }
+    }
+
+    public ImageIcon getFruitGif(String fruitType, String state) {
+        FruitState fruitState;
+        try {
+            fruitState = domain.entity.FruitState.valueOf(state);
+        } catch (IllegalArgumentException e) {
+            fruitState = domain.entity.FruitState.IDLE;
+        }
+
+        switch (fruitType) {
+            case "CACTUS":
+                switch (fruitState) {
+                    case SPAWNING:
+                        return cactusSpawnGif;
+                    case SPIKES_WARNING:
+                        return cactusSpikesWarningGif;
+                    case SPIKES_ACTIVE:
+                        return cactusSpikesActiveGif;
+                    case SPIKES_COOLDOWN:
+                        return cactusSpikesCooldownGif;
+                    case COLLECTED:
+                        return cactusCollectedGif;
+                    default:
+                        return cactusIdleGif;
+                }
+            case "CEREZA":
+                switch (fruitState) {
+                    case SPAWNING:
+                        return cherrySpawnGif;
+                    case TELEPORT_OUT:
+                        return cherryTeleportOutGif;
+                    case TELEPORT_IN:
+                        return cherryTeleportInGif;
+                    case COLLECTED:
+                        return cherryCollectedGif;
+                    default:
+                        return cherryIdleGif;
+                }
+            case "PIÑA":
+                switch (fruitState) {
+                    case SPAWNING:
+                        return pineappleSpawnGif;
+                    case COLLECTED:
+                        return pineappleCollectedGif;
+                    default:
+                        return pineappleIdleGif;
+                }
+            case "PLATANO":
+                switch (fruitState) {
+                    case SPAWNING:
+                        return bananaSpawnGif;
+                    case COLLECTED:
+                        return bananaCollectedGif;
+                    default:
+                        return bananaIdleGif;
+                }
+            case "UVA":
+                switch (fruitState) {
+                    case SPAWNING:
+                        return grapeSpawnGif;
+                    case COLLECTED:
+                        return grapeCollectedGif;
+                    default:
+                        return grapeIdleGif;
+                }
             default:
                 return uvaImage;
         }

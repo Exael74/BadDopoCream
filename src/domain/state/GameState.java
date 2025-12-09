@@ -256,7 +256,14 @@ public class GameState implements Serializable {
         return pendingFruitWaves;
     }
 
+    public void addPendingFruitWave(List<Fruit> wave) {
+        this.pendingFruitWaves.add(wave);
+    }
+
     public void addFruitWave(List<Fruit> wave) {
+        // Alias for backward compatibility or immediate add if desired?
+        // Logic uses pendingFruitWaves for sequential waves.
+        // Existing code used addFruitWave which likely added to pending.
         this.pendingFruitWaves.add(wave);
     }
 }

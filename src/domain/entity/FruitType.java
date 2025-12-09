@@ -7,7 +7,8 @@ public enum FruitType {
     UVA(false, false, 0, 50), // Estática, 50 puntos
     PLATANO(false, false, 0, 100), // Estática, 100 puntos
     PIÑA(true, false, 2000, 200), // Se mueve cada 2 segundos, 200 puntos
-    CEREZA(false, true, 3000, 150); // Se teletransporta cada 3 segundos, 150 puntos
+    CEREZA(false, true, 20000, 150), // Se teletransporta cada 20 segundos, 150 puntos
+    CACTUS(false, false, 30000, 250); // Alterna espinas cada 30 segundos, 250 puntos
 
     private final boolean canMove;
     private final boolean canTeleport;
