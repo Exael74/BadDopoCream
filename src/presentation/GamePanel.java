@@ -443,6 +443,11 @@ public class GamePanel extends JPanel {
 
                     int speed = SMOOTH_ANIMATION_SPEED;
 
+                    // High speed interpolation for Drilling Narval
+                    if (enemySnapshot.isDrilling()) {
+                        speed = 12; // Adjusted for 120ms logic speed (~8px/frame needed)
+                    }
+
                     if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
                         enemyCurrentPixelX.put(enemyId, targetX);
                         enemyCurrentPixelY.put(enemyId, targetY);
@@ -777,8 +782,8 @@ public class GamePanel extends JPanel {
         float pixelX, pixelY;
         Point gridPos = enemySnapshot.getPosition();
 
-        pixelX = enemyCurrentPixelX.getOrDefault(gridPos, (float) (gridPos.x * CELL_SIZE));
-        pixelY = enemyCurrentPixelY.getOrDefault(gridPos, (float) (gridPos.y * CELL_SIZE));
+        pixelX = enemyCurrentPixelX.getOrDefault(enemySnapshot.getId(), (float) (gridPos.x * CELL_SIZE));
+        pixelY = enemyCurrentPixelY.getOrDefault(enemySnapshot.getId(), (float) (gridPos.y * CELL_SIZE));
 
         int x = offsetX + (int) pixelX + (CELL_SIZE - TROLL_SIZE) / 2;
         int y = offsetY + (int) pixelY + (CELL_SIZE - TROLL_SIZE) / 2;
@@ -786,7 +791,14 @@ public class GamePanel extends JPanel {
         String direction = enemySnapshot.getDirection();
         String enemyType = enemySnapshot.getEnemyType();
         boolean isBreakingIce = enemySnapshot.isBreakingIce();
-        ImageIcon enemyGif = resources.getEnemyGif(enemyType, direction, isBreakingIce);
+        boolean isDrilling = enemySnapshot.isDrilling();
+
+        ImageIcon enemyGif;
+        if (enemyType.equals("NARVAL")) {
+            enemyGif = resources.getNarvalGif(direction, isBreakingIce, isDrilling);
+        } else {
+            enemyGif = resources.getEnemyGif(enemyType, direction, isBreakingIce);
+        }
 
         if (enemyGif != null) {
             Image enemyImage = enemyGif.getImage();
@@ -817,6 +829,8 @@ public class GamePanel extends JPanel {
             idleGif = resources.trollIdleGif;
         } else if (enemyType.equals("MACETA")) {
             idleGif = resources.macetaWalkDownGif;
+        } else if (enemyType.equals("NARVAL")) {
+            idleGif = resources.narvalWalkDownGif;
         } else {
             idleGif = resources.calamarWalkDownGif;
         }
@@ -1359,7 +1373,7 @@ public class GamePanel extends JPanel {
                 Main.main(new String[] {});
             }
         } else if (summaryNextLevelButton != null && summaryNextLevelButton.contains(clickPoint)) {
-            if (currentLevel < 3) {
+            if (currentLevel < 4) {
                 // Go to next level
                 startNewGameLevel(currentLevel + 1);
             } else {

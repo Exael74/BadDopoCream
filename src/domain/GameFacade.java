@@ -156,6 +156,9 @@ public class GameFacade {
                 case 3:
                     initializeLevel3(numberOfPlayers);
                     break;
+                case 4:
+                    initializeLevel4(numberOfPlayers);
+                    break;
                 default:
                     throw new BadDopoException("Nivel inválido: " + level);
             }
@@ -405,6 +408,87 @@ public class GameFacade {
         gameState.addFruitWave(wave2);
     }
 
+    /**
+     * Inicializa el nivel 4: 1 Narval + Piñas (Inicial) + Cerezas (Ola 1).
+     */
+    private void initializeLevel4(int numberOfPlayers) {
+        Random random = new Random();
+        List<Point> occupiedPositions = new ArrayList<>();
+
+        // Fix Player 1 Position
+        gameState.getPlayer().setPosition(new Point(1, 1));
+        occupiedPositions.add(gameState.getPlayer().getPosition());
+
+        // Create Central Iglu
+        gameState.setIglu(new Iglu(new Point(5, 5)));
+
+        // Add Unbreakable Blocks at borders
+        for (int x = 0; x < GameState.getGridSize(); x++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0)));
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1)));
+            occupiedPositions.add(new Point(x, 0));
+            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
+        }
+        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y)));
+            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y)));
+            occupiedPositions.add(new Point(0, y));
+            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
+        }
+
+        // Patrón de hielo (Unique Level 4 Pattern)
+        List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel4();
+        for (Point icePos : predeterminedIcePositions) {
+            if (!gameState.getIglu().collidesWith(icePos) && !isPositionOccupied(icePos, occupiedPositions)) {
+                gameState.addIceBlock(new IceBlock(icePos, false));
+                occupiedPositions.add(icePos);
+            }
+        }
+
+        // Agregar baldosas calientes (Muchas, evitando Iglú y bloqueados)
+        // Added (1, 6) and (11, 6) for 8 total
+        List<Point> hotTilePositions = List.of(
+                new Point(3, 3), new Point(9, 3), new Point(3, 9), new Point(9, 9),
+                new Point(6, 2), new Point(6, 10),
+                new Point(1, 6), new Point(11, 6));
+
+        for (Point pos : hotTilePositions) {
+            if (!gameState.getIglu().collidesWith(pos) && !isPositionOccupied(pos, occupiedPositions)) {
+                gameState.addHotTile(new HotTile(pos));
+                occupiedPositions.add(pos);
+            }
+        }
+
+        // Spawn Player 2 if applicable
+        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
+            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
+            gameState.getPlayer2().setPosition(p2Pos);
+            occupiedPositions.add(p2Pos);
+        }
+
+        // Agregar 1 Narval (Exclusivo Nivel 4)
+        Point narvalPos = getRandomFreePosition(random, occupiedPositions);
+        Enemy narval = new Enemy(narvalPos, EnemyType.NARVAL);
+        gameState.addEnemy(narval);
+        occupiedPositions.add(narvalPos);
+
+        // Wave 0: Piñas (Pineapple) only
+        for (int i = 0; i < 16; i++) {
+            Point pinaPos = getRandomFreePosition(random, occupiedPositions);
+            gameState.addFruit(new Fruit(pinaPos, FruitType.PIÑA));
+            occupiedPositions.add(pinaPos);
+        }
+
+        // Wave 1: Cerezas (Cherry)
+        List<Fruit> wave1 = new ArrayList<>();
+        for (int i = 0; i < 16; i++) {
+            Point cerezaPos = getRandomFreePosition(random, occupiedPositions);
+            wave1.add(new Fruit(cerezaPos, FruitType.CEREZA));
+            occupiedPositions.add(cerezaPos);
+        }
+        gameState.addFruitWave(wave1);
+    }
+
     // ==================== PATRONES DE HIELO ====================
 
     /**
@@ -553,6 +637,39 @@ public class GameFacade {
 
         // Centro
         icePositions.add(new Point(6, 6));
+
+        return icePositions;
+    }
+
+    /**
+     * Obtiene las posiciones de hielo predeterminadas para el nivel 4.
+     * Patrón: Diamante / Diagonal.
+     */
+    private List<Point> getPredeterminedIcePositionsLevel4() {
+        List<Point> icePositions = new ArrayList<>();
+
+        // Diagonales desde las esquinas hacia el centro
+        icePositions.add(new Point(2, 2));
+        icePositions.add(new Point(3, 3));
+        icePositions.add(new Point(9, 3));
+        icePositions.add(new Point(10, 2));
+
+        icePositions.add(new Point(2, 10));
+        icePositions.add(new Point(3, 9));
+        icePositions.add(new Point(9, 9));
+        icePositions.add(new Point(10, 10));
+
+        // Bloques centrales rodeando el Iglú
+        icePositions.add(new Point(6, 3));
+        icePositions.add(new Point(6, 9));
+        icePositions.add(new Point(3, 6));
+        icePositions.add(new Point(9, 6));
+
+        // Esquinas internas
+        icePositions.add(new Point(4, 4));
+        icePositions.add(new Point(8, 4));
+        icePositions.add(new Point(4, 8));
+        icePositions.add(new Point(8, 8));
 
         return icePositions;
     }

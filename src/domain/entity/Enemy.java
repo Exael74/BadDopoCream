@@ -28,6 +28,9 @@ public class Enemy extends Entity {
     private int breakIceTimer;
     private static final int BREAK_ICE_DURATION = 500;
 
+    // Animacion de taladrar (solo Narval)
+    private boolean isDrilling;
+
     // Estrategia de movimiento
     private MovementBehavior movementBehavior;
 
@@ -35,7 +38,7 @@ public class Enemy extends Entity {
      * Constructor del enemigo.
      *
      * @param position Posición inicial
-     * @param type Tipo de enemigo
+     * @param type     Tipo de enemigo
      */
     public Enemy(Point position, EnemyType type) {
         super(position);
@@ -49,6 +52,7 @@ public class Enemy extends Entity {
         this.lastPosition = new Point(position);
         this.isBreakingIce = false;
         this.breakIceTimer = 0;
+        this.isDrilling = false;
 
         // Asignar comportamiento según tipo
         assignMovementBehavior();
@@ -113,8 +117,7 @@ public class Enemy extends Entity {
     public void chasePlayer(Point playerPosition) {
         this.targetPosition = new Point(playerPosition);
         this.currentDirection = movementBehavior.calculateDirection(
-                position, playerPosition, stuckCounter, random
-        );
+                position, playerPosition, stuckCounter, random);
     }
 
     /**
@@ -163,14 +166,14 @@ public class Enemy extends Entity {
      * Obtiene una dirección aleatoria (excluyendo IDLE).
      */
     private Direction getRandomDirection() {
-        Direction[] directions = {Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT};
+        Direction[] directions = { Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT };
         return directions[random.nextInt(directions.length)];
     }
 
     // ==================== ACCIONES ====================
 
     /**
-     * Inicia la animación de romper hielo (solo Calamar).
+     * Inicia la animación de romper hielo (solo Calamar/Narval).
      */
     public void startBreakIce() {
         if (type.canBreakIce()) {
@@ -179,13 +182,31 @@ public class Enemy extends Entity {
         }
     }
 
+    public void startDrilling() {
+        if (type == EnemyType.NARVAL) {
+            this.isDrilling = true;
+        }
+    }
+
+    public void stopDrilling() {
+        this.isDrilling = false;
+    }
+
+    public boolean isDrilling() {
+        return isDrilling;
+    }
+
     // ==================== ESTADO ====================
 
     /**
      * Verifica si el enemigo debe moverse según su intervalo.
      */
     public boolean shouldMove() {
-        return moveTimer >= type.getMoveInterval();
+        int interval = type.getMoveInterval();
+        if (isDrilling) {
+            interval = 120; // Fast charge (halved form 60)
+        }
+        return moveTimer >= interval;
     }
 
     /**

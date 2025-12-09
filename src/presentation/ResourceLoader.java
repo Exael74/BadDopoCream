@@ -26,6 +26,7 @@ public class ResourceLoader {
     public Image nivel1Image;
     public Image nivel2Image;
     public Image nivel3Image;
+    public Image nivel4Image;
 
     // Personajes (selección)
     public Image chocolateImage;
@@ -107,10 +108,24 @@ public class ResourceLoader {
     public ImageIcon calamarWalkDownGif;
     public ImageIcon calamarWalkLeftGif;
     public ImageIcon calamarWalkRightGif;
-    public ImageIcon calamarBreakIceUpGif;
-    public ImageIcon calamarBreakIceDownGif;
-    public ImageIcon calamarBreakIceLeftGif;
-    public ImageIcon calamarBreakIceRightGif;
+    public ImageIcon calamarBreakUpGif;
+    public ImageIcon calamarBreakDownGif;
+    public ImageIcon calamarBreakLeftGif;
+    public ImageIcon calamarBreakRightGif;
+
+    // Enemigos - NARVAL
+    public ImageIcon narvalWalkUpGif;
+    public ImageIcon narvalWalkDownGif;
+    public ImageIcon narvalWalkLeftGif;
+    public ImageIcon narvalWalkRightGif;
+    public ImageIcon narvalBreakUpGif;
+    public ImageIcon narvalBreakDownGif;
+    public ImageIcon narvalBreakLeftGif;
+    public ImageIcon narvalBreakRightGif;
+    public ImageIcon narvalDrillUpGif;
+    public ImageIcon narvalDrillDownGif;
+    public ImageIcon narvalDrillLeftGif;
+    public ImageIcon narvalDrillRightGif;
 
     // Hielo
     public Image iceBlockNormalImage;
@@ -153,6 +168,7 @@ public class ResourceLoader {
             nivel1Image = ImageIO.read(new File("Resources/Buttons/Nivel 1.png"));
             nivel2Image = ImageIO.read(new File("Resources/Buttons/nivel 2.png"));
             nivel3Image = ImageIO.read(new File("Resources/Buttons/nivel 3.png"));
+            nivel4Image = ImageIO.read(new File("Resources/Buttons/nivel 4.png"));
 
             chocolateImage = ImageIO
                     .read(new File("Resources/Helados/Chocolate/Gif/chocolate_quieto_abajo animation.gif"));
@@ -258,14 +274,33 @@ public class ResourceLoader {
                     "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_caminando_izquierda animation.gif");
             calamarWalkRightGif = new ImageIcon(
                     "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_caminando_derecha animation.gif");
-            calamarBreakIceUpGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_rompe_hielo_arriba animation.gif");
-            calamarBreakIceDownGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_ropmpe_hielo_abajo animation.gif");
-            calamarBreakIceLeftGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_rompe_hielo_izquierda animation.gif");
-            calamarBreakIceRightGif = new ImageIcon(
-                    "Resources/Enemigos/Calamar/SpriteSheet_Without_Background/calamar_rompe_hielo_derecha animation.gif");
+            calamarBreakUpGif = new ImageIcon(
+                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_arriba.gif");
+            calamarBreakDownGif = new ImageIcon(
+                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_abajo.gif");
+            calamarBreakLeftGif = new ImageIcon(
+                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_izquierda.gif");
+            calamarBreakRightGif = new ImageIcon(
+                    "Resources/Enemigos/Calamar/GIF/Calamar_rompiendoHielo_derecha.gif");
+
+            // NARVAL
+            narvalWalkUpGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_caminando_arriba.gif");
+            narvalWalkDownGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_caminando_abajo.gif");
+            narvalWalkLeftGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_caminando_izquierda.gif");
+            narvalWalkRightGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_caminando_derecha.gif");
+
+            narvalBreakUpGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_rompiendoHielo_arriba.gif");
+            narvalBreakDownGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_rompiendoHielo_abajo.gif");
+            narvalBreakLeftGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_rompiendoHielo_izquierda.gif");
+            narvalBreakRightGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_rompiendoHielo_derecha.gif");
+
+            narvalDrillUpGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_drill_arriba.gif");
+            narvalDrillDownGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_drill_abajo.gif");
+            narvalDrillLeftGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_drill_izquierda.gif"); // Uppercase
+                                                                                                            // 'N'
+                                                                                                            // requested
+                                                                                                            // by User
+            narvalDrillRightGif = new ImageIcon("Resources/Enemigos/Narval/GIF/Narval_drill_derecha.gif");
 
             // HIELO
             iceBlockNormalImage = ImageIO.read(new File("Resources/Hielo/GIF/Screenshot 2025-11-23 005254.png"));
@@ -375,8 +410,54 @@ public class ResourceLoader {
             return getMacetaGif(direction);
         } else if (enemyType.equals("CALAMAR")) {
             return getCalamarGif(direction, isBreakingIce);
+        } else if (enemyType.equals("NARVAL")) {
+            return getNarvalGif(direction, isBreakingIce, false); // Default no drill if called generally
         }
         return trollIdleGif;
+    }
+
+    public ImageIcon getNarvalGif(String direction, boolean isBreakingIce, boolean isDrilling) {
+        if (isDrilling) {
+            switch (direction) {
+                case "UP":
+                    return narvalDrillUpGif;
+                case "DOWN":
+                    return narvalDrillDownGif;
+                case "LEFT":
+                    return narvalDrillLeftGif;
+                case "RIGHT":
+                    return narvalDrillRightGif;
+                default:
+                    return narvalDrillDownGif;
+            }
+        }
+        if (isBreakingIce) {
+            switch (direction) {
+                case "UP":
+                    return narvalBreakUpGif;
+                case "DOWN":
+                    return narvalBreakDownGif;
+                case "LEFT":
+                    return narvalBreakLeftGif;
+                case "RIGHT":
+                    return narvalBreakRightGif;
+                default:
+                    return narvalBreakDownGif;
+            }
+        } else {
+            switch (direction) {
+                case "UP":
+                    return narvalWalkUpGif;
+                case "DOWN":
+                    return narvalWalkDownGif;
+                case "LEFT":
+                    return narvalWalkLeftGif;
+                case "RIGHT":
+                    return narvalWalkRightGif;
+                default:
+                    return narvalWalkDownGif;
+            }
+        }
     }
 
     public ImageIcon getTrollGif(String direction) {
@@ -413,15 +494,15 @@ public class ResourceLoader {
         if (isBreakingIce) {
             switch (direction) {
                 case "UP":
-                    return calamarBreakIceUpGif;
+                    return calamarBreakUpGif;
                 case "DOWN":
-                    return calamarBreakIceDownGif;
+                    return calamarBreakDownGif;
                 case "LEFT":
-                    return calamarBreakIceLeftGif;
+                    return calamarBreakLeftGif;
                 case "RIGHT":
-                    return calamarBreakIceRightGif;
+                    return calamarBreakRightGif;
                 default:
-                    return calamarBreakIceDownGif;
+                    return calamarBreakDownGif;
             }
         } else {
             switch (direction) {

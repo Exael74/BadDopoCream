@@ -31,8 +31,8 @@ public class LevelSelectionPanel extends JPanel {
     }
 
     private void setupLevelButtons() {
-        int startY = 250;
-        int spacing = 100;
+        int startY = 150; // Raised start Y to fit 4 buttons
+        int spacing = 110; // Slightly reduced spacing
 
         if (resources.nivel1Image != null) {
             JLabel nivel1Button = createLevelButton(resources.nivel1Image,
@@ -50,6 +50,12 @@ public class LevelSelectionPanel extends JPanel {
             JLabel nivel3Button = createLevelButton(resources.nivel3Image,
                     (WINDOW_WIDTH - BUTTON_WIDTH) / 2, startY + spacing * 2, 3);
             add(nivel3Button);
+        }
+
+        if (resources.nivel4Image != null) {
+            JLabel nivel4Button = createLevelButton(resources.nivel4Image,
+                    (WINDOW_WIDTH - BUTTON_WIDTH) / 2, startY + spacing * 3, 4);
+            add(nivel4Button);
         }
     }
 
@@ -94,8 +100,10 @@ public class LevelSelectionPanel extends JPanel {
         int backButtonWidthHover = 220;
         int backButtonHeightHover = 110;
 
-        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight, Image.SCALE_SMOOTH);
-        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover, Image.SCALE_SMOOTH);
+        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight,
+                Image.SCALE_SMOOTH);
+        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover,
+                Image.SCALE_SMOOTH);
 
         JLabel backButton = new JLabel(new ImageIcon(normalButton));
         int backX = 30;

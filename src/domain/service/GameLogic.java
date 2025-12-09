@@ -337,10 +337,12 @@ public class GameLogic {
 
         // Logic adapted for PvP: Enemies chase the closest player if applicable
         if (type.shouldChasePlayer()) {
-            if (currentLevel == 2 && type == EnemyType.MACETA) {
+            if (enemy.getType() == EnemyType.MACETA) {
                 processMacetaMovement(enemy, targetPosition);
-            } else if (currentLevel == 3 && type == EnemyType.CALAMAR) {
+            } else if (enemy.getType() == EnemyType.CALAMAR) {
                 processCalamarMovement(enemy, targetPosition);
+            } else if (enemy.getType() == EnemyType.NARVAL) {
+                processNarvalMovement(enemy, targetPosition);
             } else {
                 processDefaultMovement(enemy);
             }
@@ -415,6 +417,159 @@ public class GameLogic {
         } else {
             enemy.changeDirection();
         }
+    }
+
+    /**
+     * Procesa movimiento de Narval (persecución + taladrar/romper hielo).
+     */
+    /**
+     * Procesa movimiento de Narval (Wander + Charge).
+     * Behavior:
+     * 1. If Charging (isDrilling):
+     * - Move forward.
+     * - If Ice -> Break instantly.
+     * - If Wall/Iglu/Border -> Stop Charging.
+     * 2. If Not Charging:
+     * - Check Line of Sight to Player (Horiz/Vert).
+     * - If aligned -> Start Charging in that direction.
+     * - Else -> Random Wander.
+     */
+    private void processNarvalMovement(Enemy narval, Point targetPosition) {
+        // Heartbeat log to confirm method is running
+        // System.out.println("Processing Narval at " + narval.getPosition());
+
+        // 1. Detection (Always active if not drilling)
+        if (!narval.isDrilling()) {
+            // System.out.println("[DEBUG] Checking Narval: " + narval.getPosition() + " vs
+            // Player: " + targetPosition);
+
+            Direction chargeDir = getPlayerDirectionIfSeeing(narval.getPosition(), targetPosition);
+            if (chargeDir != null) {
+                // System.out.println("[NARVAL] Player spotted at " + chargeDir + "! engaging
+                // Drill Mode.");
+                narval.setDirection(chargeDir);
+                narval.startDrilling();
+                // Force immediate movement if we want instant reaction,
+                // but changing to isDrilling will lower the threshold in shouldMove()
+                // causing it to trigger very soon (likely this frame or next).
+            }
+        }
+
+        // 2. Movement Check
+        if (!narval.shouldMove())
+            return;
+
+        // 3. Execution
+        if (narval.isDrilling()) {
+            Point nextPos = narval.getNextPosition();
+
+            // Check bounds/obstacles
+            if (!collisionDetector.isValidPosition(nextPos) ||
+                    collisionDetector.hasIgluAt(nextPos) ||
+                    collisionDetector.hasUnbreakableBlockAt(nextPos)) {
+
+                // Hit wall -> Stop
+                narval.stopDrilling();
+                return; // Stop this turn
+            }
+
+            // Check Ice -> Destroy
+            IceBlock ice = collisionDetector.getIceBlockAt(nextPos);
+            if (ice != null) {
+                ice.startBreaking();
+                // Instant destroy for charge feeling
+                gameState.removeIceBlock(ice);
+                System.out.println("[NARVAL] SMASHED Ice at " + nextPos);
+            }
+
+            // Move
+            narval.move(nextPos);
+            return;
+        }
+
+        // 4. Wander (Only if not drilling)
+        Point nextPos = narval.getNextPosition();
+        if (collisionDetector.isValidPosition(nextPos) &&
+                !collisionDetector.isPositionBlocked(nextPos) &&
+                !collisionDetector.hasEnemyAt(nextPos)) {
+            narval.move(nextPos);
+        } else {
+            narval.changeDirection();
+        }
+    }
+
+    /**
+     * Checks if player is aligned with enemy and visible (no unbreakable walls).
+     * Ice does NOT block vision for Narval.
+     */
+    private Direction getPlayerDirectionIfSeeing(Point enemyPos, Point playerPos) {
+        // Log attempts periodically or just always for now (user says it doesn't print)
+        // System.out.println("[DEBUG] Checking Narval: " + enemyPos + " vs Player: " +
+        // playerPos);
+
+        if (enemyPos.x == playerPos.x) {
+            // System.out.println("[DEBUG] Aligned Vertically! X=" + enemyPos.x);
+            // Vertical Alignment
+            if (enemyPos.y > playerPos.y) {
+                // Player is ABOVE
+                if (isPathClear(enemyPos, playerPos, Direction.UP)) {
+                    // System.out.println("[DEBUG] Seeing Player UP");
+                    return Direction.UP;
+                } else {
+                    // System.out.println("[DEBUG] Path BLOCKED UP");
+                }
+            } else {
+                // Player is BELOW
+                if (isPathClear(enemyPos, playerPos, Direction.DOWN)) {
+                    // System.out.println("[DEBUG] Seeing Player DOWN");
+                    return Direction.DOWN;
+                } else {
+                    // System.out.println("[DEBUG] Path BLOCKED DOWN");
+                }
+            }
+        } else if (enemyPos.y == playerPos.y) {
+            // Horizontal Alignment
+            // System.out.println("[DEBUG] Aligned Horizontally! Y=" + enemyPos.y);
+            if (enemyPos.x > playerPos.x) {
+                // Player is LEFT
+                if (isPathClear(enemyPos, playerPos, Direction.LEFT)) {
+                    // System.out.println("[DEBUG] Seeing Player LEFT");
+                    return Direction.LEFT;
+                } else {
+                    // System.out.println("[DEBUG] Path BLOCKED LEFT");
+                }
+            } else {
+                // Player is RIGHT
+                if (isPathClear(enemyPos, playerPos, Direction.RIGHT)) {
+                    // System.out.println("[DEBUG] Seeing Player RIGHT");
+                    return Direction.RIGHT;
+                } else {
+                    // System.out.println("[DEBUG] Path BLOCKED RIGHT");
+                }
+            }
+        }
+        return null;
+    }
+
+    private boolean isPathClear(Point start, Point end, Direction dir) {
+        Point p = new Point(start);
+        p.x += dir.getDeltaX();
+        p.y += dir.getDeltaY();
+
+        while (!p.equals(end)) {
+            // Check obstacles that block VISION (Unbreakable, Iglu).
+            // Ice does NOT block vision for Narval charge.
+            if (collisionDetector.hasUnbreakableBlockAt(p) || collisionDetector.hasIgluAt(p)) {
+                return false;
+            }
+            p.x += dir.getDeltaX();
+            p.y += dir.getDeltaY();
+
+            // Safety break for infinite loose loop (shouldn't happen on grid)
+            if (!collisionDetector.isValidPosition(p))
+                return false;
+        }
+        return true;
     }
 
     /**

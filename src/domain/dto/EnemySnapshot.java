@@ -11,6 +11,7 @@ public class EnemySnapshot extends EntitySnapshot {
     private String direction;
     private boolean controlledByPlayer;
     private boolean breakingIce;
+    private boolean isDrilling;
 
     /**
      * Constructor privado. Usar Builder.
@@ -22,6 +23,7 @@ public class EnemySnapshot extends EntitySnapshot {
         this.direction = builder.direction;
         this.controlledByPlayer = builder.controlledByPlayer;
         this.breakingIce = builder.breakingIce;
+        this.isDrilling = builder.isDrilling;
         this.id = builder.id;
     }
 
@@ -45,6 +47,7 @@ public class EnemySnapshot extends EntitySnapshot {
                 .direction(enemy.getCurrentDirection().toString())
                 .controlledByPlayer(enemy.isControlledByPlayer())
                 .breakingIce(enemy.isBreakingIce())
+                .isDrilling(enemy.isDrilling())
                 .build();
     }
 
@@ -66,6 +69,10 @@ public class EnemySnapshot extends EntitySnapshot {
         return breakingIce;
     }
 
+    public boolean isDrilling() {
+        return isDrilling;
+    }
+
     // ==================== BUILDER ====================
 
     /**
@@ -78,6 +85,7 @@ public class EnemySnapshot extends EntitySnapshot {
         private String direction;
         private boolean controlledByPlayer;
         private boolean breakingIce;
+        private boolean isDrilling;
         private String id;
 
         public Builder id(String id) {
@@ -112,6 +120,11 @@ public class EnemySnapshot extends EntitySnapshot {
 
         public Builder breakingIce(boolean breakingIce) {
             this.breakingIce = breakingIce;
+            return this;
+        }
+
+        public Builder isDrilling(boolean isDrilling) {
+            this.isDrilling = isDrilling;
             return this;
         }
 

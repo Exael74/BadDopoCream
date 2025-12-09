@@ -197,4 +197,16 @@ public class CollisionDetector {
             }
         }
     }
+
+    /**
+     * Obtiene el bloque de hielo en una posición específica.
+     */
+    public domain.entity.IceBlock getIceBlockAt(Point position) {
+        for (domain.entity.IceBlock ice : gameState.getIceBlocks()) {
+            if (ice.isAt(position)) {
+                return ice;
+            }
+        }
+        return null;
+    }
 }
