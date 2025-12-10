@@ -26,6 +26,9 @@ public class Player extends Entity {
     private int deathTimer;
     private boolean celebrating;
 
+    // AI Type for MvM
+    private AIType aiType;
+
     // Constantes de duración de animaciones
     private static final int SNEEZE_DURATION = 500;
     private static final int KICK_DURATION = 400;
@@ -196,6 +199,14 @@ public class Player extends Entity {
 
     public boolean isAlive() {
         return alive;
+    }
+
+    public void setAIType(AIType aiType) {
+        this.aiType = aiType;
+    }
+
+    public AIType getAIType() {
+        return aiType;
     }
 
     public String getCharacterType() {

@@ -14,6 +14,7 @@ public class CharacterSelectionPanel extends JPanel {
     private FontLoader fontLoader;
     private int selectedLevel;
     private int numberOfPlayers;
+    private boolean isP2CPU; // New flag
 
     private String hoveredCharacter = null;
 
@@ -46,10 +47,40 @@ public class CharacterSelectionPanel extends JPanel {
     private ImageIcon victoryGif = null;
     private Rectangle victoryArea = null;
 
-    public CharacterSelectionPanel(int selectedLevel, int numberOfPlayers, ResourceLoader resources) {
+    // AI Types for MvM
+    private domain.entity.AIType aiTypeP1 = null;
+    private domain.entity.AIType aiTypeP2 = null;
+
+    private domain.entity.AIType selectAIType(String playerName) {
+        String[] options = { "Hambriento (Frutas)", "Miedoso (Seguro)", "Experto (Balanceado)" };
+        int choice = JOptionPane.showOptionDialog(this,
+                "Selecciona la personalidad de " + playerName + ":",
+                "Personalidad IA",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[2]); // Default to Expert
+
+        switch (choice) {
+            case 0:
+                return domain.entity.AIType.HUNGRY;
+            case 1:
+                return domain.entity.AIType.FEARFUL;
+            case 2:
+                return domain.entity.AIType.EXPERT;
+            default:
+                return domain.entity.AIType.EXPERT;
+        }
+    }
+
+    // ... (fields)
+
+    public CharacterSelectionPanel(int selectedLevel, int numberOfPlayers, ResourceLoader resources, boolean isP2CPU) {
         this.selectedLevel = selectedLevel;
         this.numberOfPlayers = numberOfPlayers;
         this.resources = resources;
+        this.isP2CPU = isP2CPU;
         this.fontLoader = FontLoader.getInstance();
 
         setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
@@ -177,14 +208,28 @@ public class CharacterSelectionPanel extends JPanel {
                         p1Name = inputName.trim();
                     }
 
+                    // For MvM, select AI Type for P1
+                    if (numberOfPlayers == 0) {
+                        aiTypeP1 = selectAIType("Máquina 1");
+                    }
+
                     isSelectingP2 = true;
                     repaint();
                 }
             } else {
                 // P2 selection
-                String title = (numberOfPlayers == 0) ? "Confirmar Máquina 2" : "Confirmar Jugador 2";
-                String msg = (numberOfPlayers == 0) ? "Máquina 2: ¿Elegir a " + character + "?"
-                        : "Jugador 2: ¿Elegir a " + character + "?";
+                String title;
+                String msg;
+                if (numberOfPlayers == 0) {
+                    title = "Confirmar Máquina 2";
+                    msg = "Máquina 2: ¿Elegir a " + character + "?";
+                } else if (isP2CPU) {
+                    title = "Confirmar Máquina (P2)";
+                    msg = "Máquina (P2): ¿Elegir a " + character + "?";
+                } else {
+                    title = "Confirmar Jugador 2";
+                    msg = "Jugador 2: ¿Elegir a " + character + "?";
+                }
 
                 int response = JOptionPane.showConfirmDialog(
                         this,
@@ -196,11 +241,16 @@ public class CharacterSelectionPanel extends JPanel {
                 if (response == JOptionPane.YES_OPTION) {
                     selectedCharacterP2 = character;
 
-                    // Ask for name if Machine vs Machine OR PvP
-                    String defaultName = (numberOfPlayers == 0) ? "Máquina 2" : "Jugador 2";
+                    // Ask for name
+                    String defaultName = (numberOfPlayers == 0 || isP2CPU) ? "Máquina 2" : "Jugador 2";
                     String inputName = JOptionPane.showInputDialog(this, "Nombre para " + defaultName + ":", "P2");
                     if (inputName != null && !inputName.trim().isEmpty()) {
                         p2Name = inputName.trim();
+                    }
+
+                    // For MvM OR P1 vs Machine, select AI Type for P2
+                    if (numberOfPlayers == 0 || isP2CPU) {
+                        aiTypeP2 = selectAIType((isP2CPU) ? "Máquina (P2)" : "Máquina 2");
                     }
 
                     showVictoryAnimation(character); // Show victory for P2's choice then start
@@ -327,7 +377,8 @@ public class CharacterSelectionPanel extends JPanel {
             String p2Char = (numberOfPlayers == 2 || numberOfPlayers == 0) ? selectedCharacterP2 : null;
 
             // Note: We need to update GameWindow constructor to accept p2Char and names
-            new GameWindow(selectedCharacterP1, p2Char, p1Name, p2Name, selectedLevel, numberOfPlayers, resources);
+            new GameWindow(selectedCharacterP1, p2Char, p1Name, p2Name, selectedLevel, numberOfPlayers, resources,
+                    aiTypeP1, aiTypeP2, isP2CPU);
         }
     }
 
@@ -339,7 +390,7 @@ public class CharacterSelectionPanel extends JPanel {
             JFrame frame = (JFrame) window;
             frame.getContentPane().removeAll();
 
-            LevelSelectionPanel levelPanel = new LevelSelectionPanel(numberOfPlayers, resources);
+            LevelSelectionPanel levelPanel = new LevelSelectionPanel(numberOfPlayers, resources, isP2CPU);
             frame.add(levelPanel);
             frame.revalidate();
             frame.repaint();

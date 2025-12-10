@@ -12,7 +12,8 @@ public class GameWindow extends JFrame {
     private GamePanel gamePanel;
 
     public GameWindow(String character, String characterP2, String p1Name, String p2Name, int level,
-            int numberOfPlayers, ResourceLoader resources) {
+            int numberOfPlayers, ResourceLoader resources, domain.entity.AIType aiTypeP1,
+            domain.entity.AIType aiTypeP2, boolean isP2CPU) {
         setTitle("BAD DOPO CREAM - Nivel " + level);
         setSize(WINDOW_WIDTH, WINDOW_HEIGHT);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -20,7 +21,8 @@ public class GameWindow extends JFrame {
         setResizable(false);
 
         // Crear el panel del juego pasando los recursos y ambos personajes
-        gamePanel = new GamePanel(character, characterP2, p1Name, p2Name, level, numberOfPlayers, resources);
+        gamePanel = new GamePanel(character, characterP2, p1Name, p2Name, level, numberOfPlayers, resources, aiTypeP1,
+                aiTypeP2, isP2CPU);
         add(gamePanel);
 
         // Asegurar que el panel tenga el foco para capturar teclas

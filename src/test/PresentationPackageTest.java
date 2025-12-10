@@ -2,8 +2,10 @@ package test;
 
 import presentation.*;
 import domain.*;
+import domain.entity.AIType;
 import org.junit.Test;
 import java.awt.Point;
+import java.awt.Font;
 import javax.swing.*;
 import static org.junit.Assert.*;
 
@@ -35,10 +37,63 @@ public class PresentationPackageTest {
     public void testGamePanelInitializationTwoPlayers() throws Exception {
         ResourceLoader rl = new ResourceLoader();
         // Use signature (character, characterP2, p1Name, p2Name, level,
-        // numberOfPlayers, resources)
-        GamePanel gp = new GamePanel("Chocolate", "Vainilla", "P1", "P2", 1, 2, rl);
+        // numberOfPlayers, resources, aiTypeP1, aiTypeP2, isP2CPU)
+        GamePanel gp = new GamePanel("Chocolate", "Vainilla", "P1", "P2", 1, 2, rl, null, null, false);
         assertNotNull(gp);
         gp.cleanup();
+    }
+
+    // ...
+
+    @Test
+    public void testGameWindowConstruction() {
+        ResourceLoader rl = new ResourceLoader();
+        GameWindow gw = new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl, null, null, false);
+        assertNotNull(gw);
+        gw.dispose();
+    }
+
+    // ...
+
+    @Test
+    public void testPresentationClassesInstantiation() {
+        ResourceLoader rl = new ResourceLoader();
+        WelcomeScreen ws = new WelcomeScreen();
+        ws.dispose();
+        new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl, null, null, false).dispose();
+    }
+
+    @Test
+    public void testPanelsDisposeOk() {
+        WelcomeScreen ws = new WelcomeScreen();
+        ws.dispose();
+        ResourceLoader rl = new ResourceLoader();
+        GameWindow gw = new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl, null, null, false);
+        gw.dispose();
+    }
+
+    @Test
+    public void testGamePanelPvPMode() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp = new GamePanel("Chocolate", "Fresa", "Player 1", "Player 2", 1, 2, rl, null, null, false);
+        assertNotNull(gp);
+        gp.cleanup();
+    }
+
+    @Test
+    public void testGamePanelMachineModeInitialization() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp = new GamePanel("Chocolate", "Vainilla", "Machine 1", "Machine 2", 1, 0, rl, null, null, true);
+        assertNotNull(gp);
+        gp.cleanup();
+    }
+
+    @Test
+    public void testGameWindowPvPMode() {
+        ResourceLoader rl = new ResourceLoader();
+        GameWindow gw = new GameWindow("Chocolate", "Fresa", "P1", "P2", 1, 2, rl, null, null, false);
+        assertNotNull(gw);
+        gw.dispose();
     }
 
     @Test
@@ -80,19 +135,28 @@ public class PresentationPackageTest {
     }
 
     @Test
-    public void testGameWindowConstruction() {
+    public void testLevelSelectionAndCharacterPanels() {
         ResourceLoader rl = new ResourceLoader();
-        GameWindow gw = new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl);
-        assertNotNull(gw);
-        gw.dispose();
+        LevelSelectionPanel lp = new LevelSelectionPanel(1, rl, false);
+        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 1, rl, false);
+        assertNotNull(lp);
+        assertNotNull(cp);
+    }
+
+    // ...
+
+    @Test
+    public void testCharacterSelectionPanelTwoPlayers() {
+        ResourceLoader rl = new ResourceLoader();
+        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 2, rl, false);
+        assertNotNull(cp);
     }
 
     @Test
-    public void testLevelSelectionAndCharacterPanels() {
+    public void testCharacterSelectionPanelMachineMode() {
         ResourceLoader rl = new ResourceLoader();
-        LevelSelectionPanel lp = new LevelSelectionPanel(1, rl);
-        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 1, rl);
-        assertNotNull(lp);
+        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 0, rl, true); // MVM implies CPU but
+                                                                                  // numberOfPlayers=0 is specific
         assertNotNull(cp);
     }
 
@@ -129,23 +193,6 @@ public class PresentationPackageTest {
         } finally {
             gp.cleanup();
         }
-    }
-
-    @Test
-    public void testPresentationClassesInstantiation() {
-        ResourceLoader rl = new ResourceLoader();
-        WelcomeScreen ws = new WelcomeScreen();
-        ws.dispose();
-        new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl).dispose();
-    }
-
-    @Test
-    public void testPanelsDisposeOk() {
-        WelcomeScreen ws = new WelcomeScreen();
-        ws.dispose();
-        ResourceLoader rl = new ResourceLoader();
-        GameWindow gw = new GameWindow("Chocolate", null, "P1", "P2", 1, 1, rl);
-        gw.dispose();
     }
 
     // Bulk simple assertions to increase test count
@@ -270,49 +317,10 @@ public class PresentationPackageTest {
     }
 
     @Test
-    public void testGamePanelPvPMode() {
-        ResourceLoader rl = new ResourceLoader();
-        GamePanel gp = new GamePanel("Chocolate", "Fresa", "Player 1", "Player 2", 1, 2, rl);
-        assertNotNull(gp);
-        gp.cleanup();
-    }
-
-    @Test
-    public void testGamePanelMachineModeInitialization() {
-        ResourceLoader rl = new ResourceLoader();
-        GamePanel gp = new GamePanel("Chocolate", "Vainilla", "Machine 1", "Machine 2", 1, 0, rl);
-        assertNotNull(gp);
-        gp.cleanup();
-    }
-
-    @Test
-    public void testGameWindowPvPMode() {
-        ResourceLoader rl = new ResourceLoader();
-        GameWindow gw = new GameWindow("Chocolate", "Fresa", "P1", "P2", 1, 2, rl);
-        assertNotNull(gw);
-        gw.dispose();
-    }
-
-    @Test
     public void testGameWindowMachineMode() {
         ResourceLoader rl = new ResourceLoader();
-        GameWindow gw = new GameWindow("Chocolate", "Vainilla", "M1", "M2", 1, 0, rl);
+        GameWindow gw = new GameWindow("Chocolate", "Vainilla", "M1", "M2", 1, 0, rl, null, null, true);
         assertNotNull(gw);
         gw.dispose();
     }
-
-    @Test
-    public void testCharacterSelectionPanelTwoPlayers() {
-        ResourceLoader rl = new ResourceLoader();
-        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 2, rl);
-        assertNotNull(cp);
-    }
-
-    @Test
-    public void testCharacterSelectionPanelMachineMode() {
-        ResourceLoader rl = new ResourceLoader();
-        CharacterSelectionPanel cp = new CharacterSelectionPanel(1, 0, rl);
-        assertNotNull(cp);
-    }
-
 }

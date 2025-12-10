@@ -108,6 +108,11 @@ public class GamePanel extends JPanel {
     private Rectangle summaryRestartButton, summaryMenuButton, summaryNextLevelButton;
     private boolean isVictory = false;
 
+    // AI Types
+    private domain.entity.AIType aiTypeP1;
+    private domain.entity.AIType aiTypeP2;
+    private boolean isP2CPU;
+
     /**
      * Constructor del panel de juego.
      *
@@ -120,13 +125,18 @@ public class GamePanel extends JPanel {
      * @param resources       Recursos cargados
      */
     public GamePanel(String character, String characterP2, String p1Name, String p2Name, int level, int numberOfPlayers,
-            ResourceLoader resources) {
+            ResourceLoader resources, domain.entity.AIType aiTypeP1, domain.entity.AIType aiTypeP2, boolean isP2CPU) {
         this.resources = resources;
         this.fontLoader = FontLoader.getInstance();
         this.selectedCharacter = character;
         this.currentLevel = level;
         this.numberOfPlayers = numberOfPlayers;
-        this.gameFacade = new GameFacade(character, characterP2, p1Name, p2Name, level, numberOfPlayers);
+        this.aiTypeP1 = aiTypeP1;
+        this.aiTypeP2 = aiTypeP2;
+        this.isP2CPU = isP2CPU;
+        // Pass isP2CPU to GameFacade
+        this.gameFacade = new GameFacade(character, characterP2, p1Name, p2Name, level, numberOfPlayers, aiTypeP1,
+                aiTypeP2, isP2CPU);
 
         this.pressedKeys = new HashSet<>();
         this.spaceWasPressed = false;
@@ -176,9 +186,8 @@ public class GamePanel extends JPanel {
         startTimers();
     }
 
-    // Constructor for backwards compatibility (if needed)
     public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
-        this(character, null, "P1", "P2", level, numberOfPlayers, resources);
+        this(character, null, "P1", "P2", level, numberOfPlayers, resources, null, null, false);
     }
 
     // ==================== CONFIGURACIÓN DE LISTENERS ====================
@@ -286,7 +295,11 @@ public class GamePanel extends JPanel {
         } else {
             processHumanPlayerMovement();
             if (numberOfPlayers == 2) {
-                processHumanPlayer2Movement();
+                if (isP2CPU) {
+                    updatePlayer2Animation();
+                } else {
+                    processHumanPlayer2Movement();
+                }
             }
         }
     }
@@ -382,8 +395,10 @@ public class GamePanel extends JPanel {
             float deltaX = targetPixelX - player2CurrentPixelX;
             float deltaY = targetPixelY - player2CurrentPixelY;
 
-            // En MvM (0 players) usar velocidad suave, en PvP usar velocidad rápida
-            int speed = (numberOfPlayers == 0) ? SMOOTH_ANIMATION_SPEED : PLAYER_ANIMATION_SPEED;
+            // En MvM (0 players) O P1 vs CPU usar velocidad suave, en PvP usar velocidad
+            // rápida
+            int speed = (numberOfPlayers == 0 || (numberOfPlayers == 2 && isP2CPU)) ? SMOOTH_ANIMATION_SPEED
+                    : PLAYER_ANIMATION_SPEED;
 
             if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
                 player2CurrentPixelX = targetPixelX;
@@ -1493,7 +1508,7 @@ public class GamePanel extends JPanel {
                         : "P2";
 
                 GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, p1Name, p2Name, targetLevel,
-                        numberOfPlayers, resources);
+                        numberOfPlayers, resources, aiTypeP1, aiTypeP2, isP2CPU);
                 frame.add(newGamePanel);
                 frame.revalidate();
                 frame.repaint();

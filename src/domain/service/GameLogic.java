@@ -30,10 +30,11 @@ public class GameLogic {
         this.collisionDetector = new CollisionDetector(gameState);
         this.random = new Random();
 
-        // Crear AIController solo en modo Machine vs Machine
-        if (gameState.getNumberOfPlayers() == 0) {
+        // Crear AIController solo en modo Machine vs Machine O Player vs Machine
+        if (gameState.getNumberOfPlayers() == 0
+                || (gameState.getNumberOfPlayers() == 2 && gameState.isP2CPU())) {
             this.aiController = new AIController(gameState, this);
-            System.out.println("✓ AIController inicializado para modo Machine vs Machine");
+            System.out.println("✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)");
         }
     }
 
@@ -140,11 +141,11 @@ public class GameLogic {
             return;
         }
 
-        // Check for hot tile collision - kills player
-        if (isHotTile(player.getPosition())) {
-            player.die();
-            return;
-        }
+        // Check for hot tile collision - kills player -> REMOVED per user request
+        // if (isHotTile(player.getPosition())) {
+        // player.die();
+        // return;
+        // }
 
         // IMPROVED: Check fruit collision immediately after player lands on tile
         // This ensures collection happens BEFORE fruits have a chance to move away
@@ -200,11 +201,14 @@ public class GameLogic {
 
             // Cannot place ice on hot tiles
             if (isHotTile(current)) {
-                break;
+                // "Melt immediately": Do not add block, but CONTINUE the stream
+                // Logically the ice passes over and melts, so valid spaces beyond are still
+                // filled.
+                // We just do nothing here.
+            } else {
+                gameState.addIceBlock(new IceBlock(current));
+                icePositions.add(new Point(current));
             }
-
-            gameState.addIceBlock(new IceBlock(current));
-            icePositions.add(new Point(current));
 
             current.x += direction.getDeltaX();
             current.y += direction.getDeltaY();
@@ -770,7 +774,7 @@ public class GameLogic {
 
             // Check if ANY player has finished dying (now dead)
             // If death animation finished, trigger Game Over logic
-            boolean p1Dead = !player.isAlive() && !player.isDying();
+            boolean p1Dead = (player != null) && !player.isAlive() && !player.isDying();
             boolean p2Dead = (player2 != null) && !player2.isAlive() && !player2.isDying();
 
             boolean shouldEndGame;

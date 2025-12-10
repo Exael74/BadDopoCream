@@ -69,15 +69,21 @@ public class AIController {
      * Actualiza la IA de ambos jugadores.
      */
     public void updateAI(int deltaTime) {
-        updateAIPlayer1(deltaTime);
-        updateAIPlayer2(deltaTime);
+        // En MvM (0 players) actualizamos ambos.
+        // En P1 vs CPU (2 players + p2CPU) solo actualizamos P2 (P1 es humano).
+        if (gameState.getNumberOfPlayers() == 0) {
+            updateAIPlayer1(deltaTime);
+            updateAIPlayer2(deltaTime);
+        } else if (gameState.getNumberOfPlayers() == 2 && gameState.isP2CPU()) {
+            updateAIPlayer2(deltaTime);
+        }
     }
 
     // ==================== IA - JUGADOR 1 ====================
 
     private void updateAIPlayer1(int deltaTime) {
         Player player = gameState.getPlayer();
-        if (!player.isAlive() || player.isDying())
+        if (player == null || !player.isAlive() || player.isDying())
             return;
 
         aiPlayer1MoveTimer += deltaTime;
@@ -170,59 +176,156 @@ public class AIController {
             return;
         }
 
-        // Estrategia general: Evitar enemigos y buscar frutas
-        processGeneralStrategy(player, isPlayer1, failedMoves);
+        // Strategy switching based on AI Type
+        AIType type = player.getAIType();
+        if (type == null) {
+            type = AIType.EXPERT; // Default
+        }
+
+        switch (type) {
+            case HUNGRY:
+                processHungryStrategy(player, isPlayer1, failedMoves);
+                break;
+            case FEARFUL:
+                processFearfulStrategy(player, isPlayer1, failedMoves);
+                break;
+            case EXPERT:
+            default:
+                processExpertStrategy(player, isPlayer1, failedMoves);
+                break;
+        }
     }
 
-    private void processGeneralStrategy(Player player, boolean isPlayer1, int failedMoves) {
+    private void processHungryStrategy(Player player, boolean isPlayer1, int failedMoves) {
+        // HUNGRY: Únicamente va por las frutas, ignorando enemigos completamente
+        Point playerPos = player.getPosition();
+
+        Fruit closestFruit = findClosestFruit(playerPos);
+        if (closestFruit != null) {
+            moveToTarget(playerPos, closestFruit.getPosition(), isPlayer1, failedMoves);
+        } else {
+            moveRandomly(isPlayer1);
+        }
+    }
+
+    private void processFearfulStrategy(Player player, boolean isPlayer1, int failedMoves) {
+        // FEARFUL: Prioritize Safety > Fruit.
         Point playerPos = player.getPosition();
         Enemy nearestEnemy = findNearestEnemy(playerPos);
 
-        // 1. Evitar enemigos cercanos
         if (nearestEnemy != null) {
-            int distance = manhattanDistance(playerPos, nearestEnemy.getPosition());
-            if (distance <= 3) {
+            int dist = manhattanDistance(playerPos, nearestEnemy.getPosition());
+
+            // Si el enemigo está MUY cerca, CORRER (prioridad sobre estornudar)
+            if (dist <= 3) {
                 moveAwayFrom(playerPos, nearestEnemy.getPosition(), isPlayer1);
+            }
+            // Si está a media distancia, intentar alejarse, pero processAIPlayerActions
+            // intentará estornudar si es posible
+            else if (dist <= 6) {
+                moveAwayFrom(playerPos, nearestEnemy.getPosition(), isPlayer1);
+            } else {
+                moveRandomly(isPlayer1);
+            }
+        } else {
+            moveRandomly(isPlayer1);
+        }
+    }
+
+    private void processExpertStrategy(Player player, boolean isPlayer1, int failedMoves) {
+        // EXPERT: Pathfinding inteligente que esquiva enemigos.
+        Point playerPos = player.getPosition();
+        Enemy nearestEnemy = findNearestEnemy(playerPos);
+
+        // 1. Supervivencia Inmediata: Si hay un enemigo pegado (distancia <= 2), huir
+        // usando lógica de evasión directa
+        if (nearestEnemy != null && manhattanDistance(playerPos, nearestEnemy.getPosition()) <= 2) {
+            moveAwayFrom(playerPos, nearestEnemy.getPosition(), isPlayer1);
+            return;
+        }
+
+        // 2. Buscar fruta usando Pathfinding (BFS) CON EVASIÓN DE ENEMIGOS
+        Fruit targetFruit = findBestFruitBFS(playerPos, true); // true = avoid enemies
+
+        if (targetFruit != null) {
+            Point nextStep = getNextStepBFS(playerPos, targetFruit.getPosition(), true);
+            if (nextStep != null) {
+                moveToStep(playerPos, nextStep, isPlayer1);
                 return;
             }
         }
 
-        // 2. Buscar fruta más cercana
-        Fruit closestFruit = findClosestFruit(playerPos);
-        if (closestFruit != null) {
-            Point target = closestFruit.getPosition();
-            if (isPlayer1)
-                aiPlayer1Target = target;
-            else
-                aiPlayer2Target = target;
+        // 3. Fallback: moverse random (que suele ser evasivo si se bloquea)
+        moveRandomly(isPlayer1);
+    }
 
-            if (failedMoves > 2) {
-                moveAlternative(playerPos, target, isPlayer1);
-            } else {
-                moveTowards(playerPos, target, isPlayer1);
-            }
+    // Movimiento directo a un paso adyacente (calculado por BFS)
+    private void moveToStep(Point current, Point nextInfo, boolean isPlayer1) {
+        int dx = nextInfo.x - current.x;
+        int dy = nextInfo.y - current.y;
+        Direction direction = null;
+
+        if (dx == 1)
+            direction = Direction.RIGHT;
+        else if (dx == -1)
+            direction = Direction.LEFT;
+        else if (dy == 1)
+            direction = Direction.DOWN;
+        else if (dy == -1)
+            direction = Direction.UP;
+
+        if (direction != null) {
+            executeMove(direction, isPlayer1);
+        }
+    }
+
+    private void moveToTarget(Point playerPos, Point target, boolean isPlayer1, int failedMoves) {
+        if (isPlayer1)
+            aiPlayer1Target = target;
+        else
+            aiPlayer2Target = target;
+
+        if (failedMoves > 2) {
+            moveAlternative(playerPos, target, isPlayer1);
         } else {
-            // No hay frutas, moverse aleatoriamente
-            moveRandomly(isPlayer1);
+            moveTowards(playerPos, target, isPlayer1);
         }
     }
 
     private void processAIPlayerActions(Player player, boolean isPlayer1) {
         Point playerPos = player.getPosition();
         Point target = isPlayer1 ? aiPlayer1Target : aiPlayer2Target;
+        AIType type = player.getAIType();
+        if (type == null)
+            type = AIType.EXPERT;
 
+        // FEARFUL: Solo estornuda si NO está corriendo por su vida (distancia > 2)
+        if (type == AIType.FEARFUL) {
+            Enemy enemy = findNearestEnemy(playerPos);
+            if (enemy != null) {
+                int dist = manhattanDistance(playerPos, enemy.getPosition());
+                // Solo estornudar si no estamos en pánico total
+                if (dist > 2 && dist <= 5 && shouldCreateIceFearful(player, enemy.getPosition())) {
+                    if (isPlayer1)
+                        gameLogic.performIceSneeze(player);
+                    else
+                        gameLogic.performIceSneeze(player);
+                    return;
+                }
+            }
+            return;
+        }
+
+        // EXPERT & HUNGRY Handling
         if (target == null)
             return;
 
-        // Decidir si romper hielo
         if (shouldBreakIce(player, target)) {
             if (isPlayer1)
                 gameLogic.performIceKick(player);
             else
-                gameLogic.performIceKick(player); // GameLogic supports passing player
-        }
-        // Decidir si crear hielo (defensivo)
-        else if (shouldCreateIce(player)) {
+                gameLogic.performIceKick(player);
+        } else if (type == AIType.EXPERT && shouldCreateIce(player)) {
             if (isPlayer1)
                 gameLogic.performIceSneeze(player);
             else
@@ -253,16 +356,28 @@ public class AIController {
     }
 
     private void moveAwayFrom(Point from, Point dangerPos, boolean isPlayer1) {
-        int dx = from.x - dangerPos.x;
-        int dy = from.y - dangerPos.y;
+        // Mejorada: Evaluar los 4 movimientos posibles y elegir el que más aleja
+        Direction bestDir = null;
+        int maxDist = -1;
 
-        Direction direction;
-        if (Math.abs(dx) > Math.abs(dy)) {
-            direction = (dx > 0) ? Direction.RIGHT : Direction.LEFT;
-        } else {
-            direction = (dy > 0) ? Direction.DOWN : Direction.UP;
+        for (Direction dir : Direction.values()) {
+            Point next = new Point(from.x + dir.getDeltaX(), from.y + dir.getDeltaY());
+
+            if (isValidMove(next)) {
+                int dist = manhattanDistance(next, dangerPos); // Distancia futura
+                if (dist > maxDist) {
+                    maxDist = dist;
+                    bestDir = dir;
+                }
+            }
         }
-        executeMove(direction, isPlayer1);
+
+        if (bestDir != null) {
+            executeMove(bestDir, isPlayer1);
+        } else {
+            // Si no hay escape, intentar moverse random (mejor que nada)
+            moveRandomly(isPlayer1);
+        }
     }
 
     private void moveAlternative(Point from, Point to, boolean isPlayer1) {
@@ -281,20 +396,139 @@ public class AIController {
 
     // ==================== UTILIDADES ====================
 
+    // BFS Simple con opción de evitar enemigos
+    private Fruit findBestFruitBFS(Point start, boolean avoidEnemies) {
+        Queue<Point> queue = new LinkedList<>();
+        queue.add(start);
+        Set<Point> visited = new HashSet<>();
+        visited.add(start);
+
+        while (!queue.isEmpty()) {
+            Point current = queue.poll();
+
+            // Encontró fruta
+            for (Fruit f : gameState.getFruits()) {
+                if (!f.isCollected() && f.getPosition().equals(current)) {
+                    if (f.isLethal())
+                        continue;
+                    return f; // Primera fruta encontrada es la más cercana accesible
+                }
+            }
+
+            for (Direction dir : Direction.values()) {
+                Point next = new Point(current.x + dir.getDeltaX(), current.y + dir.getDeltaY());
+                if (isValidMove(next) && !visited.contains(next)) {
+                    if (avoidEnemies && !isSafeFromEnemies(next)) {
+                        continue; // Saltar casillas peligrosas
+                    }
+                    visited.add(next);
+                    queue.add(next);
+                }
+            }
+        }
+        return null;
+    }
+
+    private Point getNextStepBFS(Point start, Point target, boolean avoidEnemies) {
+        Queue<Point> queue = new LinkedList<>();
+        queue.add(start);
+        Map<Point, Point> parents = new HashMap<>();
+        parents.put(start, null);
+
+        boolean found = false;
+
+        while (!queue.isEmpty()) {
+            Point current = queue.poll();
+            if (current.equals(target)) {
+                found = true;
+                break;
+            }
+
+            for (Direction dir : Direction.values()) {
+                Point next = new Point(current.x + dir.getDeltaX(), current.y + dir.getDeltaY());
+                if (isValidMove(next) && !parents.containsKey(next)) {
+                    if (avoidEnemies && !isSafeFromEnemies(next)) {
+                        continue;
+                    }
+                    parents.put(next, current);
+                    queue.add(next);
+                }
+            }
+        }
+
+        if (found) {
+            Point step = target;
+            while (parents.get(step) != null && !parents.get(step).equals(start)) {
+                step = parents.get(step);
+            }
+            return step;
+        }
+        return null;
+    }
+
+    // Check if position is safe (not adjacent to any enemy)
+    private boolean isSafeFromEnemies(Point p) {
+        for (Enemy e : gameState.getEnemies()) {
+            if (!e.isActive())
+                continue;
+            // Si la distancia es <= 2, es peligroso (el enemigo puede moverse y alcanzarnos
+            // rápido)
+            if (manhattanDistance(p, e.getPosition()) <= 2) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean isValidMove(Point p) {
+        if (p.x < 0 || p.x >= GameState.getGridSize() || p.y < 0 || p.y >= GameState.getGridSize())
+            return false;
+
+        if (gameState.getIglu() != null) {
+            Iglu iglu = gameState.getIglu();
+            Point igluPos = iglu.getPosition();
+            // 3x3 hardcoded check as fallback
+            if (p.x >= igluPos.x && p.x < igluPos.x + 3 &&
+                    p.y >= igluPos.y && p.y < igluPos.y + 3) {
+                return false;
+            }
+        }
+
+        for (UnbreakableBlock b : gameState.getUnbreakableBlocks()) {
+            if (b.getPosition().equals(p))
+                return false;
+        }
+
+        if (hasIceAt(p))
+            return false;
+        return true;
+    }
+
     private boolean shouldBreakIce(Player player, Point target) {
         Direction dir = player.getFacingDirection();
         Point checkPos = new Point(
                 player.getPosition().x + dir.getDeltaX(),
                 player.getPosition().y + dir.getDeltaY());
-        // Simplificación: si hay hielo enfrente y nos acerca al objetivo
         return hasIceAt(checkPos);
     }
 
+    private boolean shouldCreateIceFearful(Player player, Point enemyPos) {
+        Direction dir = player.getFacingDirection();
+        Point checkPos = new Point(
+                player.getPosition().x + dir.getDeltaX(),
+                player.getPosition().y + dir.getDeltaY());
+        return isValidMove(checkPos) && !hasIceAt(checkPos);
+    }
+
     private boolean shouldCreateIce(Player player) {
-        // Crear hielo si hay un enemigo cerca en línea recta (simplificado)
         Enemy enemy = findNearestEnemy(player.getPosition());
-        if (enemy != null && manhattanDistance(player.getPosition(), enemy.getPosition()) < 4) {
-            return true;
+        // Solo crear hielo si el enemigo no está DEMASIADO cerca (riesgo de
+        // auto-bloqueo)
+        // Y está lo suficientemente cerca para ser amenaza
+        if (enemy != null) {
+            int d = manhattanDistance(player.getPosition(), enemy.getPosition());
+            if (d > 2 && d < 5)
+                return true;
         }
         return false;
     }
@@ -315,7 +549,7 @@ public class AIController {
         Fruit closest = null;
         int minDist = Integer.MAX_VALUE;
         for (Fruit f : gameState.getFruits()) {
-            if (!f.isCollected()) {
+            if (!f.isCollected() && !f.isLethal()) {
                 int d = manhattanDistance(from, f.getPosition());
                 if (d < minDist) {
                     minDist = d;
@@ -352,4 +586,5 @@ public class AIController {
         }
         return false;
     }
+
 }

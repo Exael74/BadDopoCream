@@ -20,6 +20,8 @@ public class ResourceLoader {
     public Image onePlayerImage;
     public Image twoPlayerImage;
     public Image machineVsMachineImage;
+    public Image p1VsP2Image; // New
+    public Image p1VsMachineImage; // New
     public Image optionsImage;
     public Image backImage;
 
@@ -197,6 +199,8 @@ public class ResourceLoader {
             onePlayerImage = ImageIO.read(new File("Resources/Buttons/1 Player.png"));
             twoPlayerImage = ImageIO.read(new File("Resources/Buttons/2 Player.png"));
             machineVsMachineImage = ImageIO.read(new File("Resources/Buttons/Machine vs Machine.png"));
+            p1VsP2Image = ImageIO.read(new File("Resources/Buttons/Player 1 vs Player 2.png"));
+            p1VsMachineImage = ImageIO.read(new File("Resources/Buttons/Player 1 vs Machine.png"));
             optionsImage = ImageIO.read(new File("Resources/Buttons/Options.png"));
             backImage = ImageIO.read(new File("Resources/Buttons/Back.png"));
 

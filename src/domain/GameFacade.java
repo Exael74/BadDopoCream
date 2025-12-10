@@ -32,14 +32,31 @@ public class GameFacade {
      * @param numberOfPlayers Número de jugadores (0=IA vs IA, 1=1P, 2=2P)
      */
     public GameFacade(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
-            int numberOfPlayers) {
+            int numberOfPlayers, AIType aiTypeP1, AIType aiTypeP2, boolean isP2CPU) {
         this.gameState = new GameState(characterType, level, numberOfPlayers);
+        this.gameState.setP2CPU(isP2CPU);
 
         // Set Player 2 character type if applicable
         if (gameState.getPlayer2() != null && characterTypeP2 != null) {
             Point pos = gameState.getPlayer2().getPosition();
             Player p2 = new Player(pos, characterTypeP2);
             gameState.setPlayer2(p2);
+        }
+
+        // Set AI Types for MvM (0 players) OR P1 vs Machine (2 players + isP2CPU)
+        if (numberOfPlayers == 0) {
+            // Machine vs Machine
+            if (gameState.getPlayer() != null)
+                gameState.getPlayer().setAIType(aiTypeP1);
+            if (gameState.getPlayer2() != null)
+                gameState.getPlayer2().setAIType(aiTypeP2);
+        } else if (numberOfPlayers == 2 && isP2CPU) {
+            // Player 1 vs Machine
+            // P1 is human (no AI type set, or null)
+            if (gameState.getPlayer2() != null) {
+                gameState.getPlayer2().setAIType(aiTypeP2 != null ? aiTypeP2 : AIType.EXPERT); // Default to Expert if
+                                                                                               // null
+            }
         }
 
         this.gameState.setPlayerNames(p1Name, p2Name);
@@ -52,8 +69,13 @@ public class GameFacade {
         initializeLevel(level, numberOfPlayers);
     }
 
+    public GameFacade(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
+            int numberOfPlayers, AIType aiTypeP1, AIType aiTypeP2) {
+        this(characterType, characterTypeP2, p1Name, p2Name, level, numberOfPlayers, aiTypeP1, aiTypeP2, false);
+    }
+
     public GameFacade(String characterType, int level, int numberOfPlayers) {
-        this(characterType, null, "P1", "P2", level, numberOfPlayers);
+        this(characterType, null, "P1", "P2", level, numberOfPlayers, null, null, false);
     }
 
     /**
@@ -985,7 +1007,7 @@ public class GameFacade {
     }
 
     public boolean isPlayerAlive() {
-        return gameState.getPlayer().isAlive();
+        return gameState.getPlayer() != null && gameState.getPlayer().isAlive();
     }
 
     public boolean isPlayer2Alive() {
@@ -1001,7 +1023,7 @@ public class GameFacade {
         Player player = gameState.getPlayer();
         Player player2 = gameState.getPlayer2();
 
-        boolean p1Dead = !player.isDying() && !player.isAlive();
+        boolean p1Dead = (player != null) && !player.isDying() && !player.isAlive();
         boolean p2Dead = (player2 != null) && !player2.isDying() && !player2.isAlive();
 
         // In PvP/MvM, game over only if BOTH players die (GameLogic ensures isGameOver

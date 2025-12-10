@@ -34,6 +34,7 @@ public class GameState implements Serializable {
     private boolean timeUp;
     private int score;
     private int scorePlayer2;
+    private boolean p2CPU;
 
     /**
      * Constructor del estado del juego.
@@ -63,6 +64,7 @@ public class GameState implements Serializable {
         this.timeUp = false;
         this.score = 0;
         this.scorePlayer2 = 0;
+        this.p2CPU = false;
     }
 
     // ==================== GETTERS ESTÁTICOS ====================
@@ -265,5 +267,13 @@ public class GameState implements Serializable {
         // Logic uses pendingFruitWaves for sequential waves.
         // Existing code used addFruitWave which likely added to pending.
         this.pendingFruitWaves.add(wave);
+    }
+
+    public boolean isP2CPU() {
+        return p2CPU;
+    }
+
+    public void setP2CPU(boolean p2CPU) {
+        this.p2CPU = p2CPU;
     }
 }

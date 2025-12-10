@@ -17,10 +17,12 @@ public class LevelSelectionPanel extends JPanel {
     private ResourceLoader resources;
     private FontLoader fontLoader;
     private int numberOfPlayers;
+    private boolean isP2CPU;
 
-    public LevelSelectionPanel(int numberOfPlayers, ResourceLoader resources) {
+    public LevelSelectionPanel(int numberOfPlayers, ResourceLoader resources, boolean isP2CPU) {
         this.numberOfPlayers = numberOfPlayers;
         this.resources = resources;
+        this.isP2CPU = isP2CPU;
         this.fontLoader = FontLoader.getInstance();
 
         setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
@@ -144,7 +146,8 @@ public class LevelSelectionPanel extends JPanel {
             JFrame frame = (JFrame) window;
             frame.getContentPane().removeAll();
 
-            CharacterSelectionPanel characterPanel = new CharacterSelectionPanel(level, numberOfPlayers, resources);
+            CharacterSelectionPanel characterPanel = new CharacterSelectionPanel(level, numberOfPlayers, resources,
+                    isP2CPU);
             frame.add(characterPanel);
             frame.revalidate();
             frame.repaint();

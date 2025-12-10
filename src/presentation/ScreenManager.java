@@ -22,6 +22,7 @@ public class ScreenManager {
 
     // Variables de estado
     private int numberOfPlayers = 0;
+    private boolean isP2CPU = false;
 
     public ScreenManager(JPanel mainPanel, JLabel titleLabel, ResourceLoader resources, WelcomeScreen parentWindow) {
         this.mainPanel = mainPanel;
@@ -40,8 +41,7 @@ public class ScreenManager {
                     resources.startButtonImage,
                     (WINDOW_WIDTH - BUTTON_WIDTH) / 2,
                     330,
-                    this::showMainMenu
-            );
+                    this::showMainMenu);
             mainPanel.add(startButton);
         }
 
@@ -62,8 +62,7 @@ public class ScreenManager {
                     resources.startGameImage,
                     (WINDOW_WIDTH - BUTTON_WIDTH) / 2,
                     startY,
-                    this::showPlayerSelectionMenu
-            );
+                    this::showPlayerSelectionMenu);
             mainPanel.add(startGameButton);
         }
 
@@ -77,9 +76,7 @@ public class ScreenManager {
                             parentWindow,
                             "Juego en construcción",
                             "BAD DOPO CREAM",
-                            JOptionPane.INFORMATION_MESSAGE
-                    )
-            );
+                            JOptionPane.INFORMATION_MESSAGE));
             mainPanel.add(optionsButton);
         }
 
@@ -89,8 +86,7 @@ public class ScreenManager {
                     resources.backImage,
                     (WINDOW_WIDTH - BUTTON_WIDTH) / 2,
                     startY + spacing * 2,
-                    this::showStartScreen
-            );
+                    this::showStartScreen);
             mainPanel.add(backButton);
         }
 
@@ -114,8 +110,7 @@ public class ScreenManager {
                     () -> {
                         numberOfPlayers = 1;
                         showLevelSelection();
-                    }
-            );
+                    });
             mainPanel.add(onePlayerButton);
         }
 
@@ -125,10 +120,7 @@ public class ScreenManager {
                     resources.twoPlayerImage,
                     (WINDOW_WIDTH - BUTTON_WIDTH) / 2,
                     startY + spacing,
-                    () -> {
-                        numberOfPlayers = 2;
-                        showLevelSelection();
-                    }
+                    this::showTwoPlayerModeSelection // Call new method
             );
             mainPanel.add(twoPlayerButton);
         }
@@ -141,9 +133,9 @@ public class ScreenManager {
                     startY + spacing * 2,
                     () -> {
                         numberOfPlayers = 0; // 0 = Machine vs Machine
+                        isP2CPU = true; // Implicitly true for MvM, but MvM has its own logic (numberOfPlayers=0)
                         showLevelSelection();
-                    }
-            );
+                    });
             mainPanel.add(machineButton);
         }
 
@@ -154,8 +146,10 @@ public class ScreenManager {
             int backButtonWidthHover = 220;
             int backButtonHeightHover = 110;
 
-            Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight, Image.SCALE_SMOOTH);
-            Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover, Image.SCALE_SMOOTH);
+            Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight,
+                    Image.SCALE_SMOOTH);
+            Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover,
+                    Image.SCALE_SMOOTH);
 
             JLabel backButton = new JLabel(new ImageIcon(normalButton));
             int backX = 30;
@@ -193,6 +187,94 @@ public class ScreenManager {
         refreshPanel();
     }
 
+    // ==================== PANTALLA 3.5: 2 PLAYER MODE SELECTION
+    // ====================
+    public void showTwoPlayerModeSelection() {
+        clearButtons();
+        setTitle(resources.titleGif);
+
+        int startY = 250;
+        int spacing = 100;
+
+        // Botón P1 vs P2
+        if (resources.p1VsP2Image != null) {
+            JLabel p1VsP2Button = createButton(
+                    resources.p1VsP2Image,
+                    (WINDOW_WIDTH - BUTTON_WIDTH) / 2,
+                    startY,
+                    () -> {
+                        numberOfPlayers = 2;
+                        isP2CPU = false;
+                        showLevelSelection();
+                    });
+            mainPanel.add(p1VsP2Button);
+        }
+
+        // Botón P1 vs Machine
+        if (resources.p1VsMachineImage != null) {
+            JLabel p1VsMachineButton = createButton(
+                    resources.p1VsMachineImage,
+                    (WINDOW_WIDTH - BUTTON_WIDTH) / 2,
+                    startY + spacing,
+                    () -> {
+                        numberOfPlayers = 2; // Treat as 2 players for game logic
+                        isP2CPU = true; // Flag to indicate P2 is AIcontrolled
+                        showLevelSelection();
+                    });
+            mainPanel.add(p1VsMachineButton);
+        }
+
+        addBackButton(this::showPlayerSelectionMenu);
+
+        refreshPanel();
+    }
+
+    private void addBackButton(Runnable onClick) {
+        if (resources.backImage != null) {
+            int backButtonWidth = 200;
+            int backButtonHeight = 100;
+            int backButtonWidthHover = 220;
+            int backButtonHeightHover = 110;
+
+            Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight,
+                    Image.SCALE_SMOOTH);
+            Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover,
+                    Image.SCALE_SMOOTH);
+
+            JLabel backButton = new JLabel(new ImageIcon(normalButton));
+            int backX = 30;
+            int backY = WINDOW_HEIGHT - backButtonHeight - 30;
+            backButton.setBounds(backX, backY, backButtonWidth, backButtonHeight);
+            backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
+
+            final int originalX = backX;
+            final int originalY = backY;
+
+            backButton.addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    backButton.setIcon(new ImageIcon(hoverButton));
+                    int newX = originalX - (backButtonWidthHover - backButtonWidth) / 2;
+                    int newY = originalY - (backButtonHeightHover - backButtonHeight) / 2;
+                    backButton.setBounds(newX, newY, backButtonWidthHover, backButtonHeightHover);
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    backButton.setIcon(new ImageIcon(normalButton));
+                    backButton.setBounds(originalX, originalY, backButtonWidth, backButtonHeight);
+                }
+
+                @Override
+                public void mouseClicked(MouseEvent e) {
+                    onClick.run();
+                }
+            });
+
+            mainPanel.add(backButton);
+        }
+    }
+
     // ==================== PANTALLA 4: LEVEL SELECTION ====================
     public void showLevelSelection() {
         // Cerrar la ventana actual y abrir nueva con LevelSelectionPanel
@@ -205,7 +287,7 @@ public class ScreenManager {
             levelFrame.setLocationRelativeTo(null);
             levelFrame.setResizable(false);
 
-            LevelSelectionPanel levelPanel = new LevelSelectionPanel(numberOfPlayers, resources);
+            LevelSelectionPanel levelPanel = new LevelSelectionPanel(numberOfPlayers, resources, isP2CPU);
             levelFrame.add(levelPanel);
 
             levelFrame.setVisible(true);
@@ -262,8 +344,7 @@ public class ScreenManager {
                     (WINDOW_WIDTH - titleWidth) / 2,
                     60,
                     titleWidth,
-                    titleHeight
-            );
+                    titleHeight);
         }
     }
 
