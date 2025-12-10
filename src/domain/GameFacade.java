@@ -4,6 +4,8 @@ import domain.dto.*;
 import domain.entity.*;
 import domain.service.GameLogic;
 import domain.service.PersistenceService;
+import domain.service.MapLoaderService;
+import domain.service.MapParserService;
 import domain.state.GameState;
 import java.awt.Point;
 import java.io.File;
@@ -11,7 +13,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
-import java.util.HashMap;
 
 /**
  * Fachada del dominio del juego.
@@ -23,6 +24,8 @@ public class GameFacade {
     private GameState gameState;
     private GameLogic gameLogic;
     private PersistenceService persistenceService;
+    private MapLoaderService mapLoaderService;
+    private MapParserService mapParserService;
     private long lastUpdateTime;
     private boolean paused;
 
@@ -82,6 +85,8 @@ public class GameFacade {
 
         this.gameLogic = new GameLogic(gameState);
         this.persistenceService = new PersistenceService();
+        this.mapLoaderService = new MapLoaderService();
+        this.mapParserService = new MapParserService();
         this.lastUpdateTime = System.currentTimeMillis();
         this.paused = false;
 
@@ -190,10 +195,10 @@ public class GameFacade {
      * Inicializa el nivel especificado.
      */
     /**
-     * Inicializa el nivel especificado usando configuración predeterminada.
+     * Inicializa el nivel especificado usando JSON.
      */
     private void initializeLevel(int level, int numberOfPlayers) {
-        initializeLevel(level, numberOfPlayers, getDefaultConfiguration(level));
+        initializeLevelFromJSON(level, numberOfPlayers);
     }
 
     /**
@@ -204,10 +209,11 @@ public class GameFacade {
             BadDopoLogger.logInfo(
                     "Iniciando nivel " + level + " con " + numberOfPlayers + " jugadores y config personalizada.");
 
-            // 1. Setup Base Map Structure (Walls, Ice, Iglu) - Preserving Level Design
+            // 1. Setup Base Map Structure (Walls, Ice, Iglu) - Now from JSON
             setupMapStructure(level, numberOfPlayers);
 
             // 2. Spawn Configured Entities (Fruits, Enemies, HotTiles)
+            // Use legacy method for backward compatibility
             spawnDynamicEntities(config);
 
         } catch (BadDopoException e) {
@@ -218,33 +224,53 @@ public class GameFacade {
     }
 
     /**
-     * Sets up the static map elements (Walls, Iglu, Default Ice) based on Level ID.
+     * Initialize level using JSON configuration (new method).
      */
-    private void setupMapStructure(int level, int numberOfPlayers) throws BadDopoException {
-        switch (level) {
-            case 1:
-                setupLevel1Structure(numberOfPlayers);
-                break;
-            case 2:
-                initializeLevel2StructureOnly(numberOfPlayers);
-                break;
-            case 3:
-                initializeLevel3StructureOnly(numberOfPlayers);
-                break;
-            case 4:
-                initializeLevel4StructureOnly(numberOfPlayers);
-                break;
-            default:
-                throw new BadDopoException("Nivel inválido: " + level);
+    private void initializeLevelFromJSON(int level, int numberOfPlayers) {
+        try {
+            BadDopoLogger.logInfo("Iniciando nivel " + level + " desde JSON con " + numberOfPlayers + " jugadores.");
+
+            // Load level data from JSON
+            LevelDataDTO levelData = mapLoaderService.loadLevel(level);
+
+            // 1. Setup Map Structure from JSON
+            mapParserService.applyMapLayout(gameState, levelData.getMapLayout(), numberOfPlayers);
+
+            // 2. Spawn Dynamic Entities from JSON
+            spawnDynamicEntitiesFromJSON(levelData);
+
+            BadDopoLogger.logInfo("Nivel " + level + " inicializado completamente desde JSON");
+
+        } catch (BadDopoException e) {
+            BadDopoLogger.logError("Error al inicializar el nivel desde JSON: " + e.getMessage(), e);
+        } catch (Exception e) {
+            BadDopoLogger.logError("Error inesperado al inicializar el nivel desde JSON", e);
         }
     }
 
     /**
-     * Spawns entities based on the configuration.
+     * Sets up the static map elements (Walls, Iglu, Default Ice) based on Level ID.
+     * Now loads from JSON instead of hardcoded methods.
+     */
+    private void setupMapStructure(int level, int numberOfPlayers) throws BadDopoException {
+        try {
+            LevelDataDTO levelData = mapLoaderService.loadLevel(level);
+            mapParserService.applyMapLayout(gameState, levelData.getMapLayout(), numberOfPlayers);
+            BadDopoLogger.logInfo("Estructura del mapa nivel " + level + " cargada desde JSON");
+        } catch (BadDopoException e) {
+            BadDopoLogger.logError("Error cargando estructura del mapa desde JSON: " + e.getMessage(), e);
+            throw e;
+        }
+    }
+
+    /**
+     * Spawns entities based on the configuration from JSON.
      */
     private void spawnDynamicEntities(LevelConfigurationDTO config) {
-        // 1. Spawn Fruits (Ordered Waves: Uvas -> Platanos -> Piña -> Cactus)
-        // Store counts first
+        // Legacy method - convert to use JSON if available
+        // This is called when using old constructor without JSON
+
+        // 1. Spawn Fruits (Ordered Waves)
         Map<FruitType, Integer> counts = new java.util.EnumMap<>(FruitType.class);
         for (Map.Entry<String, Integer> entry : config.getFruitCounts().entrySet()) {
             try {
@@ -265,17 +291,6 @@ public class GameFacade {
                 int count = counts.get(type);
                 if (count > 0) {
                     List<Fruit> wave = new ArrayList<>();
-                    // We PRE-CALCULATE positions? No, avoiding overlaps is hard if we pre-calc.
-                    // But GameState expects List<Fruit>.
-                    // A better approach for MVC:
-                    // Add a "PendingWave" concept to State? No, keep it simple.
-                    // We will generate the Fruit objects but their position might need to be
-                    // re-validated on spawn?
-                    // Or simpler: Just store the Types and Counts in GameState?
-                    // The requirement "pendingFruitWaves" is List<List<Fruit>>.
-                    // Let's try to generate them with temporary positions or find positions now.
-                    // Finding positions now is safer provided the map layout is static.
-
                     for (int i = 0; i < count; i++) {
                         Point position = findFreePosition();
                         if (position != null) {
@@ -315,13 +330,68 @@ public class GameFacade {
         initializeHotTiles(config.getHotTileCount());
     }
 
-    // Helper for Spawning specific fruit type
-    private void spawnRandomFruit(FruitType type) {
-        Point position = findFreePosition();
-        if (position != null) {
-            Fruit fruit = new Fruit(position, type); // Corrected Order
-            gameState.addFruit(fruit);
-        }
+    /**
+     * Spawns entities based on LevelDataDTO from JSON.
+     * TEMPORARILY DISABLED - Only loading map structure
+     */
+    private void spawnDynamicEntitiesFromJSON(LevelDataDTO levelData) {
+        // DISABLED: Only loading map, not entities
+        /*
+         * // 1. Spawn Fruits from JSON waves
+         * if (levelData.getFruitConfig() != null) {
+         * for (FruitWaveDTO wave : levelData.getFruitConfig().getWaves()) {
+         * List<Fruit> fruitWave = new ArrayList<>();
+         * 
+         * for (FruitSpawnDTO fruitSpawn : wave.getFruits()) {
+         * try {
+         * FruitType type = FruitType.valueOf(fruitSpawn.getType());
+         * int count = fruitSpawn.getCount();
+         * 
+         * for (int i = 0; i < count; i++) {
+         * Point position = findFreePosition();
+         * if (position != null) {
+         * fruitWave.add(new Fruit(position, type));
+         * }
+         * }
+         * } catch (IllegalArgumentException e) {
+         * BadDopoLogger.logError("Unknown Fruit Type in JSON: " + fruitSpawn.getType(),
+         * e);
+         * }
+         * }
+         * 
+         * if (!fruitWave.isEmpty()) {
+         * if (wave.isSpawnOnStart()) {
+         * // Spawn immediately
+         * for (Fruit f : fruitWave) {
+         * gameState.addFruit(f);
+         * }
+         * } else {
+         * // Add to pending waves
+         * gameState.addPendingFruitWave(fruitWave);
+         * }
+         * }
+         * }
+         * }
+         * 
+         * // 2. Spawn Enemies from JSON
+         * if (levelData.getEnemyConfig() != null) {
+         * for (EnemySpawnDTO enemySpawn : levelData.getEnemyConfig().getTypes()) {
+         * try {
+         * EnemyType type = EnemyType.valueOf(enemySpawn.getType());
+         * int count = enemySpawn.getCount();
+         * 
+         * for (int i = 0; i < count; i++) {
+         * spawnEnemy(type);
+         * }
+         * } catch (IllegalArgumentException e) {
+         * BadDopoLogger.logError("Unknown Enemy Type in JSON: " + enemySpawn.getType(),
+         * e);
+         * }
+         * }
+         * }
+         */
+
+        BadDopoLogger.logInfo("Mapa cargado desde JSON (entidades deshabilitadas temporalmente)");
     }
 
     // Helper for Spawning specific enemy type
@@ -380,29 +450,7 @@ public class GameFacade {
         }
     }
 
-    private void clearSpaceForPlayers(int numberOfPlayers) {
-        // Clear ice/entities around 1,1
-        Point p1 = new Point(1, 1);
-        removeIceAt(p1);
-        gameState.getPlayer().setPosition(p1);
-
-        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
-            if (gameState.getPlayer2() != null) {
-                Point p2 = findFreePosition();
-                if (p2 == null)
-                    p2 = new Point(11, 11);
-                removeIceAt(p2);
-                gameState.getPlayer2().setPosition(p2);
-            }
-        }
-    }
-
     // --- Helper Methods for Entity Management and Collision ---
-
-    private void removeIceAt(Point p) {
-        // Safe removal using iterator or removeIf
-        gameState.getIceBlocks().removeIf(ice -> ice.getPosition().equals(p));
-    }
 
     private boolean hasIceAt(Point p) {
         return gameState.getIceBlocks().stream().anyMatch(ice -> ice.getPosition().equals(p));
@@ -410,634 +458,6 @@ public class GameFacade {
 
     private boolean hasHotTileAt(Point p) {
         return gameState.getHotTiles().stream().anyMatch(tile -> tile.getPosition().equals(p));
-    }
-
-    // --- Structure Helpers ---
-
-    private void initializeCentralIglu() {
-        gameState.setIglu(new Iglu(new Point(5, 5)));
-    }
-
-    private void initializeBorders() {
-        for (int x = 0; x < GameState.getGridSize(); x++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0))); // Top
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1))); // Bottom
-        }
-        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y))); // Left
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y))); // Right
-        }
-    }
-
-    private void initializeIcePatternLevel1() {
-        List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel1();
-        for (Point icePos : predeterminedIcePositions) {
-            if (gameState.getIglu() != null && !gameState.getIglu().collidesWith(icePos)) {
-                gameState.addIceBlock(new IceBlock(icePos, false));
-            }
-        }
-    }
-
-    /**
-     * Initializes the structure (walls, iglu, ice) for Level 1.
-     */
-    private void setupLevel1Structure(int numberOfPlayers) {
-        gameState.clear(); // Ensure clear call works (or implement it if missing)
-        // If gameState.clear() is undefined, we need to clear lists manually.
-        // Assuming clear() might be missing based on lint "The method clear() is
-        // undefined for the type GameState"
-        gameState.getFruits().clear();
-        gameState.getEnemies().clear();
-        gameState.getIceBlocks().clear();
-        gameState.getHotTiles().clear();
-        gameState.getUnbreakableBlocks().clear();
-
-        initializeBorders();
-        initializeCentralIglu();
-        // Clear space MUST happen after or before?
-        // If we clear space, we remove ice. So ice must be there.
-        initializeIcePatternLevel1();
-        clearSpaceForPlayers(numberOfPlayers);
-    }
-
-    // Alias Helpers
-    private void initializeLevel2StructureOnly(int n) {
-        // CLEANUP
-        gameState.clear();
-        gameState.getFruits().clear();
-        gameState.getEnemies().clear();
-        gameState.getIceBlocks().clear();
-        gameState.getHotTiles().clear();
-        gameState.getUnbreakableBlocks().clear();
-
-        initializeBorders();
-        initializeCentralIglu();
-        initializeIcePatternLevel2();
-        clearSpaceForPlayers(n);
-    }
-
-    private void initializeLevel3StructureOnly(int n) {
-        // CLEANUP
-        gameState.clear();
-        gameState.getFruits().clear();
-        gameState.getEnemies().clear();
-        gameState.getIceBlocks().clear();
-        gameState.getHotTiles().clear();
-        gameState.getUnbreakableBlocks().clear();
-
-        initializeBorders();
-        initializeCentralIglu();
-        initializeIcePatternLevel3();
-        clearSpaceForPlayers(n);
-    }
-
-    private void initializeLevel4StructureOnly(int n) {
-        // CLEANUP
-        gameState.clear();
-        gameState.getFruits().clear();
-        gameState.getEnemies().clear();
-        gameState.getIceBlocks().clear();
-        gameState.getHotTiles().clear();
-        gameState.getUnbreakableBlocks().clear();
-
-        initializeBorders();
-        initializeCentralIglu();
-        initializeIcePatternLevel4();
-        clearSpaceForPlayers(n);
-    }
-
-    private void initializeLevel1(int numberOfPlayers) {
-        Random random = new Random();
-        List<Point> occupiedPositions = new ArrayList<>();
-
-        // Fix Player 1 Position (Move out of center)
-        // Handled by clearSpaceForPlayers
-        // gameState.getPlayer().setPosition(new Point(1, 1));
-        // occupiedPositions.add(gameState.getPlayer().getPosition());
-
-        // Create Central Iglu
-        gameState.setIglu(new Iglu(new Point(5, 5))); // 3x3 Iglu at center
-
-        // Add Unbreakable Blocks at borders
-        for (int x = 0; x < GameState.getGridSize(); x++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0))); // Top
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1))); // Bottom
-            occupiedPositions.add(new Point(x, 0));
-            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
-        }
-        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y))); // Left
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y))); // Right
-            occupiedPositions.add(new Point(0, y));
-            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
-        }
-
-        // Agregar hielos predeterminados del nivel 1 (Avoid center and borders)
-        List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel1();
-        for (Point icePos : predeterminedIcePositions) {
-            if (!gameState.getIglu().collidesWith(icePos)) {
-                gameState.addIceBlock(new IceBlock(icePos, false));
-                occupiedPositions.add(icePos);
-            }
-        }
-
-        // Agregar baldosas calientes (Nivel 1: pocas) - AVOID ICE positions per user
-        List<Point> hotTilePositions = List.of(new Point(2, 2), new Point(10, 10), new Point(2, 10), new Point(10, 2));
-        for (Point pos : hotTilePositions) {
-            if (!isPositionOccupied(pos, occupiedPositions) && !gameState.getIglu().collidesWith(pos)) {
-                gameState.addHotTile(new HotTile(pos));
-                occupiedPositions.add(pos);
-            }
-        }
-
-        // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
-        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
-            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
-            gameState.getPlayer2().setPosition(p2Pos);
-            occupiedPositions.add(p2Pos);
-        }
-
-        // Agregar 2 trolls
-        for (int i = 0; i < 2; i++) {
-            Point trollPos = getRandomFreePosition(random, occupiedPositions);
-            Enemy troll = new Enemy(trollPos, EnemyType.TROLL);
-            gameState.addEnemy(troll);
-            occupiedPositions.add(trollPos);
-        }
-
-        // Wave 1: 16 Uvas (Initial)
-        for (int i = 0; i < 16; i++) {
-            Point uvaPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(uvaPos, FruitType.UVA));
-            occupiedPositions.add(uvaPos);
-        }
-
-        // Wave 2: 16 Plátanos (Pending)
-        List<Fruit> wave2 = new ArrayList<>();
-        for (int i = 0; i < 16; i++) {
-            Point platanoPos = getRandomFreePosition(random, occupiedPositions);
-            wave2.add(new Fruit(platanoPos, FruitType.PLATANO));
-            occupiedPositions.add(platanoPos);
-        }
-        gameState.addFruitWave(wave2);
-    }
-
-    /**
-     * Inicializa el nivel 2: 1 Maceta + 8 Piñas + 8 Plátanos.
-     */
-    private void initializeLevel2(int numberOfPlayers) {
-        Random random = new Random();
-        List<Point> occupiedPositions = new ArrayList<>();
-
-        // Fix Player 1 Position
-        gameState.getPlayer().setPosition(new Point(1, 1));
-        occupiedPositions.add(gameState.getPlayer().getPosition());
-
-        // Create Central Iglu
-        gameState.setIglu(new Iglu(new Point(5, 5)));
-
-        // Add Unbreakable Blocks at borders
-        for (int x = 0; x < GameState.getGridSize(); x++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0)));
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1)));
-            occupiedPositions.add(new Point(x, 0));
-            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
-        }
-        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y)));
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y)));
-            occupiedPositions.add(new Point(0, y));
-            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
-        }
-
-        // Patrón de hielo DIFERENTE para nivel 2 (Avoid center/borders)
-        List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel2();
-        for (Point icePos : predeterminedIcePositions) {
-            if (!gameState.getIglu().collidesWith(icePos)) {
-                gameState.addIceBlock(new IceBlock(icePos, false));
-                occupiedPositions.add(icePos);
-            }
-        }
-
-        // Agregar baldosas calientes (Nivel 2: moderadas)
-        List<Point> hotTilePositions = List.of(
-                new Point(4, 4), new Point(8, 8), new Point(4, 8), new Point(8, 4),
-                new Point(6, 2), new Point(6, 10)); // Some of these might collide with Iglu (4,4 - 8,8).
-
-        // Filter hot tiles that collide with Iglu
-        for (Point pos : hotTilePositions) {
-            if (!gameState.getIglu().collidesWith(pos) && !isPositionOccupied(pos, occupiedPositions)) {
-                gameState.addHotTile(new HotTile(pos));
-                occupiedPositions.add(pos);
-            }
-        }
-
-        // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
-        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
-            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
-            gameState.getPlayer2().setPosition(p2Pos);
-            occupiedPositions.add(p2Pos);
-        }
-
-        // Agregar 1 maceta
-        Point macetaPos = getRandomFreePosition(random, occupiedPositions);
-        Enemy maceta = new Enemy(macetaPos, EnemyType.MACETA);
-        gameState.addEnemy(maceta);
-        occupiedPositions.add(macetaPos);
-
-        // Wave 1: 16 Piñas (Initial)
-        for (int i = 0; i < 16; i++) {
-            Point pinaPos = getRandomFreePosition(random, occupiedPositions);
-            gameState.addFruit(new Fruit(pinaPos, FruitType.PIÑA));
-            occupiedPositions.add(pinaPos);
-        }
-
-        // Wave 2: 16 Plátanos (Pending)
-        List<Fruit> wave2 = new ArrayList<>();
-        for (int i = 0; i < 16; i++) {
-            Point platanoPos = getRandomFreePosition(random, occupiedPositions);
-            wave2.add(new Fruit(platanoPos, FruitType.PLATANO));
-            occupiedPositions.add(platanoPos);
-        }
-        gameState.addFruitWave(wave2);
-    }
-
-    /**
-     * Inicializa el nivel 3: 1 Calamar + 8 Piñas + 8 Cerezas.
-     */
-    private void initializeLevel3(int numberOfPlayers) {
-        Random random = new Random();
-        List<Point> occupiedPositions = new ArrayList<>();
-
-        // Fix Player 1 Position
-        gameState.getPlayer().setPosition(new Point(1, 1));
-        occupiedPositions.add(gameState.getPlayer().getPosition());
-
-        // Create Central Iglu
-        gameState.setIglu(new Iglu(new Point(5, 5)));
-
-        // Add Unbreakable Blocks at borders
-        for (int x = 0; x < GameState.getGridSize(); x++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0)));
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1)));
-            occupiedPositions.add(new Point(x, 0));
-            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
-        }
-        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y)));
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y)));
-            occupiedPositions.add(new Point(0, y));
-            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
-        }
-
-        // Patrón de hielo DIFERENTE para nivel 3
-        List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel3();
-        for (Point icePos : predeterminedIcePositions) {
-            if (!gameState.getIglu().collidesWith(icePos) && !isPositionOccupied(icePos, occupiedPositions)) {
-                gameState.addIceBlock(new IceBlock(icePos, false));
-                occupiedPositions.add(icePos);
-            }
-        }
-
-        // Agregar baldosas calientes (Nivel 3: muchas)
-        List<Point> hotTilePositions = List.of(
-                new Point(2, 2), new Point(10, 10), new Point(2, 10), new Point(10, 2),
-                new Point(6, 4), new Point(6, 8), new Point(4, 6), new Point(8, 6)); // 6,4 and 6,8 collide with Iglu
-
-        for (Point pos : hotTilePositions) {
-            if (!gameState.getIglu().collidesWith(pos) && !isPositionOccupied(pos, occupiedPositions)) {
-                gameState.addHotTile(new HotTile(pos));
-                occupiedPositions.add(pos);
-            }
-        }
-
-        // Spawn Player 2 if applicable (2 Players OR Machine vs Machine)
-        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
-            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
-            gameState.getPlayer2().setPosition(p2Pos);
-            occupiedPositions.add(p2Pos);
-        }
-
-        // Agregar 1 calamar
-        Point calamarPos = getRandomFreePosition(random, occupiedPositions);
-        Enemy calamar = new Enemy(calamarPos, EnemyType.CALAMAR);
-        gameState.addEnemy(calamar);
-        occupiedPositions.add(calamarPos);
-
-        // Wave 1: 16 Piñas (Initial) - Removing this block as Level 4 logic below
-        // handles it
-        // and Level 3 logic handles its own. This was a legacy block that might
-        // interfere.
-
-        // Initialize specific level logic
-        initializeLevelSpecifics(gameState.getLevel(), occupiedPositions);
-    }
-
-    private void initializeLevelSpecifics(int level, List<Point> occupiedPositions) {
-        Random random = new Random();
-
-        switch (level) {
-            case 1:
-                // Level 1: Uvas (Initial), Platano (Pending)
-                for (int i = 0; i < 20; i++) { // 20 Uvas
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null) {
-                        gameState.addFruit(new Fruit(pos, FruitType.UVA));
-                        occupiedPositions.add(pos);
-                    }
-                }
-                List<Fruit> wave1_2 = new ArrayList<>();
-                for (int i = 0; i < 5; i++) { // 5 Platanos
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null)
-                        wave1_2.add(new Fruit(pos, FruitType.PLATANO));
-                }
-                gameState.addPendingFruitWave(wave1_2);
-                break;
-
-            case 2:
-                // Level 2: Platano (Initial), Piña (Pending)
-                for (int i = 0; i < 15; i++) { // 15 Platanos
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null) {
-                        gameState.addFruit(new Fruit(pos, FruitType.PLATANO));
-                        occupiedPositions.add(pos);
-                    }
-                }
-                List<Fruit> wave2_2 = new ArrayList<>();
-                for (int i = 0; i < 5; i++) { // 5 Piñas
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null)
-                        wave2_2.add(new Fruit(pos, FruitType.PIÑA));
-                }
-                gameState.addPendingFruitWave(wave2_2);
-                break;
-
-            case 3:
-                // Level 3: Piña (Initial), Cereza (Pending)
-                for (int i = 0; i < 15; i++) { // 15 Piñas
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null) {
-                        gameState.addFruit(new Fruit(pos, FruitType.PIÑA));
-                        occupiedPositions.add(pos);
-                    }
-                }
-                List<Fruit> wave3_2 = new ArrayList<>();
-                for (int i = 0; i < 5; i++) { // 5 Cerezas
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null)
-                        wave3_2.add(new Fruit(pos, FruitType.CEREZA));
-                }
-                gameState.addPendingFruitWave(wave3_2);
-                break;
-
-            case 4:
-                // Level 4: Piña (Initial), Cereza (Pending), Cactus (Pending)
-                for (int i = 0; i < 10; i++) { // 10 Piñas
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null) {
-                        gameState.addFruit(new Fruit(pos, FruitType.PIÑA));
-                        occupiedPositions.add(pos);
-                    }
-                }
-                List<Fruit> wave4_2 = new ArrayList<>();
-                for (int i = 0; i < 5; i++) { // 5 Cerezas
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null)
-                        wave4_2.add(new Fruit(pos, FruitType.CEREZA));
-                }
-                gameState.addPendingFruitWave(wave4_2);
-
-                List<Fruit> wave4_3 = new ArrayList<>();
-                for (int i = 0; i < 4; i++) { // 4 Cactus
-                    Point pos = gameLogic.findRandomEmptyPosition();
-                    if (pos != null)
-                        wave4_3.add(new Fruit(pos, FruitType.CACTUS));
-                }
-                gameState.addPendingFruitWave(wave4_3);
-
-                break;
-        }
-    }
-
-    /**
-     * Inicializa el nivel 4: 1 Narval + Piñas (Inicial) + Cerezas (Ola 1).
-     */
-    private void initializeLevel4(int numberOfPlayers) {
-        Random random = new Random();
-        List<Point> occupiedPositions = new ArrayList<>();
-
-        // Fix Player 1 Position
-        gameState.getPlayer().setPosition(new Point(1, 1));
-        occupiedPositions.add(gameState.getPlayer().getPosition());
-
-        // Create Central Iglu
-        gameState.setIglu(new Iglu(new Point(5, 5)));
-
-        // Add Unbreakable Blocks at borders
-        for (int x = 0; x < GameState.getGridSize(); x++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, 0)));
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(x, GameState.getGridSize() - 1)));
-            occupiedPositions.add(new Point(x, 0));
-            occupiedPositions.add(new Point(x, GameState.getGridSize() - 1));
-        }
-        for (int y = 1; y < GameState.getGridSize() - 1; y++) {
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(0, y)));
-            gameState.addUnbreakableBlock(new UnbreakableBlock(new Point(GameState.getGridSize() - 1, y)));
-            occupiedPositions.add(new Point(0, y));
-            occupiedPositions.add(new Point(GameState.getGridSize() - 1, y));
-        }
-
-        // Patrón de hielo (Unique Level 4 Pattern)
-        List<Point> predeterminedIcePositions = getPredeterminedIcePositionsLevel4();
-        for (Point icePos : predeterminedIcePositions) {
-            if (!gameState.getIglu().collidesWith(icePos) && !isPositionOccupied(icePos, occupiedPositions)) {
-                gameState.addIceBlock(new IceBlock(icePos, false));
-                occupiedPositions.add(icePos);
-            }
-        }
-
-        // Agregar baldosas calientes (Muchas, evitando Iglú y bloqueados)
-        // Added (1, 6) and (11, 6) for 8 total
-        List<Point> hotTilePositions = List.of(
-                new Point(3, 3), new Point(9, 3), new Point(3, 9), new Point(9, 9),
-                new Point(6, 2), new Point(6, 10),
-                new Point(1, 6), new Point(11, 6));
-
-        for (Point pos : hotTilePositions) {
-            if (!gameState.getIglu().collidesWith(pos) && !isPositionOccupied(pos, occupiedPositions)) {
-                gameState.addHotTile(new HotTile(pos));
-                occupiedPositions.add(pos);
-            }
-        }
-
-        // Spawn Player 2 if applicable
-        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && gameState.getPlayer2() != null) {
-            Point p2Pos = getRandomFreePosition(random, occupiedPositions);
-            gameState.getPlayer2().setPosition(p2Pos);
-            occupiedPositions.add(p2Pos);
-        }
-
-        // Agregar 1 Narval (Exclusivo Nivel 4)
-        Point narvalPos = getRandomFreePosition(random, occupiedPositions);
-        Enemy narval = new Enemy(narvalPos, EnemyType.NARVAL);
-        gameState.addEnemy(narval);
-        occupiedPositions.add(narvalPos);
-
-        // Initialize specific level logic (Fruits & Waves: Pineapple -> Cherry ->
-        // Cactus)
-        initializeLevelSpecifics(4, occupiedPositions);
-    }
-
-    // ==================== PATRONES DE HIELO ====================
-
-    /**
-     * Obtiene las posiciones de hielo predeterminadas para el nivel 1.
-     * Patrón: Simétrico con bloques en esquinas.
-     */
-    private List<Point> getPredeterminedIcePositionsLevel1() {
-        List<Point> icePositions = new ArrayList<>();
-
-        // Patrón simétrico
-        icePositions.add(new Point(2, 3));
-        icePositions.add(new Point(3, 3));
-        icePositions.add(new Point(4, 3));
-
-        icePositions.add(new Point(8, 3));
-        icePositions.add(new Point(9, 3));
-        icePositions.add(new Point(10, 3));
-
-        icePositions.add(new Point(2, 6));
-        icePositions.add(new Point(2, 7));
-        icePositions.add(new Point(2, 8));
-
-        icePositions.add(new Point(10, 6));
-        icePositions.add(new Point(10, 7));
-        icePositions.add(new Point(10, 8));
-
-        icePositions.add(new Point(2, 9));
-        icePositions.add(new Point(3, 9));
-        icePositions.add(new Point(4, 9));
-
-        icePositions.add(new Point(8, 9));
-        icePositions.add(new Point(9, 9));
-        icePositions.add(new Point(10, 9));
-
-        icePositions.add(new Point(5, 5));
-        icePositions.add(new Point(7, 5));
-        icePositions.add(new Point(5, 7));
-        return icePositions;
-    }
-
-    /**
-     * Level 2: Cross Pattern (Diagonal Ice)
-     */
-    private void initializeIcePatternLevel2() {
-        for (Point p : getPredeterminedIcePositionsLevel2()) {
-            if (gameState.getIglu() != null && !gameState.getIglu().collidesWith(p)) {
-                gameState.addIceBlock(new IceBlock(p, false));
-            }
-        }
-    }
-
-    private List<Point> getPredeterminedIcePositionsLevel2() {
-        List<Point> list = new ArrayList<>();
-        int size = GameState.getGridSize();
-        for (int i = 2; i < size - 2; i++) {
-            // X pattern
-            list.add(new Point(i, i));
-            list.add(new Point(i, size - 1 - i));
-        }
-        return list;
-    }
-
-    /**
-     * Level 3: Horizontal Stripes
-     */
-    private void initializeIcePatternLevel3() {
-        for (Point p : getPredeterminedIcePositionsLevel3()) {
-            if (gameState.getIglu() != null && !gameState.getIglu().collidesWith(p)) {
-                gameState.addIceBlock(new IceBlock(p, false));
-            }
-        }
-    }
-
-    private List<Point> getPredeterminedIcePositionsLevel3() {
-        List<Point> list = new ArrayList<>();
-        int size = GameState.getGridSize();
-        // Rows 3, 5, 7, 9
-        for (int y = 3; y < size - 2; y += 2) {
-            for (int x = 2; x < size - 2; x++) {
-                if (x % 3 != 0) { // Leave gaps
-                    list.add(new Point(x, y));
-                }
-            }
-        }
-        return list;
-    }
-
-    /**
-     * Level 4: Dense Field / Rings
-     */
-    private void initializeIcePatternLevel4() {
-        for (Point p : getPredeterminedIcePositionsLevel4()) {
-            if (gameState.getIglu() != null && !gameState.getIglu().collidesWith(p)) {
-                gameState.addIceBlock(new IceBlock(p, false));
-            }
-        }
-    }
-
-    private List<Point> getPredeterminedIcePositionsLevel4() {
-        List<Point> list = new ArrayList<>();
-        int size = GameState.getGridSize();
-        // Ring 1 (Inner) - Avoid Iglu
-        // Ring 2 (Outer)
-        for (int x = 2; x < size - 2; x++) {
-            list.add(new Point(x, 2));
-            list.add(new Point(x, size - 3));
-        }
-        for (int y = 2; y < size - 2; y++) {
-            list.add(new Point(2, y));
-            list.add(new Point(size - 3, y));
-        }
-        // Random scattered inside remaining space
-        list.add(new Point(3, 3));
-        list.add(new Point(9, 3));
-        list.add(new Point(3, 9));
-        list.add(new Point(9, 9));
-
-        return list;
-    }
-
-    // ==================== UTILIDADES PRIVADAS ====================
-
-    /**
-     * Obtiene una posición libre aleatoria en el grid.
-     */
-    private Point getRandomFreePosition(Random random, List<Point> occupiedPositions) {
-        Point newPosition;
-        do {
-            int x = random.nextInt(GameState.getGridSize());
-            int y = random.nextInt(GameState.getGridSize());
-            newPosition = new Point(x, y);
-        } while (isPositionOccupied(newPosition, occupiedPositions));
-
-        return newPosition;
-    }
-
-    /**
-     * Verifica si una posición está ocupada.
-     */
-    private boolean isPositionOccupied(Point position, List<Point> occupiedPositions) {
-        if (gameState.getIglu() != null && gameState.getIglu().collidesWith(position)) {
-            return true;
-        }
-        for (Point occupied : occupiedPositions) {
-            if (occupied.x == position.x && occupied.y == position.y) {
-                return true;
-            }
-        }
-        return false;
     }
 
     // ==================== COMANDOS DE MOVIMIENTO P1 ====================

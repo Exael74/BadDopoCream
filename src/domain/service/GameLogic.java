@@ -845,24 +845,6 @@ public class GameLogic {
         }
     }
 
-    // ==================== WAVE MANAGEMENT ====================
-
-    /**
-     * Checks if all fruits are collected and spawns the next wave if available.
-     */
-    private void checkWaveCompletion() {
-        if (gameState.getFruits().isEmpty() && !gameState.getPendingFruitWaves().isEmpty()) {
-            List<Fruit> nextWave = gameState.getPendingFruitWaves().remove(0);
-            for (Fruit f : nextWave) {
-                gameState.addFruit(f);
-            }
-            domain.BadDopoLogger.logInfo(
-                    "✓ Next Fruit Wave Spawned: " + (nextWave.isEmpty() ? "Empty" : nextWave.get(0).getType()));
-        } else if (gameState.getFruits().isEmpty() && gameState.getPendingFruitWaves().isEmpty()) {
-            domain.BadDopoLogger.logInfo("✓ All Fruit Waves Cleared!");
-        }
-    }
-
     // ==================== UTILIDADES ====================
 
     /**

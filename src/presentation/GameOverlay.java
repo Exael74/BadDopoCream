@@ -117,7 +117,6 @@ public class GameOverlay {
         g2d.fillRect(0, 0, windowWidth, windowHeight);
 
         int centerX = windowWidth / 2;
-        int startY = 150;
         int buttonWidth = 300;
         int buttonHeight = 50;
         int spacing = 20;

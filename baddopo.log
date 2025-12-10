@@ -1146,3 +1146,763 @@ Dec 10, 2025 12:55:53 PM domain.BadDopoLogger logInfo
 INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=8,y=3]
 Dec 10, 2025 12:55:57 PM domain.BadDopoLogger logInfo
 INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=8,y=9]
+Dec 10, 2025 1:28:39 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 1 jugadores.
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Entidades dinámicas spawneadas desde JSON
+Dec 10, 2025 1:28:44 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 inicializado completamente desde JSON
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 1:28:57 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 1:29:10 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 1:29:30 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 1:30:01 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 1:30:22 PM domain.BadDopoLogger logInfo
+INFO: Partida guardada exitosamente: New Maps.dat
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 1:30:57 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 1:31:04 PM domain.BadDopoLogger logInfo
+INFO: Partida cargada exitosamente: New Maps.dat
+Dec 10, 2025 1:31:04 PM domain.BadDopoLogger logInfo
+INFO: DEBUG: resetAnimationState called. New Logical Pos: java.awt.Point[x=2,y=4], Old Pixel X: 50.0, Old Pixel Y: 50.0
+Dec 10, 2025 1:31:17 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 1:31:27 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=3,y=10]
+Dec 10, 2025 1:31:27 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=3,y=9]
+Dec 10, 2025 1:31:29 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=3,y=2]
+Dec 10, 2025 1:31:33 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=8]
+Dec 10, 2025 1:31:33 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=9]
+Dec 10, 2025 1:31:38 PM domain.BadDopoLogger logInfo
+INFO: ✓ Cereza teletransportada a java.awt.Point[x=4,y=5]
+Dec 10, 2025 1:31:39 PM domain.BadDopoLogger logInfo
+INFO: ✓ Cereza teletransportada a java.awt.Point[x=8,y=8]
+Dec 10, 2025 1:31:39 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=11,y=3]
+Dec 10, 2025 1:31:52 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:31:52 PM domain.BadDopoLogger logError
+SEVERE: Error cargando estructura del mapa desde JSON: No se pudo leer el archivo de nivel: Resources/levels/level_2.json
+domain.BadDopoException: No se pudo leer el archivo de nivel: Resources/levels/level_2.json
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:60)
+	at domain.GameFacade.setupMapStructure(GameFacade.java:258)
+	at domain.GameFacade.initializeLevel(GameFacade.java:214)
+	at domain.GameFacade.<init>(GameFacade.java:96)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GamePanel.lambda$3(GamePanel.java:1294)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: java.nio.file.NoSuchFileException: Resources\levels\level_2.json
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:234)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:380)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:432)
+	at java.base/java.nio.file.Files.readAllBytes(Files.java:3292)
+	at domain.service.MapLoaderService.readFile(MapLoaderService.java:71)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:49)
+	... 18 more
+
+Dec 10, 2025 1:31:52 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel: No se pudo leer el archivo de nivel: Resources/levels/level_2.json
+domain.BadDopoException: No se pudo leer el archivo de nivel: Resources/levels/level_2.json
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:60)
+	at domain.GameFacade.setupMapStructure(GameFacade.java:258)
+	at domain.GameFacade.initializeLevel(GameFacade.java:214)
+	at domain.GameFacade.<init>(GameFacade.java:96)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GamePanel.lambda$3(GamePanel.java:1294)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: java.nio.file.NoSuchFileException: Resources\levels\level_2.json
+	at java.base/sun.nio.fs.WindowsException.translateToIOException(WindowsException.java:85)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:103)
+	at java.base/sun.nio.fs.WindowsException.rethrowAsIOException(WindowsException.java:108)
+	at java.base/sun.nio.fs.WindowsFileSystemProvider.newByteChannel(WindowsFileSystemProvider.java:234)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:380)
+	at java.base/java.nio.file.Files.newByteChannel(Files.java:432)
+	at java.base/java.nio.file.Files.readAllBytes(Files.java:3292)
+	at domain.service.MapLoaderService.readFile(MapLoaderService.java:71)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:49)
+	... 18 more
+
+Dec 10, 2025 1:31:52 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 2 with 1 player(s)
+Dec 10, 2025 1:46:02 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 0 jugadores.
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Player 2 spawn: java.awt.Point[x=11,y=11]
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Entidades dinámicas spawneadas desde JSON
+Dec 10, 2025 1:46:12 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 inicializado completamente desde JSON
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: P2: Chocolate (P2)
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 0 jugadores y config personalizada.
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Player 2 spawn: java.awt.Point[x=11,y=11]
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 1:46:29 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with Machine vs Machine
+Dec 10, 2025 1:46:31 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=10,y=8]
+Dec 10, 2025 1:46:31 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=10,y=9]
+Dec 10, 2025 1:46:34 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=9,y=10]
+Dec 10, 2025 1:46:35 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=3,y=10]
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 desde JSON con 0 jugadores.
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 4 exitosa
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Nivel 4 cargado exitosamente desde Resources/levels/level_4.json
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=4,y=4]
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Player 2 spawn: java.awt.Point[x=11,y=11]
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 40 hielos, 48 paredes, 8 baldosas calientes
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Entidades dinámicas spawneadas desde JSON
+Dec 10, 2025 1:46:53 PM domain.BadDopoLogger logInfo
+INFO: Nivel 4 inicializado completamente desde JSON
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: P2: Chocolate (P2)
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 0 jugadores y config personalizada.
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 4 exitosa
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Nivel 4 cargado exitosamente desde Resources/levels/level_4.json
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=4,y=4]
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Player 2 spawn: java.awt.Point[x=11,y=11]
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 40 hielos, 48 paredes, 8 baldosas calientes
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 4 cargada desde JSON
+Dec 10, 2025 1:47:07 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 4 with Machine vs Machine
+Dec 10, 2025 1:47:09 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=1,y=3]
+Dec 10, 2025 1:47:09 PM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=1,y=2]
+Dec 10, 2025 2:16:48 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:16:54 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:16:54 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 desde JSON con 1 jugadores.
+Dec 10, 2025 2:16:54 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel desde JSON: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.initializeLevelFromJSON(GameFacade.java:225)
+	at domain.GameFacade.initializeLevel(GameFacade.java:206)
+	at domain.GameFacade.<init>(GameFacade.java:97)
+	at domain.GameFacade.<init>(GameFacade.java:50)
+	at domain.GameFacade.<init>(GameFacade.java:107)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:368)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:17:00 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:17:00 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 desde JSON con 1 jugadores.
+Dec 10, 2025 2:17:00 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel desde JSON: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.initializeLevelFromJSON(GameFacade.java:225)
+	at domain.GameFacade.initializeLevel(GameFacade.java:214)
+	at domain.GameFacade.<init>(GameFacade.java:95)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GameWindow.<init>(GameWindow.java:34)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:400)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:17:00 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 4 with 1 player(s)
+Dec 10, 2025 2:21:45 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:21:50 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:21:50 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 desde JSON con 1 jugadores.
+Dec 10, 2025 2:21:50 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel desde JSON: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.initializeLevelFromJSON(GameFacade.java:225)
+	at domain.GameFacade.initializeLevel(GameFacade.java:206)
+	at domain.GameFacade.<init>(GameFacade.java:97)
+	at domain.GameFacade.<init>(GameFacade.java:50)
+	at domain.GameFacade.<init>(GameFacade.java:107)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:368)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:21:59 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:21:59 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 desde JSON con 1 jugadores.
+Dec 10, 2025 2:21:59 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel desde JSON: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 4: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.initializeLevelFromJSON(GameFacade.java:225)
+	at domain.GameFacade.initializeLevel(GameFacade.java:214)
+	at domain.GameFacade.<init>(GameFacade.java:95)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GameWindow.<init>(GameWindow.java:34)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:400)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:21:59 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 4 with 1 player(s)
+Dec 10, 2025 2:24:26 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:24:31 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:24:31 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 1 jugadores.
+Dec 10, 2025 2:24:31 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel desde JSON: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.initializeLevelFromJSON(GameFacade.java:234)
+	at domain.GameFacade.initializeLevel(GameFacade.java:201)
+	at domain.GameFacade.<init>(GameFacade.java:97)
+	at domain.GameFacade.<init>(GameFacade.java:50)
+	at domain.GameFacade.<init>(GameFacade.java:107)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:368)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:24:35 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:24:35 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:24:35 PM domain.BadDopoLogger logError
+SEVERE: Error cargando estructura del mapa desde JSON: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.setupMapStructure(GameFacade.java:257)
+	at domain.GameFacade.initializeLevel(GameFacade.java:213)
+	at domain.GameFacade.<init>(GameFacade.java:95)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GameWindow.<init>(GameWindow.java:34)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:400)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:24:35 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.setupMapStructure(GameFacade.java:257)
+	at domain.GameFacade.initializeLevel(GameFacade.java:213)
+	at domain.GameFacade.<init>(GameFacade.java:95)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GameWindow.<init>(GameWindow.java:34)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:400)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:24:35 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:26:31 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:26:36 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:26:36 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 1 jugadores.
+Dec 10, 2025 2:26:36 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel desde JSON: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.initializeLevelFromJSON(GameFacade.java:234)
+	at domain.GameFacade.initializeLevel(GameFacade.java:201)
+	at domain.GameFacade.<init>(GameFacade.java:97)
+	at domain.GameFacade.<init>(GameFacade.java:50)
+	at domain.GameFacade.<init>(GameFacade.java:107)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:368)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:26:46 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:26:46 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:26:46 PM domain.BadDopoLogger logError
+SEVERE: Error cargando estructura del mapa desde JSON: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.setupMapStructure(GameFacade.java:257)
+	at domain.GameFacade.initializeLevel(GameFacade.java:213)
+	at domain.GameFacade.<init>(GameFacade.java:95)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GameWindow.<init>(GameWindow.java:34)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:400)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:26:46 PM domain.BadDopoLogger logError
+SEVERE: Error al inicializar el nivel: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+domain.BadDopoException: Error parseando JSON del nivel 1: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:62)
+	at domain.GameFacade.setupMapStructure(GameFacade.java:257)
+	at domain.GameFacade.initializeLevel(GameFacade.java:213)
+	at domain.GameFacade.<init>(GameFacade.java:95)
+	at presentation.GamePanel.<init>(GamePanel.java:161)
+	at presentation.GameWindow.<init>(GameWindow.java:34)
+	at presentation.CharacterSelectionPanel.startGame(CharacterSelectionPanel.java:400)
+	at presentation.CharacterSelectionPanel.lambda$1(CharacterSelectionPanel.java:301)
+	at java.desktop/javax.swing.Timer.fireActionPerformed(Timer.java:311)
+	at java.desktop/javax.swing.Timer$DoPostEvent.run(Timer.java:243)
+	at java.desktop/java.awt.event.InvocationEvent.dispatch(InvocationEvent.java:318)
+	at java.desktop/java.awt.EventQueue.dispatchEventImpl(EventQueue.java:773)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:720)
+	at java.desktop/java.awt.EventQueue$4.run(EventQueue.java:714)
+	at java.base/java.security.AccessController.doPrivileged(AccessController.java:400)
+	at java.base/java.security.ProtectionDomain$JavaSecurityAccessImpl.doIntersectionPrivilege(ProtectionDomain.java:87)
+	at java.desktop/java.awt.EventQueue.dispatchEvent(EventQueue.java:742)
+	at java.desktop/java.awt.EventDispatchThread.pumpOneEventForFilters(EventDispatchThread.java:203)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForFilter(EventDispatchThread.java:124)
+	at java.desktop/java.awt.EventDispatchThread.pumpEventsForHierarchy(EventDispatchThread.java:113)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:109)
+	at java.desktop/java.awt.EventDispatchThread.pumpEvents(EventDispatchThread.java:101)
+	at java.desktop/java.awt.EventDispatchThread.run(EventDispatchThread.java:90)
+Caused by: org.json.JSONException: A JSONObject text must begin with '{' at 1 [character 2 line 1]
+	at org.json.JSONTokener.syntaxError(JSONTokener.java:501)
+	at org.json.JSONObject.<init>(JSONObject.java:208)
+	at org.json.JSONObject.<init>(JSONObject.java:404)
+	at domain.service.MapLoaderService.parseJSON(MapLoaderService.java:78)
+	at domain.service.MapLoaderService.loadLevel(MapLoaderService.java:50)
+	... 22 more
+
+Dec 10, 2025 2:26:46 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:29:38 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:29:43 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:29:43 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 1 jugadores.
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Mapa cargado desde JSON (entidades deshabilitadas temporalmente)
+Dec 10, 2025 2:29:44 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 inicializado completamente desde JSON
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 2:29:48 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 2:30:04 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 2:30:10 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 10, 2025 2:30:25 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
