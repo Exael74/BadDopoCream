@@ -361,24 +361,44 @@ public class CharacterSelectionPanel extends JPanel {
 
     private void startGame() {
         domain.BadDopoLogger.logInfo("Starting game...");
-        domain.BadDopoLogger.logInfo("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
-        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
-            domain.BadDopoLogger.logInfo("P2: " + selectedCharacterP2 + " (" + p2Name + ")");
-        }
 
-        cleanup();
+        // --- Level Configuration Step ---
+        // Create temporary facade just to fetch defaults/types
+        // Note: Character types for facade constructor don't matter here
+        domain.GameFacade tempFacade = new domain.GameFacade("Chocolate", selectedLevel, numberOfPlayers);
+
+        domain.dto.LevelConfigurationDTO config = tempFacade.getDefaultConfiguration(selectedLevel);
+        java.util.List<String> fruits = tempFacade.getAvailableFruitTypes();
+        java.util.List<String> enemies = tempFacade.getAvailableEnemyTypes();
 
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window instanceof JFrame) {
+            LevelConfigurationDialog configDialog = new LevelConfigurationDialog(
+                    (JFrame) window, config, fruits, enemies);
+            configDialog.setVisible(true);
+
+            if (!configDialog.isConfirmed()) {
+                return; // User cancelled
+            }
+
+            config = configDialog.getConfiguration();
+
+            domain.BadDopoLogger.logInfo("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
+            if (numberOfPlayers == 2 || numberOfPlayers == 0) {
+                domain.BadDopoLogger.logInfo("P2: " + selectedCharacterP2 + " (" + p2Name + ")");
+            }
+
+            cleanup();
+
             JFrame frame = (JFrame) window;
             frame.dispose();
 
             // Pass both characters if 2 players or Machine vs Machine, otherwise just P1
             String p2Char = (numberOfPlayers == 2 || numberOfPlayers == 0) ? selectedCharacterP2 : null;
 
-            // Note: We need to update GameWindow constructor to accept p2Char and names
+            // Pass updated Config
             new GameWindow(selectedCharacterP1, p2Char, p1Name, p2Name, selectedLevel, numberOfPlayers, resources,
-                    aiTypeP1, aiTypeP2, isP2CPU);
+                    aiTypeP1, aiTypeP2, isP2CPU, config);
         }
     }
 

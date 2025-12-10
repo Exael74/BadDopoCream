@@ -714,3 +714,323 @@ Dec 10, 2025 12:29:31 AM domain.BadDopoLogger logInfo
 INFO: Iniciando nivel 2 con 0 jugadores.
 Dec 10, 2025 12:34:57 AM domain.BadDopoLogger logInfo
 INFO: Iniciando nivel 2 con 0 jugadores.
+Dec 10, 2025 1:37:33 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 1:37:39 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 1:37:39 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:38:47 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 1:38:47 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:38:47 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 1:39:08 AM domain.BadDopoLogger logInfo
+INFO: ✓ Cereza teletransportada a java.awt.Point[x=11,y=5]
+Dec 10, 2025 1:46:28 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 1:46:33 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 1:46:33 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:46:39 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 1:46:39 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 1:46:39 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 1:46:41 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=9]
+Dec 10, 2025 1:46:41 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=8]
+Dec 10, 2025 1:46:41 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=7]
+Dec 10, 2025 1:46:42 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=6]
+Dec 10, 2025 1:46:42 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=3]
+Dec 10, 2025 2:02:05 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:02:11 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:02:11 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:02:34 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:02:34 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:02:34 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:02:39 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:02:54 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:02:54 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:02:59 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:02:59 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:03:05 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:03:12 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=10,y=8]
+Dec 10, 2025 2:03:14 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=2,y=8]
+Dec 10, 2025 2:03:17 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:03:20 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:03:24 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:03:31 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:03:31 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:04:06 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:04:12 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:04:12 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:04:14 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:04:14 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:04:14 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 2 with 1 player(s)
+Dec 10, 2025 2:04:28 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:04:28 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:12:12 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:12:17 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:12:17 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:12:32 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:12:32 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:12:32 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:12:34 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:12:38 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:12:40 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:12:43 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:12:52 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:12:52 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:13:05 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:13:05 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:13:25 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:13:25 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:13:26 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:13:26 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:13:26 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 2 with 1 player(s)
+Dec 10, 2025 2:13:31 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:13:31 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:13:44 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:13:44 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:13:46 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:13:46 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:13:46 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 4 with 1 player(s)
+Dec 10, 2025 2:14:06 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:14:06 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 2 jugadores y config personalizada.
+Dec 10, 2025 2:14:13 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:14:13 AM domain.BadDopoLogger logInfo
+INFO: P2: Vainilla (P2)
+Dec 10, 2025 2:14:13 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 2:14:13 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 2 jugadores y config personalizada.
+Dec 10, 2025 2:14:13 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 2 player(s)
+Dec 10, 2025 2:14:29 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:14:48 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:14:48 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 2:14:48 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 3 con 0 jugadores y config personalizada.
+Dec 10, 2025 2:14:54 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:14:54 AM domain.BadDopoLogger logInfo
+INFO: P2: Vainilla (P2)
+Dec 10, 2025 2:14:54 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 2:14:54 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 3 con 0 jugadores y config personalizada.
+Dec 10, 2025 2:14:54 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 3 with Machine vs Machine
+Dec 10, 2025 2:14:59 AM domain.BadDopoLogger logInfo
+INFO: [NARVAL] SMASHED Ice at java.awt.Point[x=4,y=3]
+Dec 10, 2025 2:24:33 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:24:38 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:24:38 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:24:46 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:24:46 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:24:46 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:24:53 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:25:00 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:25:02 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:25:06 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:25:19 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:25:19 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:25:30 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:25:30 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:25:45 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:25:45 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:25:54 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:25:54 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:25:58 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:25:58 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:26:03 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:26:03 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:41:30 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 2:41:35 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:41:35 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:41:40 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:41:40 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:41:40 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:41:51 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:41:51 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 2 with 1 player(s)
+Dec 10, 2025 2:42:12 AM domain.BadDopoLogger logInfo
+INFO: ✓ Cereza teletransportada a java.awt.Point[x=11,y=6]
+Dec 10, 2025 2:42:30 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 3 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:42:30 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 3 with 1 player(s)
+Dec 10, 2025 2:43:13 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:43:13 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 10, 2025 2:43:27 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:43:27 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:43:31 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:43:31 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 1 jugadores y config personalizada.
+Dec 10, 2025 2:43:31 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 4 with 1 player(s)
+Dec 10, 2025 2:43:56 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:43:56 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 2 jugadores y config personalizada.
+Dec 10, 2025 2:44:00 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:44:00 AM domain.BadDopoLogger logInfo
+INFO: P2: Vainilla (P2)
+Dec 10, 2025 2:44:00 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 2:44:00 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 4 con 2 jugadores y config personalizada.
+Dec 10, 2025 2:44:00 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 4 with 2 player(s)
+Dec 10, 2025 2:44:07 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 2:44:23 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 2:44:23 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 2:44:23 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 0 jugadores y config personalizada.
+Dec 10, 2025 2:44:30 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 2:44:30 AM domain.BadDopoLogger logInfo
+INFO: P2: Vainilla (P2)
+Dec 10, 2025 2:44:30 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 2:44:30 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 0 jugadores y config personalizada.
+Dec 10, 2025 2:44:30 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 2 with Machine vs Machine
+Dec 10, 2025 3:23:37 AM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 10, 2025 3:23:49 AM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 10, 2025 3:23:50 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 3:23:50 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 0 jugadores y config personalizada.
+Dec 10, 2025 3:23:59 AM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 10, 2025 3:23:59 AM domain.BadDopoLogger logInfo
+INFO: P2: Vainilla (P2)
+Dec 10, 2025 3:23:59 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 3:23:59 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 0 jugadores y config personalizada.
+Dec 10, 2025 3:23:59 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with Machine vs Machine
+Dec 10, 2025 3:24:28 AM domain.BadDopoLogger logInfo
+INFO: ✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)
+Dec 10, 2025 3:24:28 AM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 2 con 0 jugadores y config personalizada.
+Dec 10, 2025 3:24:28 AM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 2 with Machine vs Machine
+Dec 10, 2025 3:24:50 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 3:25:07 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 3:25:28 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 10, 2025 3:25:39 AM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!

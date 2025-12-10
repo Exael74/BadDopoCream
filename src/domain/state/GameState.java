@@ -176,6 +176,18 @@ public class GameState implements Serializable {
         return victory;
     }
 
+    /**
+     * Limpia todas las entidades del estado del juego.
+     */
+    public void clear() {
+        enemies.clear();
+        fruits.clear();
+        iceBlocks.clear();
+        hotTiles.clear();
+        unbreakableBlocks.clear();
+        iglu = null;
+    }
+
     public void setVictory(boolean victory) {
         this.victory = victory;
     }

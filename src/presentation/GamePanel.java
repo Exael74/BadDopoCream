@@ -16,7 +16,7 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * Panel principal del juego que maneja renderizado y captura de inputs.
  * Solo responsable de la presentación visual, sin lógica de negocio.
  */
-public class GamePanel extends JPanel {
+public class GamePanel extends JPanel implements java.awt.event.ActionListener {
 
     // Constantes del juego
     private static final int WINDOW_WIDTH = 1280;
@@ -42,6 +42,7 @@ public class GamePanel extends JPanel {
 
     // Fachada del dominio
     private GameFacade gameFacade;
+    private GameWindow gameWindow;
 
     // Datos del nivel
     private String selectedCharacter;
@@ -65,6 +66,18 @@ public class GamePanel extends JPanel {
     private MenuState menuState = MenuState.NONE;
     private List<String> savedGamesList = new ArrayList<>();
     private boolean isVictory = false;
+
+    // Almacenar parámetros de inicio para reiniciar
+    private String lastCharacterTypeP1;
+    private String lastCharacterTypeP2;
+    private String lastP1Name;
+    private String lastP2Name;
+    private int lastLevel;
+    private int lastNumberOfPlayers;
+    private String lastAITypeP1;
+    private String lastAITypeP2;
+    private boolean lastIsP2CPU;
+    private domain.dto.LevelConfigurationDTO lastConfig;
 
     // AI Types (Strings)
     private String aiTypeP1;
@@ -100,49 +113,79 @@ public class GamePanel extends JPanel {
     /**
      * Constructor del panel de juego.
      *
-     * @param character       Personaje seleccionado P1
-     * @param characterP2     Personaje seleccionado P2 (puede ser null)
+     * @param characterType   Personaje seleccionado P1
+     * @param characterTypeP2 Personaje seleccionado P2 (puede ser null)
      * @param p1Name          Nombre del Jugador 1 / Máquina 1
      * @param p2Name          Nombre del Jugador 2 / Máquina 2
      * @param level           Nivel a jugar
      * @param numberOfPlayers Número de jugadores
-     * @param resources       Recursos cargados
+     * @param loader          Recursos cargados
+     * @param window          Ventana principal
+     * @param aiTypeP1        Tipo de IA P1
+     * @param aiTypeP2        Tipo de IA P2
+     * @param isP2CPU         Si P2 es CPU
+     * @param config          Configuración del nivel
      */
-    public GamePanel(String character, String characterP2, String p1Name, String p2Name, int level, int numberOfPlayers,
-            ResourceLoader resources, String aiTypeP1, String aiTypeP2, boolean isP2CPU) {
-        this.resources = resources;
+    public GamePanel(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
+            int numberOfPlayers, ResourceLoader loader, GameWindow window, String aiTypeP1, String aiTypeP2,
+            boolean isP2CPU, domain.dto.LevelConfigurationDTO config) {
+        this.resources = loader;
+        this.gameWindow = window;
         this.fontLoader = FontLoader.getInstance();
-        this.selectedCharacter = character;
-        this.currentLevel = level;
+
+        // Keep track of initialization parameters for restart
+        this.lastCharacterTypeP1 = characterType;
+        this.lastCharacterTypeP2 = characterTypeP2;
+        this.lastP1Name = p1Name;
+        this.lastP2Name = p2Name;
+        this.lastLevel = level;
+        this.lastNumberOfPlayers = numberOfPlayers;
+        this.lastAITypeP1 = aiTypeP1;
+        this.lastAITypeP2 = aiTypeP2;
+        this.lastIsP2CPU = isP2CPU;
+        this.lastConfig = config;
+
+        // Active game state fields
+        this.currentLevel = level; // FIX: Initialize currentLevel
         this.numberOfPlayers = numberOfPlayers;
         this.aiTypeP1 = aiTypeP1;
         this.aiTypeP2 = aiTypeP2;
         this.isP2CPU = isP2CPU;
-        // Pass isP2CPU to GameFacade
-        this.gameFacade = new GameFacade(character, characterP2, p1Name, p2Name, level, numberOfPlayers, aiTypeP1,
-                aiTypeP2, isP2CPU);
+        this.selectedCharacter = characterType; // Assuming this field exists based on usage in startNewGameLevel
 
-        // Initialize Helpers
+        setPreferredSize(new Dimension(1280, 768));
+        setBackground(Color.BLACK);
+        setFocusable(true);
+
+        this.gameFacade = new GameFacade(characterType, characterTypeP2, p1Name, p2Name, level, numberOfPlayers,
+                aiTypeP1, aiTypeP2, isP2CPU, config);
+
+        // Initialize helper classes
         this.inputHandler = new GameInputHandler(this, gameFacade);
-        this.gameHUD = new GameHUD(gameFacade, resources, fontLoader);
-        this.gameOverlay = new GameOverlay(gameFacade, fontLoader, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        // Restore animation state fields
-        // Restore animation state fields
+        // Correct Constructor Calls & Field Names
+        this.gameOverlay = new GameOverlay(gameFacade, fontLoader, 1280, 768);
+        this.gameHUD = new GameHUD(gameFacade, resources, fontLoader);
+
+        // Listeners are setup by inputHandler.setupListeners() later
+
+        gameTimer = new javax.swing.Timer(16, this); // ~60 FPS
+        gameTimer.start();
+
+        initializeAnimationTimers();
 
         // Animation State Initialization
         this.iceAnimationProgress = new HashMap<>();
         this.icePlacementQueue = new LinkedList<>();
         this.restartScheduled = false;
 
-        // Inicializar animación de enemigos
         this.enemyTargetPositions = new HashMap<>();
         this.enemyCurrentPixelX = new HashMap<>();
         this.enemyCurrentPixelY = new HashMap<>();
         this.enemyIsMoving = new HashMap<>();
 
-        // Inicializar posiciones de enemigos usando snapshots
-        for (EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
+        // Initialize Enemy Animation States
+        for (domain.dto.EnemySnapshot enemySnapshot : gameFacade.getEnemySnapshots()) {
             String id = enemySnapshot.getId();
             Point pos = enemySnapshot.getPosition();
             enemyTargetPositions.put(id, new Point(pos));
@@ -151,15 +194,17 @@ public class GamePanel extends JPanel {
             enemyIsMoving.put(id, false);
         }
 
-        // Inicializar posición de animación del jugador 1
+        // Initialize Player 1 Animation State
         Point initialPos = gameFacade.getPlayerPosition();
-        this.targetGridPosition = new Point(initialPos);
-        this.currentPixelX = initialPos.x * CELL_SIZE;
-        this.currentPixelY = initialPos.y * CELL_SIZE;
-        this.isMoving = false;
+        if (initialPos != null) {
+            this.targetGridPosition = new Point(initialPos);
+            this.currentPixelX = initialPos.x * CELL_SIZE;
+            this.currentPixelY = initialPos.y * CELL_SIZE;
+            this.isMoving = false;
+        }
 
-        // Inicializar posición de animación del jugador 2
-        PlayerSnapshot p2Snapshot = gameFacade.getPlayer2Snapshot();
+        // Initialize Player 2 Animation State
+        domain.dto.PlayerSnapshot p2Snapshot = gameFacade.getPlayer2Snapshot();
         if (p2Snapshot != null) {
             Point p2Pos = p2Snapshot.getPosition();
             this.player2TargetGridPosition = new Point(p2Pos);
@@ -172,16 +217,101 @@ public class GamePanel extends JPanel {
         domain.BadDopoLogger.logInfo("GamePanel initialized for level " + level + " with " + modeText);
 
         inputHandler.setupListeners();
+
         startTimers();
     }
 
     public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
-        this(character, null, "P1", "P2", level, numberOfPlayers, resources, null, null, false);
+        this(character, null, "P1", "P2", level, numberOfPlayers, resources, null, null, null, false, null);
+    }
+
+    /**
+     * Legacy constructor for Main/Tests compatibility.
+     * Matches usage: new GamePanel(..., null, null, false)
+     */
+    public GamePanel(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
+            int numberOfPlayers, ResourceLoader loader, String aiTypeP1, String aiTypeP2, boolean isP2CPU) {
+        this(characterType, characterTypeP2, p1Name, p2Name, level, numberOfPlayers, loader, null, aiTypeP1, aiTypeP2,
+                isP2CPU, null);
+    }
+
+    private void initializeAnimationTimers() {
+        // Placeholder for additional animation timers if needed
     }
 
     // ==================== CONFIGURACIÓN DE LISTENERS ====================
 
     // ==================== MANEJO DE ACCIONES ====================
+
+    @Override
+    public void actionPerformed(java.awt.event.ActionEvent e) {
+        if (e.getSource() == gameTimer) {
+            if (menuState != MenuState.NONE && menuState != MenuState.SUMMARY) {
+                repaint();
+                return;
+            }
+
+            if (isVictory || gameFacade.isGameOver()) {
+                // Logic for game over/victory handled in draw or separate check
+            } else {
+                updateGame();
+            }
+            repaint();
+        }
+    }
+
+    private void updateGame() {
+        gameFacade.update();
+        processMovement();
+        // Update enemy animations
+        updateEnemyAnimations();
+    }
+
+    private void updateEnemyAnimations() {
+        for (domain.dto.EnemySnapshot enemy : gameFacade.getEnemySnapshots()) {
+            String id = enemy.getId();
+            Point target = enemy.getPosition();
+
+            // Initialize if new
+            if (!enemyTargetPositions.containsKey(id)) {
+                enemyTargetPositions.put(id, target);
+                enemyCurrentPixelX.put(id, (float) (target.x * CELL_SIZE));
+                enemyCurrentPixelY.put(id, (float) (target.y * CELL_SIZE));
+                enemyIsMoving.put(id, false);
+            }
+
+            Point oldTarget = enemyTargetPositions.get(id);
+            if (!oldTarget.equals(target)) {
+                // Enemy moved to new tile
+                enemyTargetPositions.put(id, target);
+                enemyIsMoving.put(id, true);
+            }
+
+            // Interpolate
+            float targetX = target.x * CELL_SIZE;
+            float targetY = target.y * CELL_SIZE;
+            float currentX = enemyCurrentPixelX.get(id);
+            float currentY = enemyCurrentPixelY.get(id);
+
+            if (Math.abs(targetX - currentX) < SMOOTH_ANIMATION_SPEED
+                    && Math.abs(targetY - currentY) < SMOOTH_ANIMATION_SPEED) {
+                enemyCurrentPixelX.put(id, targetX);
+                enemyCurrentPixelY.put(id, targetY);
+                enemyIsMoving.put(id, false);
+            } else {
+                if (currentX < targetX)
+                    currentX += SMOOTH_ANIMATION_SPEED;
+                if (currentX > targetX)
+                    currentX -= SMOOTH_ANIMATION_SPEED;
+                if (currentY < targetY)
+                    currentY += SMOOTH_ANIMATION_SPEED;
+                if (currentY > targetY)
+                    currentY -= SMOOTH_ANIMATION_SPEED;
+                enemyCurrentPixelX.put(id, currentX);
+                enemyCurrentPixelY.put(id, currentY);
+            }
+        }
+    }
 
     /**
      * Maneja la acción de SPACE (P1).
@@ -344,23 +474,29 @@ public class GamePanel extends JPanel {
             float deltaX = targetPixelX - player2CurrentPixelX;
             float deltaY = targetPixelY - player2CurrentPixelY;
 
-            // En MvM (0 players) O P1 vs CPU usar velocidad suave, en PvP usar velocidad
-            // rápida
-            int speed = (numberOfPlayers == 0 || (numberOfPlayers == 2 && isP2CPU)) ? SMOOTH_ANIMATION_SPEED
-                    : PLAYER_ANIMATION_SPEED;
+            // En MvM/P1vsCPU usar velocidad suave
+            int speed = SMOOTH_ANIMATION_SPEED;
 
             if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
                 player2CurrentPixelX = targetPixelX;
                 player2CurrentPixelY = targetPixelY;
                 player2IsMoving = false;
             } else {
+                // MANHATTAN INTERPOLATION
                 if (Math.abs(deltaX) > 0.5f) {
                     player2CurrentPixelX += Math.signum(deltaX) * speed;
-                }
-                if (Math.abs(deltaY) > 0.5f) {
+                    if (Math.abs(deltaY) < speed)
+                        player2CurrentPixelY = targetPixelY;
+                } else if (Math.abs(deltaY) > 0.5f) {
                     player2CurrentPixelY += Math.signum(deltaY) * speed;
+                    if (Math.abs(deltaX) < speed)
+                        player2CurrentPixelX = targetPixelX;
                 }
             }
+        } else {
+            // Force sync
+            player2CurrentPixelX = player2TargetGridPosition.x * CELL_SIZE;
+            player2CurrentPixelY = player2TargetGridPosition.y * CELL_SIZE;
         }
     }
 
@@ -419,11 +555,15 @@ public class GamePanel extends JPanel {
                         enemyCurrentPixelY.put(enemyId, targetY);
                         enemyIsMoving.put(enemyId, false);
                     } else {
+                        // MANHATTAN INTERPOLATION: Prevent diagonal slide
                         if (Math.abs(deltaX) > 0.5f) {
                             enemyCurrentPixelX.put(enemyId, currentX + Math.signum(deltaX) * speed);
-                        }
-                        if (Math.abs(deltaY) > 0.5f) {
+                            if (Math.abs(deltaY) < speed)
+                                enemyCurrentPixelY.put(enemyId, targetY);
+                        } else if (Math.abs(deltaY) > 0.5f) {
                             enemyCurrentPixelY.put(enemyId, currentY + Math.signum(deltaY) * speed);
+                            if (Math.abs(deltaX) < speed)
+                                enemyCurrentPixelX.put(enemyId, targetX);
                         }
                     }
                 }
@@ -564,11 +704,18 @@ public class GamePanel extends JPanel {
                 currentPixelY = targetPixelY;
                 isMoving = false;
             } else {
+                // MANHATTAN INTERPOLATION: Move only one axis at a time to prevent diagonal
+                // slide
                 if (Math.abs(deltaX) > 0.5f) {
                     currentPixelX += Math.signum(deltaX) * speed;
-                }
-                if (Math.abs(deltaY) > 0.5f) {
+                    // Snap Y if trying to move X to avoid micro-diagonals
+                    if (Math.abs(deltaY) < speed)
+                        currentPixelY = targetPixelY;
+                } else if (Math.abs(deltaY) > 0.5f) {
                     currentPixelY += Math.signum(deltaY) * speed;
+                    // Snap X
+                    if (Math.abs(deltaX) < speed)
+                        currentPixelX = targetPixelX;
                 }
             }
         }
@@ -983,7 +1130,8 @@ public class GamePanel extends JPanel {
                 menuState = MenuState.LOAD;
             } else if (gameOverlay.getRestartButtonRect() != null
                     && gameOverlay.getRestartButtonRect().contains(clickPoint)) {
-                startNewGameLevel(currentLevel);
+                // Modified: Prompt for config even on mid-game restart
+                promptForConfigurationAndStart(currentLevel);
                 menuState = MenuState.NONE;
             } else if (gameOverlay.getExitButtonRect() != null
                     && gameOverlay.getExitButtonRect().contains(clickPoint)) {
@@ -1021,9 +1169,11 @@ public class GamePanel extends JPanel {
         if (gameOverlay.getSummaryRestartButton() != null
                 && gameOverlay.getSummaryRestartButton().contains(clickPoint)) {
             if (isVictory) {
-                startNewGameLevel(currentLevel);
+                // Restart Current Level with Config Dialog
+                promptForConfigurationAndStart(currentLevel);
             } else {
-                startNewGameLevel(1);
+                // Restart Game (Defeat) -> Level 1 with Config Dialog
+                promptForConfigurationAndStart(1);
             }
         } else if (gameOverlay.getSummaryMenuButton() != null
                 && gameOverlay.getSummaryMenuButton().contains(clickPoint)) {
@@ -1035,13 +1185,41 @@ public class GamePanel extends JPanel {
         } else if (gameOverlay.getSummaryNextLevelButton() != null
                 && gameOverlay.getSummaryNextLevelButton().contains(clickPoint)) {
             if (currentLevel < 4) {
-                startNewGameLevel(currentLevel + 1);
+                promptForConfigurationAndStart(currentLevel + 1);
             } else {
                 JOptionPane.showMessageDialog(this, "¡Próximamente más niveles!", "Próximamente",
                         JOptionPane.INFORMATION_MESSAGE);
             }
         }
         repaint();
+    }
+
+    /**
+     * Shows the LevelConfigurationDialog for the target level and starts the game
+     * with the chosen config.
+     */
+    private void promptForConfigurationAndStart(int targetLevel) {
+        // Use a temporary facade to get defaults/types.
+        // We reuse the existing context (players, etc.) from THIS GamePanel instance.
+        // Or creates a temp one. existing gameFacade has necessary info? Not exactly,
+        // getAvailableFruitTypes is static-like or simple getter in facade?
+
+        // Let's rely on gameFacade for DTO/Lists.
+        domain.dto.LevelConfigurationDTO defaultConfig = gameFacade.getDefaultConfiguration(targetLevel);
+        java.util.List<String> fruits = gameFacade.getAvailableFruitTypes();
+        java.util.List<String> enemies = gameFacade.getAvailableEnemyTypes();
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            LevelConfigurationDialog configDialog = new LevelConfigurationDialog(
+                    (JFrame) window, defaultConfig, fruits, enemies);
+            configDialog.setVisible(true);
+
+            if (configDialog.isConfirmed()) {
+                domain.dto.LevelConfigurationDTO newConfig = configDialog.getConfiguration();
+                startNewGameLevel(targetLevel, newConfig);
+            }
+        }
     }
 
     /**
@@ -1098,7 +1276,14 @@ public class GamePanel extends JPanel {
     /**
      * Helper method to start a new game level with preserved settings.
      */
+    /**
+     * Helper method to start a new game level with preserved settings.
+     */
     private void startNewGameLevel(int targetLevel) {
+        startNewGameLevel(targetLevel, null);
+    }
+
+    private void startNewGameLevel(int targetLevel, domain.dto.LevelConfigurationDTO newConfig) {
         if (gameTimer != null)
             gameTimer.stop();
         if (animationTimer != null)
@@ -1121,8 +1306,27 @@ public class GamePanel extends JPanel {
                         ? gameFacade.getPlayer2Snapshot().getName()
                         : "P2";
 
+                // Use new config if provided, otherwise fallback to last config (or default
+                // inside facade if null)
+                // Actually constructor expects a config.
+                // If newConfig is null, we should use lastConfig?
+                // Or if we claim this is "Next Level" without dialog, we might want default.
+                // But promptForConfigurationAndStart ALWAYS provides non-null config if
+                // confirmed.
+                // If it was null (legacy call), we might want to fetch default or use last.
+                // Let's use lastConfig if newConfig is null to preserve settings on quick
+                // restart,
+                // BUT "Restart Game" usually means reset.
+                // Given the flow, promptForConfigurationAndStart handles the config creation.
+                // If startNewGameLevel(int) is called directly (e.g. from debug?), use
+                // lastConfig.
+
+                domain.dto.LevelConfigurationDTO configToUse = (newConfig != null) ? newConfig : lastConfig;
+                // Using lastConfig implies restarting with SAME settings.
+
                 GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, p1Name, p2Name, targetLevel,
-                        numberOfPlayers, resources, aiTypeP1, aiTypeP2, isP2CPU);
+                        numberOfPlayers, resources, (GameWindow) window, aiTypeP1, aiTypeP2, isP2CPU, configToUse);
+
                 frame.add(newGamePanel);
                 frame.revalidate();
                 frame.repaint();
