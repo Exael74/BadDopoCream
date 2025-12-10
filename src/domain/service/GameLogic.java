@@ -34,7 +34,7 @@ public class GameLogic {
         if (gameState.getNumberOfPlayers() == 0
                 || (gameState.getNumberOfPlayers() == 2 && gameState.isP2CPU())) {
             this.aiController = new AIController(gameState, this);
-            System.out.println("✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)");
+            domain.BadDopoLogger.logInfo("✓ AIController inicializado para modo IA (0 Players o P1 vs CPU)");
         }
     }
 
@@ -426,7 +426,7 @@ public class GameLogic {
             if (ice != null) {
                 ice.startBreaking();
                 enemy.startBreakIce();
-                System.out.println("✓ Calamar IA rompió hielo automáticamente");
+                domain.BadDopoLogger.logInfo("✓ Calamar IA rompió hielo automáticamente");
             }
         }
         // Si no hay hielo, moverse normalmente (pero respetar Iglú y Bloques
@@ -458,16 +458,17 @@ public class GameLogic {
      */
     private void processNarvalMovement(Enemy narval, Point targetPosition) {
         // Heartbeat log to confirm method is running
-        // System.out.println("Processing Narval at " + narval.getPosition());
+        // BadDopoLogger.logInfo("Processing Narval at " + narval.getPosition());
 
         // 1. Detection (Always active if not drilling)
         if (!narval.isDrilling()) {
-            // System.out.println("[DEBUG] Checking Narval: " + narval.getPosition() + " vs
+            // BadDopoLogger.logInfo("[DEBUG] Checking Narval: " + narval.getPosition() + "
+            // vs
             // Player: " + targetPosition);
 
             Direction chargeDir = getPlayerDirectionIfSeeing(narval.getPosition(), targetPosition);
             if (chargeDir != null) {
-                // System.out.println("[NARVAL] Player spotted at " + chargeDir + "! engaging
+                // BadDopoLogger.logInfo("[NARVAL] Player spotted at " + chargeDir + "! engaging
                 // Drill Mode.");
                 narval.setDirection(chargeDir);
                 narval.startDrilling();
@@ -501,7 +502,7 @@ public class GameLogic {
                 ice.startBreaking();
                 // Instant destroy for charge feeling
                 gameState.removeIceBlock(ice);
-                System.out.println("[NARVAL] SMASHED Ice at " + nextPos);
+                domain.BadDopoLogger.logInfo("[NARVAL] SMASHED Ice at " + nextPos);
             }
 
             // Move
@@ -526,47 +527,48 @@ public class GameLogic {
      */
     private Direction getPlayerDirectionIfSeeing(Point enemyPos, Point playerPos) {
         // Log attempts periodically or just always for now (user says it doesn't print)
-        // System.out.println("[DEBUG] Checking Narval: " + enemyPos + " vs Player: " +
+        // BadDopoLogger.logInfo("[DEBUG] Checking Narval: " + enemyPos + " vs Player: "
+        // +
         // playerPos);
 
         if (enemyPos.x == playerPos.x) {
-            // System.out.println("[DEBUG] Aligned Vertically! X=" + enemyPos.x);
+            // BadDopoLogger.logInfo("[DEBUG] Aligned Vertically! X=" + enemyPos.x);
             // Vertical Alignment
             if (enemyPos.y > playerPos.y) {
                 // Player is ABOVE
                 if (isPathClear(enemyPos, playerPos, Direction.UP)) {
-                    // System.out.println("[DEBUG] Seeing Player UP");
+                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player UP");
                     return Direction.UP;
                 } else {
-                    // System.out.println("[DEBUG] Path BLOCKED UP");
+                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED UP");
                 }
             } else {
                 // Player is BELOW
                 if (isPathClear(enemyPos, playerPos, Direction.DOWN)) {
-                    // System.out.println("[DEBUG] Seeing Player DOWN");
+                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player DOWN");
                     return Direction.DOWN;
                 } else {
-                    // System.out.println("[DEBUG] Path BLOCKED DOWN");
+                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED DOWN");
                 }
             }
         } else if (enemyPos.y == playerPos.y) {
             // Horizontal Alignment
-            // System.out.println("[DEBUG] Aligned Horizontally! Y=" + enemyPos.y);
+            // BadDopoLogger.logInfo("[DEBUG] Aligned Horizontally! Y=" + enemyPos.y);
             if (enemyPos.x > playerPos.x) {
                 // Player is LEFT
                 if (isPathClear(enemyPos, playerPos, Direction.LEFT)) {
-                    // System.out.println("[DEBUG] Seeing Player LEFT");
+                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player LEFT");
                     return Direction.LEFT;
                 } else {
-                    // System.out.println("[DEBUG] Path BLOCKED LEFT");
+                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED LEFT");
                 }
             } else {
                 // Player is RIGHT
                 if (isPathClear(enemyPos, playerPos, Direction.RIGHT)) {
-                    // System.out.println("[DEBUG] Seeing Player RIGHT");
+                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player RIGHT");
                     return Direction.RIGHT;
                 } else {
-                    // System.out.println("[DEBUG] Path BLOCKED RIGHT");
+                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED RIGHT");
                 }
             }
         }
@@ -618,10 +620,13 @@ public class GameLogic {
             Fruit fruit = iterator.next();
             if (fruit.isActive() && !fruit.isCollected() && fruit.getPosition().equals(player.getPosition())) {
 
+                // If player is already dead/dying, ignore lethal collision to prevent infinite
+                // death loop
                 if (fruit.isLethal()) {
-                    player.die(); // Use existing die() method
-                    // Game Over logic handled in central update() loop
-                    return; // Player died, stop checking
+                    if (!player.isDying() && player.isAlive()) {
+                        player.die();
+                    }
+                    return;
                 }
 
                 // Normal Collection
@@ -657,7 +662,7 @@ public class GameLogic {
                 Point newPos = findRandomEmptyPosition();
                 if (newPos != null) {
                     fruit.move(newPos);
-                    System.out.println("✓ Cereza teletransportada a " + newPos);
+                    domain.BadDopoLogger.logInfo("✓ Cereza teletransportada a " + newPos);
                 }
             }
 
@@ -754,7 +759,7 @@ public class GameLogic {
             for (Fruit fruit : nextWave) {
                 gameState.addFruit(fruit);
             }
-            System.out.println("✓ Next wave spawned!");
+            domain.BadDopoLogger.logInfo("✓ Next wave spawned!");
         }
 
         // Actualizar IA si está activa
@@ -821,7 +826,7 @@ public class GameLogic {
             if (gameState.getNumberOfPlayers() == 2) {
                 int score1 = gameState.getScore();
                 int score2 = gameState.getScorePlayer2();
-                System.out.println("Victory! P1: " + score1 + " - P2: " + score2);
+                domain.BadDopoLogger.logInfo("Victory! P1: " + score1 + " - P2: " + score2);
             }
         }
     }

@@ -422,7 +422,6 @@ public class ResourceLoader {
 
         } catch (Exception e) {
             domain.BadDopoLogger.logError("Error cargando imágenes: " + e.getMessage(), e);
-            e.printStackTrace();
         }
     }
 

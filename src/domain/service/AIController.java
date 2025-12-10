@@ -33,7 +33,7 @@ public class AIController {
 
     // Constantes
     private static final int AI_MOVE_INTERVAL = 400;
-    private static final int AI_ACTION_INTERVAL = 800;
+    private static final int AI_ACTION_INTERVAL = 300; // Faster action checks (was 800)
 
     /**
      * Constructor del controlador de IA.
@@ -163,9 +163,9 @@ public class AIController {
 
         boolean inLoop = detectPositionLoop(recentPositions);
 
-        // Si está atascado, movimiento aleatorio
+        // Si está atascado, intentar liberarse
         if (failedMoves > 4 || inLoop) {
-            moveRandomly(isPlayer1);
+            handleStuckState(player, isPlayer1);
             if (isPlayer1) {
                 aiPlayer1ConsecutiveFailedMoves = 0;
                 aiPlayer1RecentPositions.clear();
@@ -299,13 +299,17 @@ public class AIController {
         if (type == null)
             type = AIType.EXPERT;
 
-        // FEARFUL: Solo estornuda si NO está corriendo por su vida (distancia > 2)
+        // FEARFUL: Logic improved to use Sneeze more often
         if (type == AIType.FEARFUL) {
             Enemy enemy = findNearestEnemy(playerPos);
+            // Si el enemigo no esta en rango de panico inmediato, considerar estornudar
             if (enemy != null) {
                 int dist = manhattanDistance(playerPos, enemy.getPosition());
-                // Solo estornudar si no estamos en pánico total
-                if (dist > 2 && dist <= 5 && shouldCreateIceFearful(player, enemy.getPosition())) {
+
+                // Occasional defensive sneeze if enemy is mid-range (chance based)
+                boolean randomSneeze = aiRandom.nextInt(100) < 30; // 30% chance per tick if conditions met
+
+                if (dist > 2 && dist <= 7 && randomSneeze && shouldCreateIceFearful(player, enemy.getPosition())) {
                     if (isPlayer1)
                         gameLogic.performIceSneeze(player);
                     else
@@ -326,6 +330,7 @@ public class AIController {
             else
                 gameLogic.performIceKick(player);
         } else if (type == AIType.EXPERT && shouldCreateIce(player)) {
+            // EXPERT: Intelligent use of ice block
             if (isPlayer1)
                 gameLogic.performIceSneeze(player);
             else
@@ -522,13 +527,40 @@ public class AIController {
 
     private boolean shouldCreateIce(Player player) {
         Enemy enemy = findNearestEnemy(player.getPosition());
-        // Solo crear hielo si el enemigo no está DEMASIADO cerca (riesgo de
-        // auto-bloqueo)
-        // Y está lo suficientemente cerca para ser amenaza
+
         if (enemy != null) {
             int d = manhattanDistance(player.getPosition(), enemy.getPosition());
-            if (d > 2 && d < 5)
+
+            // 1. Proximity Defense (Enemy close but not too close)
+            if (d > 2 && d < 5) {
                 return true;
+            }
+
+            // 2. Strategic Blocking (Alignment Sniping)
+            // If enemy is aligned and we are facing them, trap them!
+            Point pPos = player.getPosition();
+            Point ePos = enemy.getPosition();
+            Direction facing = player.getFacingDirection();
+
+            boolean alignedX = (pPos.x == ePos.x);
+            boolean alignedY = (pPos.y == ePos.y);
+
+            // Only snipe if strictly aligned and within reasonable range (not across entire
+            // map)
+            if ((alignedX || alignedY) && d < 10 && d > 1) {
+                if (alignedX) {
+                    if (pPos.y < ePos.y && facing == Direction.DOWN)
+                        return true; // Enemy below
+                    if (pPos.y > ePos.y && facing == Direction.UP)
+                        return true; // Enemy above
+                }
+                if (alignedY) {
+                    if (pPos.x < ePos.x && facing == Direction.RIGHT)
+                        return true; // Enemy right
+                    if (pPos.x > ePos.x && facing == Direction.LEFT)
+                        return true; // Enemy left
+                }
+            }
         }
         return false;
     }
@@ -558,6 +590,39 @@ public class AIController {
             }
         }
         return closest;
+    }
+
+    // ==================== UNSTUCK LOGIC ====================
+
+    private void handleStuckState(Player player, boolean isPlayer1) {
+        // First try: Kick surrounding ice
+        Point p = player.getPosition();
+        List<Direction> iceDirs = new ArrayList<>();
+
+        for (Direction d : Direction.values()) {
+            Point neighbor = new Point(p.x + d.getDeltaX(), p.y + d.getDeltaY());
+            if (hasIceAt(neighbor)) {
+                iceDirs.add(d);
+            }
+        }
+
+        if (!iceDirs.isEmpty()) {
+            // Found ice! Face it and kick.
+            Direction kickDir = iceDirs.get(aiRandom.nextInt(iceDirs.size()));
+
+            // Turn towards ice first (move in that direction but blocked)
+            executeMove(kickDir, isPlayer1);
+
+            // Then kick
+            if (isPlayer1)
+                gameLogic.performIceKick(player);
+            else
+                gameLogic.performIceKick(player);
+            return;
+        }
+
+        // Second try: Random move (fallback)
+        moveRandomly(isPlayer1);
     }
 
     private Enemy findNearestEnemy(Point from) {

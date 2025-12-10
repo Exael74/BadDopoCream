@@ -31,13 +31,13 @@ public class FontLoader {
                 GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
                 ge.registerFont(customFont);
 
-                System.out.println("✓ Fuente personalizada cargada: " + fontFiles[0].getName());
+                domain.BadDopoLogger.logInfo("✓ Fuente personalizada cargada: " + fontFiles[0].getName());
             } else {
-                System.err.println("⚠ No se encontró archivo .ttf en Resources/font");
+                domain.BadDopoLogger.logSevere("⚠ No se encontró archivo .ttf en Resources/font");
                 customFont = new Font("Arial", Font.PLAIN, 24); // Fuente por defecto
             }
         } catch (Exception e) {
-            System.err.println("Error cargando fuente personalizada: " + e.getMessage());
+            domain.BadDopoLogger.logError("Error cargando fuente personalizada: " + e.getMessage(), e);
             customFont = new Font("Arial", Font.PLAIN, 24); // Fuente por defecto
         }
     }

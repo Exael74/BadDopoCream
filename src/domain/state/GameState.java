@@ -224,7 +224,7 @@ public class GameState implements Serializable {
             if (timeRemaining <= 0) {
                 timeRemaining = 0;
                 timeUp = true;
-                System.out.println("✗ ¡Se acabó el tiempo! - Game Over");
+                domain.BadDopoLogger.logInfo("✗ ¡Se acabó el tiempo! - Game Over");
             }
         }
     }

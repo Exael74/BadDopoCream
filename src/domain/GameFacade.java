@@ -186,10 +186,8 @@ public class GameFacade {
             }
         } catch (BadDopoException e) {
             BadDopoLogger.logError("Error al inicializar el nivel: " + e.getMessage(), e);
-            System.err.println(e.getMessage());
         } catch (Exception e) {
             BadDopoLogger.logError("Error inesperado al inicializar el nivel", e);
-            e.printStackTrace();
         }
     }
 
@@ -504,8 +502,7 @@ public class GameFacade {
                         wave4_3.add(new Fruit(pos, FruitType.CACTUS));
                 }
                 gameState.addPendingFruitWave(wave4_3);
-                System.out.println("DEBUG: Level 4 Initialized. Piñas: " + 10 + ", Pending Wave 1 (Cerezas): "
-                        + wave4_2.size() + ", Pending Wave 2 (Cactus): " + wave4_3.size());
+
                 break;
         }
     }
@@ -1030,6 +1027,10 @@ public class GameFacade {
         // is set).
         // Here we ensure we wait for BOTH animations to complete before showing
         // summary.
+        if (isTimeUp()) {
+            return true;
+        }
+
         if (gameState.getNumberOfPlayers() == 2 || gameState.getNumberOfPlayers() == 0) {
             return p1Dead && p2Dead;
         }

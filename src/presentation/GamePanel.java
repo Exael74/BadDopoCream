@@ -6,10 +6,7 @@ import domain.dto.*;
 import domain.entity.*;
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 import java.util.*;
 import java.util.List;
 import java.io.File;
@@ -26,11 +23,7 @@ public class GamePanel extends JPanel {
     private static final int WINDOW_HEIGHT = 768;
     private static final int GRID_SIZE = 13;
     private static final int CELL_SIZE = 50;
-
-    // Constantes del sidebar
     private static final int SIDEBAR_WIDTH = 200;
-    private static final int SIDEBAR_FRUIT_SIZE = 40;
-    private static final int SIDEBAR_PADDING = 20;
 
     // Tamaños de los sprites
     private static final int PLAYER_SIZE = 45;
@@ -59,10 +52,24 @@ public class GamePanel extends JPanel {
     private javax.swing.Timer gameTimer;
     private javax.swing.Timer animationTimer;
 
-    // Control de teclas
-    private Set<Integer> pressedKeys;
-    private boolean spaceWasPressed;
-    private boolean mWasPressed;
+    // Helper Classes
+    private GameInputHandler inputHandler;
+    private GameHUD gameHUD;
+    private GameOverlay gameOverlay;
+
+    // Menú de Pausa y Resumen
+    public enum MenuState {
+        NONE, MAIN, SAVE, LOAD, SUMMARY
+    }
+
+    private MenuState menuState = MenuState.NONE;
+    private List<String> savedGamesList = new ArrayList<>();
+    private boolean isVictory = false;
+
+    // AI Types
+    private domain.entity.AIType aiTypeP1;
+    private domain.entity.AIType aiTypeP2;
+    private boolean isP2CPU;
 
     // Variables para animación suave del jugador 1
     private Point targetGridPosition;
@@ -76,7 +83,6 @@ public class GamePanel extends JPanel {
     private float player2CurrentPixelY;
     private boolean player2IsMoving;
 
-    // Variables para animación suave de enemigos (mapeadas por posición de grid)
     // Variables para animación suave de enemigos (mapeadas por ID de entidad)
     private Map<String, Point> enemyTargetPositions;
     private Map<String, Float> enemyCurrentPixelX;
@@ -90,28 +96,6 @@ public class GamePanel extends JPanel {
 
     // Control de reinicio
     private boolean restartScheduled;
-
-    // Menú de Pausa y Resumen
-    private enum MenuState {
-        NONE, MAIN, SAVE, LOAD, SUMMARY
-    }
-
-    private MenuState menuState = MenuState.NONE;
-    private List<String> savedGamesList = new ArrayList<>();
-
-    // Rectángulos de botones (para detección de clicks)
-    private Rectangle resumeButtonRect, saveButtonRect, loadButtonRect, restartButtonRect, exitButtonRect;
-    private List<Rectangle> loadGameButtonRects = new ArrayList<>();
-    private Rectangle backButtonRect;
-
-    // Botones del menú de resumen
-    private Rectangle summaryRestartButton, summaryMenuButton, summaryNextLevelButton;
-    private boolean isVictory = false;
-
-    // AI Types
-    private domain.entity.AIType aiTypeP1;
-    private domain.entity.AIType aiTypeP2;
-    private boolean isP2CPU;
 
     /**
      * Constructor del panel de juego.
@@ -138,9 +122,15 @@ public class GamePanel extends JPanel {
         this.gameFacade = new GameFacade(character, characterP2, p1Name, p2Name, level, numberOfPlayers, aiTypeP1,
                 aiTypeP2, isP2CPU);
 
-        this.pressedKeys = new HashSet<>();
-        this.spaceWasPressed = false;
-        this.mWasPressed = false;
+        // Initialize Helpers
+        this.inputHandler = new GameInputHandler(this, gameFacade);
+        this.gameHUD = new GameHUD(gameFacade, resources, fontLoader);
+        this.gameOverlay = new GameOverlay(gameFacade, fontLoader, WINDOW_WIDTH, WINDOW_HEIGHT);
+
+        // Restore animation state fields
+        // Restore animation state fields
+
+        // Animation State Initialization
         this.iceAnimationProgress = new HashMap<>();
         this.icePlacementQueue = new LinkedList<>();
         this.restartScheduled = false;
@@ -179,10 +169,9 @@ public class GamePanel extends JPanel {
         }
 
         String modeText = numberOfPlayers == 0 ? "Machine vs Machine" : numberOfPlayers + " player(s)";
-        System.out.println("GamePanel initialized for level " + level + " with " + modeText);
+        domain.BadDopoLogger.logInfo("GamePanel initialized for level " + level + " with " + modeText);
 
-        setupKeyListeners();
-        setupMouseListeners();
+        inputHandler.setupListeners();
         startTimers();
     }
 
@@ -192,58 +181,15 @@ public class GamePanel extends JPanel {
 
     // ==================== CONFIGURACIÓN DE LISTENERS ====================
 
-    private void setupKeyListeners() {
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-
-                if (!pressedKeys.contains(keyCode)) {
-                    pressedKeys.add(keyCode);
-
-                    if (keyCode == KeyEvent.VK_ESCAPE) {
-                        handleEscapeAction();
-                    }
-
-                    if (gameFacade.isPaused())
-                        return; // No procesar otros inputs si está pausado
-
-                    // P1 Action
-                    if (keyCode == KeyEvent.VK_SPACE && !spaceWasPressed) {
-                        spaceWasPressed = true;
-                        handleSpaceAction();
-                    }
-
-                    // P2 Action (M)
-                    if (keyCode == KeyEvent.VK_M && !mWasPressed && numberOfPlayers == 2) {
-                        mWasPressed = true;
-                        handleMAction();
-                    }
-                }
-            }
-
-            @Override
-            public void keyReleased(KeyEvent e) {
-                int keyCode = e.getKeyCode();
-                pressedKeys.remove(keyCode);
-
-                if (keyCode == KeyEvent.VK_SPACE) {
-                    spaceWasPressed = false;
-                }
-
-                if (keyCode == KeyEvent.VK_M) {
-                    mWasPressed = false;
-                }
-            }
-        });
-    }
-
     // ==================== MANEJO DE ACCIONES ====================
 
     /**
      * Maneja la acción de SPACE (P1).
      */
-    private void handleSpaceAction() {
+    /**
+     * Maneja la acción de SPACE (P1).
+     */
+    void handleSpaceAction() {
         if (!gameFacade.isPlayerAlive() || gameFacade.isPlayerBusy())
             return;
 
@@ -257,7 +203,10 @@ public class GamePanel extends JPanel {
     /**
      * Maneja la acción de M (P2).
      */
-    private void handleMAction() {
+    /**
+     * Maneja la acción de M (P2).
+     */
+    void handleMAction() {
         // Check if P2 is alive/busy if needed, but performActionPlayer2 handles logic
         List<Point> affectedPositions = gameFacade.performActionPlayer2();
 
@@ -308,16 +257,16 @@ public class GamePanel extends JPanel {
         if (!isMoving) {
             boolean moved = false;
 
-            if (pressedKeys.contains(KeyEvent.VK_W)) {
+            if (inputHandler.isKeyPressed(KeyEvent.VK_W)) {
                 gameFacade.movePlayerUp();
                 moved = true;
-            } else if (pressedKeys.contains(KeyEvent.VK_S)) {
+            } else if (inputHandler.isKeyPressed(KeyEvent.VK_S)) {
                 gameFacade.movePlayerDown();
                 moved = true;
-            } else if (pressedKeys.contains(KeyEvent.VK_A)) {
+            } else if (inputHandler.isKeyPressed(KeyEvent.VK_A)) {
                 gameFacade.movePlayerLeft();
                 moved = true;
-            } else if (pressedKeys.contains(KeyEvent.VK_D)) {
+            } else if (inputHandler.isKeyPressed(KeyEvent.VK_D)) {
                 gameFacade.movePlayerRight();
                 moved = true;
             } else {
@@ -348,16 +297,16 @@ public class GamePanel extends JPanel {
         if (!player2IsMoving) {
             boolean moved = false;
 
-            if (pressedKeys.contains(KeyEvent.VK_UP)) {
+            if (inputHandler.isKeyPressed(KeyEvent.VK_UP)) {
                 gameFacade.movePlayer2Up();
                 moved = true;
-            } else if (pressedKeys.contains(KeyEvent.VK_DOWN)) {
+            } else if (inputHandler.isKeyPressed(KeyEvent.VK_DOWN)) {
                 gameFacade.movePlayer2Down();
                 moved = true;
-            } else if (pressedKeys.contains(KeyEvent.VK_LEFT)) {
+            } else if (inputHandler.isKeyPressed(KeyEvent.VK_LEFT)) {
                 gameFacade.movePlayer2Left();
                 moved = true;
-            } else if (pressedKeys.contains(KeyEvent.VK_RIGHT)) {
+            } else if (inputHandler.isKeyPressed(KeyEvent.VK_RIGHT)) {
                 gameFacade.movePlayer2Right();
                 moved = true;
             } else {
@@ -519,9 +468,10 @@ public class GamePanel extends JPanel {
 
             // Debug prints (remove later)
             if (gameFacade.isGameOver()) {
-                System.out.println("DEBUG: GameOver=true, RestartLevel=" + gameFacade.shouldRestartLevel() +
-                        ", DeathAnimComplete=" + gameFacade.isDeathAnimationComplete() +
-                        ", RestartScheduled=" + restartScheduled);
+                // domain.BadDopoLogger.logInfo("DEBUG: GameOver=true, RestartLevel=" +
+                // gameFacade.shouldRestartLevel() +
+                // ", DeathAnimComplete=" + gameFacade.isDeathAnimationComplete() +
+                // ", RestartScheduled=" + restartScheduled);
             }
 
             // Verificar victoria
@@ -532,14 +482,16 @@ public class GamePanel extends JPanel {
                 }
 
                 if (!restartScheduled) {
-                    System.out.println("DEBUG: Victory detected! Setting menuState to SUMMARY.");
+                    // domain.BadDopoLogger.logInfo("DEBUG: Victory detected! Setting menuState to
+                    // SUMMARY.");
                     restartScheduled = true;
                     menuState = MenuState.SUMMARY;
                     repaint();
                 } else {
                     // Failsafe: ensure menu is showing
-                    System.out.println("DEBUG: Victory is true, restartScheduled is true, BUT menuState is "
-                            + menuState + ". Forcing SUMMARY.");
+                    // domain.BadDopoLogger.logInfo("DEBUG: Victory is true, restartScheduled is
+                    // true, BUT menuState is "
+                    // + menuState + ". Forcing SUMMARY.");
                     menuState = MenuState.SUMMARY;
                     gameTimer.stop(); // Stop here too
                     repaint();
@@ -552,7 +504,7 @@ public class GamePanel extends JPanel {
 
             // Verificar derrota (tiempo agotado o jugador muerto)
             if (gameFacade.shouldRestartLevel() && !restartScheduled) {
-                System.out.println("DEBUG: Triggering Game Over Menu");
+                // domain.BadDopoLogger.logInfo("DEBUG: Triggering Game Over Menu");
                 restartScheduled = true;
                 isVictory = false; // Si alguien muere o se acaba el tiempo, es derrota (Game Over)
                 menuState = MenuState.SUMMARY;
@@ -636,54 +588,66 @@ public class GamePanel extends JPanel {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         Graphics2D g2d = (Graphics2D) g;
-        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        // Renderizado del juego
+        g2d.setColor(new Color(30, 30, 30));
+        g2d.fillRect(0, 0, getWidth(), getHeight());
 
         int mapWidth = GRID_SIZE * CELL_SIZE;
         int mapHeight = GRID_SIZE * CELL_SIZE;
-        int offsetX = (WINDOW_WIDTH - mapWidth) / 2;
+        int offsetX = (WINDOW_WIDTH - SIDEBAR_WIDTH - mapWidth) / 2 + SIDEBAR_WIDTH;
         int offsetY = (WINDOW_HEIGHT - mapHeight) / 2;
 
-        // Dibujar fondo
-        if (resources.fondoMapa != null) {
-            g2d.drawImage(resources.fondoMapa, offsetX, offsetY, mapWidth, mapHeight, this);
-        }
+        g2d.translate(offsetX, offsetY);
+        drawGridBackground(g2d);
+        g2d.translate(-offsetX, -offsetY);
 
-        // Panel lateral
-        drawSidebar(g2d, offsetX);
-
-        // Renderizado del fondo:
-        // 1. Iglú Central (antes que entidades)
-        drawIglu(g2d, offsetX, offsetY);
-
-        // 2. Bloques Irrompibles (limites)
         drawUnbreakableBlocks(g2d, offsetX, offsetY);
-
-        // Dibujar frutas usando FruitSnapshot
-        drawFruits(g2d, offsetX, offsetY);
-
-        // Dibujar baldosas calientes
         drawHotTiles(g2d, offsetX, offsetY);
-
-        // Dibujar hielo usando IceBlockSnapshot
+        drawIglu(g2d, offsetX, offsetY);
+        drawFruits(g2d, offsetX, offsetY);
         drawIceBlocks(g2d, offsetX, offsetY);
-
-        // Dibujar enemigos usando EnemySnapshot
         drawEnemies(g2d, offsetX, offsetY);
-
-        // Dibujar jugador 1
         drawPlayer(g2d, offsetX, offsetY);
 
-        // Dibujar jugador 2
-        drawPlayer2(g2d, offsetX, offsetY);
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
+            drawPlayer2(g2d, offsetX, offsetY);
+        }
 
-        // Mostrar controles según modo
-        drawControls(g2d);
+        // Delegar dibujo de UI
+        gameHUD.drawSidebar(g2d, offsetX, numberOfPlayers, currentLevel);
 
-        // Dibujar menú de pausa si es necesario
-        if (gameFacade.isPaused()) {
-            drawPauseMenu(g2d);
-        } else if (menuState == MenuState.SUMMARY) {
-            drawSummaryMenu(g2d);
+        // Menús superpuestos
+        if (gameFacade.isPaused() && menuState != MenuState.SUMMARY) {
+            gameOverlay.drawPauseMenu(g2d, menuState, savedGamesList, getMousePosition());
+        }
+
+        // Game Over / Victory
+        if (gameFacade.isGameOver() || gameFacade.isVictory()) {
+            boolean allPlayersDead = (numberOfPlayers > 0)
+                    ? (!gameFacade.isPlayerAlive() && (!gameFacade.isPlayer2Alive() || numberOfPlayers == 1))
+                    : false;
+            // PvP Logic handled in Facade/Logic, assume facade.isGameOver() is truth
+
+            if (gameFacade.isGameOver()) {
+                isVictory = false;
+                if (!gameFacade.isDeathAnimationComplete()) {
+                    gameTimer.stop(); // Stop game timer but allow animation
+                    return; // Don't show menu yet
+                }
+                menuState = MenuState.SUMMARY;
+                gameOverlay.drawSummaryMenu(g2d, false, numberOfPlayers, getMousePosition());
+            } else if (gameFacade.isVictory()) {
+                isVictory = true;
+                menuState = MenuState.SUMMARY;
+                gameOverlay.drawSummaryMenu(g2d, true, numberOfPlayers, getMousePosition());
+            }
+        }
+    }
+
+    private void drawGridBackground(Graphics2D g2d) {
+        if (resources.fondoMapa != null) {
+            g2d.drawImage(resources.fondoMapa, 0, 0, GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE, this);
         }
     }
 
@@ -947,174 +911,12 @@ public class GamePanel extends JPanel {
     /**
      * Dibuja los controles según el modo de juego.
      */
-    private void drawControls(Graphics2D g2d) {
-        g2d.setFont(fontLoader.getBoldFont(14f));
-        if (numberOfPlayers == 2) {
-            g2d.setColor(Color.WHITE);
-            g2d.drawString("P1: WASD + SPACE", 10, 20);
-            g2d.setColor(new Color(255, 100, 100)); // Reddish for P2
-            g2d.drawString("P2: Flechas + M", 10, 40);
-        } else if (numberOfPlayers == 0) {
-            g2d.setColor(new Color(255, 215, 0));
-            g2d.drawString("Modo: MACHINE vs MACHINE", 10, 20);
-            g2d.setColor(new Color(150, 150, 150));
-            g2d.drawString("Nivel " + currentLevel, 10, 40);
-        }
-    }
 
     // ==================== PANEL LATERAL ====================
 
     /**
      * Dibuja el panel lateral con temporizador y contador de frutas.
      */
-    private void drawSidebar(Graphics2D g2d, int mapOffsetX) {
-        int sidebarX = mapOffsetX - SIDEBAR_WIDTH - 20;
-        int sidebarY = 100;
-        int sidebarHeight = 600;
-
-        // Fondo del panel lateral con transparencia
-        g2d.setColor(new Color(0, 0, 0, 150));
-        g2d.fillRoundRect(sidebarX, sidebarY, SIDEBAR_WIDTH, sidebarHeight, 15, 15);
-
-        // Borde del panel
-        g2d.setColor(new Color(255, 255, 255, 200));
-        g2d.setStroke(new BasicStroke(3));
-        g2d.drawRoundRect(sidebarX, sidebarY, SIDEBAR_WIDTH, sidebarHeight, 15, 15);
-
-        int currentY = sidebarY + SIDEBAR_PADDING;
-
-        // ==================== TEMPORIZADOR ====================
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(fontLoader.getBoldFont(20f));
-        String timeLabel = "TIEMPO";
-        FontMetrics fmLabel = g2d.getFontMetrics();
-        int timeLabelWidth = fmLabel.stringWidth(timeLabel);
-        g2d.drawString(timeLabel, sidebarX + (SIDEBAR_WIDTH - timeLabelWidth) / 2, currentY);
-
-        currentY += 30;
-
-        // Mostrar tiempo restante
-        String timeRemaining = gameFacade.getFormattedTime();
-        long timeInMs = gameFacade.getTimeRemaining();
-
-        // Cambiar color según el tiempo restante
-        if (timeInMs <= 30000) { // Menos de 30 segundos - ROJO
-            g2d.setColor(new Color(255, 50, 50));
-        } else if (timeInMs <= 60000) { // Menos de 1 minuto - AMARILLO
-            g2d.setColor(new Color(255, 255, 0));
-        } else { // Más de 1 minuto - VERDE
-            g2d.setColor(new Color(100, 255, 100));
-        }
-
-        g2d.setFont(fontLoader.getBoldFont(32f));
-        FontMetrics fmTime = g2d.getFontMetrics();
-        int timeWidth = fmTime.stringWidth(timeRemaining);
-        g2d.drawString(timeRemaining, sidebarX + (SIDEBAR_WIDTH - timeWidth) / 2, currentY);
-
-        currentY += 50;
-
-        // Línea separadora
-        g2d.setColor(new Color(255, 255, 255, 150));
-        g2d.drawLine(sidebarX + 20, currentY, sidebarX + SIDEBAR_WIDTH - 20, currentY);
-
-        currentY += 30;
-
-        // ==================== FRUTAS RESTANTES ====================
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(fontLoader.getBoldFont(18f));
-        String fruitLabel = "FRUTAS";
-        FontMetrics fmFruit = g2d.getFontMetrics();
-        int fruitLabelWidth = fmFruit.stringWidth(fruitLabel);
-        g2d.drawString(fruitLabel, sidebarX + (SIDEBAR_WIDTH - fruitLabelWidth) / 2, currentY);
-
-        currentY += 35;
-
-        // Obtener tipos únicos de frutas en el nivel
-        List<String> fruitTypes = gameFacade.getUniqueFruitTypes();
-
-        for (String fruitType : fruitTypes) {
-            int remainingCount = gameFacade.countRemainingFruits(fruitType);
-
-            // Dibujar imagen de la fruta
-            ImageIcon fruitImage = resources.getFruitImage(fruitType);
-            int fruitX = sidebarX + 30;
-            g2d.drawImage(fruitImage.getImage(), fruitX, currentY, SIDEBAR_FRUIT_SIZE, SIDEBAR_FRUIT_SIZE, this);
-
-            // Dibujar contador
-            g2d.setFont(fontLoader.getBoldFont(24f));
-
-            // Color según cantidad restante
-            if (remainingCount == 0) {
-                g2d.setColor(new Color(100, 100, 100)); // Gris si está completo
-            } else {
-                g2d.setColor(Color.WHITE);
-            }
-
-            String countText = "x " + remainingCount;
-            g2d.drawString(countText, fruitX + SIDEBAR_FRUIT_SIZE + 15, currentY + 28);
-
-            currentY += SIDEBAR_FRUIT_SIZE + 15;
-        }
-
-        // ==================== PUNTUACIÓN ====================
-        currentY += 10;
-
-        // Línea separadora
-        g2d.setColor(new Color(255, 255, 255, 150));
-        g2d.drawLine(sidebarX + 20, currentY, sidebarX + SIDEBAR_WIDTH - 20, currentY);
-
-        currentY += 30;
-
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(fontLoader.getBoldFont(18f));
-        String scoreLabel = "PUNTOS";
-        FontMetrics fmScore = g2d.getFontMetrics();
-        int scoreLabelWidth = fmScore.stringWidth(scoreLabel);
-        g2d.drawString(scoreLabel, sidebarX + (SIDEBAR_WIDTH - scoreLabelWidth) / 2, currentY);
-
-        currentY += 35;
-
-        int score = gameFacade.getScore();
-        String scoreText = String.valueOf(score);
-        g2d.setFont(fontLoader.getBoldFont(32f));
-        g2d.setColor(new Color(255, 215, 0)); // Dorado
-        FontMetrics fmScoreVal = g2d.getFontMetrics();
-        int scoreValWidth = fmScoreVal.stringWidth(scoreText);
-        g2d.drawString(scoreText, sidebarX + (SIDEBAR_WIDTH - scoreValWidth) / 2, currentY);
-
-        // P2 Score if applicable
-        if (numberOfPlayers == 2) {
-            currentY += 40;
-            int score2 = gameFacade.getScorePlayer2();
-            String scoreText2 = String.valueOf(score2);
-            g2d.setColor(new Color(255, 100, 100)); // Reddish
-            FontMetrics fmScoreVal2 = g2d.getFontMetrics();
-            int scoreValWidth2 = fmScoreVal2.stringWidth(scoreText2);
-            g2d.drawString(scoreText2, sidebarX + (SIDEBAR_WIDTH - scoreValWidth2) / 2, currentY);
-
-            // Labels P1/P2 next to scores
-            g2d.setFont(fontLoader.getBoldFont(14f));
-            g2d.setColor(new Color(255, 215, 0));
-            g2d.drawString("P1", sidebarX + 20, currentY - 40);
-            g2d.setColor(new Color(255, 100, 100));
-            g2d.drawString("P2", sidebarX + 20, currentY);
-        }
-
-        // ==================== ADVERTENCIA DE TIEMPO ====================
-        if (timeInMs <= 30000 && timeInMs > 0) {
-            currentY += 20;
-            g2d.setColor(new Color(255, 50, 50));
-            g2d.setFont(fontLoader.getBoldFont(16f));
-            String warning = "¡APÚRATE!";
-            FontMetrics fmWarning = g2d.getFontMetrics();
-            int warningWidth = fmWarning.stringWidth(warning);
-
-            // Efecto parpadeante
-            int alpha = (int) ((Math.sin(System.currentTimeMillis() / 200.0) + 1) * 127.5);
-            g2d.setColor(new Color(255, 50, 50, alpha));
-            g2d.drawString(warning, sidebarX + (SIDEBAR_WIDTH - warningWidth) / 2, currentY);
-        }
-    }
 
     /**
      * Limpia los recursos del panel al cerrarse.
@@ -1128,20 +930,15 @@ public class GamePanel extends JPanel {
             icePlacementTimer.stop();
     }
 
-    private void setupMouseListeners() {
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (gameFacade.isPaused()) {
-                    handlePauseMenuClick(e.getPoint());
-                } else if (menuState == MenuState.SUMMARY) {
-                    handleSummaryMenuClick(e.getPoint());
-                }
-            }
-        });
+    void handleMouseClick(Point point) {
+        if (gameFacade.isPaused()) {
+            handlePauseMenuClick(point);
+        } else if (menuState == MenuState.SUMMARY) {
+            handleSummaryMenuClick(point);
+        }
     }
 
-    private void handleEscapeAction() {
+    void handleEscapeAction() {
         if (menuState == MenuState.NONE) {
             gameFacade.togglePause();
             menuState = MenuState.MAIN;
@@ -1156,109 +953,13 @@ public class GamePanel extends JPanel {
         }
     }
 
-    private void drawPauseMenu(Graphics2D g2d) {
-        // Fondo semitransparente
-        g2d.setColor(new Color(0, 0, 0, 200));
-        g2d.fillRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-        if (menuState == MenuState.MAIN) {
-            drawMainMenu(g2d);
-        } else if (menuState == MenuState.LOAD) {
-            drawLoadMenu(g2d);
-        }
-    }
-
-    private void drawMainMenu(Graphics2D g2d) {
-        int centerX = WINDOW_WIDTH / 2;
-        int startY = 200;
-        int buttonWidth = 300;
-        int buttonHeight = 50;
-        int spacing = 20;
-
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(fontLoader.getBoldFont(48f));
-        String title = "PAUSA";
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(title, centerX - fm.stringWidth(title) / 2, 150);
-
-        g2d.setFont(fontLoader.getBoldFont(24f));
-
-        resumeButtonRect = drawButton(g2d, "REANUDAR", centerX, startY, buttonWidth, buttonHeight);
-        saveButtonRect = drawButton(g2d, "GUARDAR PARTIDA", centerX, startY + (buttonHeight + spacing), buttonWidth,
-                buttonHeight);
-        loadButtonRect = drawButton(g2d, "CARGAR PARTIDA", centerX, startY + (buttonHeight + spacing) * 2, buttonWidth,
-                buttonHeight);
-        restartButtonRect = drawButton(g2d, "REINICIAR NIVEL", centerX, startY + (buttonHeight + spacing) * 3,
-                buttonWidth, buttonHeight);
-        exitButtonRect = drawButton(g2d, "SALIR", centerX, startY + (buttonHeight + spacing) * 4, buttonWidth,
-                buttonHeight);
-    }
-
-    private void drawLoadMenu(Graphics2D g2d) {
-        int centerX = WINDOW_WIDTH / 2;
-        int startY = 150;
-        int buttonWidth = 400;
-        int buttonHeight = 40;
-        int spacing = 10;
-
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(fontLoader.getBoldFont(36f));
-        String title = "CARGAR PARTIDA";
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(title, centerX - fm.stringWidth(title) / 2, 100);
-
-        g2d.setFont(fontLoader.getBoldFont(18f));
-
-        loadGameButtonRects.clear();
-
-        if (savedGamesList.isEmpty()) {
-            g2d.drawString("No hay partidas guardadas", centerX - fm.stringWidth("No hay partidas guardadas") / 2,
-                    startY);
-        } else {
-            for (int i = 0; i < savedGamesList.size(); i++) {
-                String saveName = savedGamesList.get(i);
-                Rectangle rect = drawButton(g2d, saveName, centerX, startY + i * (buttonHeight + spacing), buttonWidth,
-                        buttonHeight);
-                loadGameButtonRects.add(rect);
-            }
-        }
-
-        backButtonRect = drawButton(g2d, "VOLVER", centerX, WINDOW_HEIGHT - 100, 200, 50);
-    }
-
-    private Rectangle drawButton(Graphics2D g2d, String text, int centerX, int y, int width, int height) {
-        int x = centerX - width / 2;
-        Rectangle rect = new Rectangle(x, y, width, height);
-
-        // Detectar hover (opcional, requiere MouseMotionListener)
-        Point mousePos = getMousePosition();
-        boolean hover = mousePos != null && rect.contains(mousePos);
-
-        if (hover) {
-            g2d.setColor(new Color(255, 255, 255, 50));
-            g2d.fill(rect);
-            g2d.setColor(Color.YELLOW);
-        } else {
-            g2d.setColor(Color.WHITE);
-        }
-
-        g2d.setStroke(new BasicStroke(2));
-        g2d.draw(rect);
-
-        FontMetrics fm = g2d.getFontMetrics();
-        int textX = centerX - fm.stringWidth(text) / 2;
-        int textY = y + (height + fm.getAscent()) / 2 - 5;
-        g2d.drawString(text, textX, textY);
-
-        return rect;
-    }
-
     private void handlePauseMenuClick(Point clickPoint) {
         if (menuState == MenuState.MAIN) {
-            if (resumeButtonRect != null && resumeButtonRect.contains(clickPoint)) {
+            if (gameOverlay.getResumeButtonRect() != null && gameOverlay.getResumeButtonRect().contains(clickPoint)) {
                 gameFacade.togglePause();
                 menuState = MenuState.NONE;
-            } else if (saveButtonRect != null && saveButtonRect.contains(clickPoint)) {
+            } else if (gameOverlay.getSaveButtonRect() != null
+                    && gameOverlay.getSaveButtonRect().contains(clickPoint)) {
                 JFileChooser fileChooser = new JFileChooser();
                 fileChooser.setCurrentDirectory(new File("saves"));
                 fileChooser.setFileFilter(new FileNameExtensionFilter("Archivos de guardado (*.dat)", "dat"));
@@ -1276,37 +977,34 @@ public class GamePanel extends JPanel {
                         JOptionPane.showMessageDialog(this, "Error al guardar: " + e.getMessage());
                     }
                 }
-            } else if (loadButtonRect != null && loadButtonRect.contains(clickPoint)) {
+            } else if (gameOverlay.getLoadButtonRect() != null
+                    && gameOverlay.getLoadButtonRect().contains(clickPoint)) {
                 savedGamesList = gameFacade.getSavedGames();
                 menuState = MenuState.LOAD;
-            } else if (restartButtonRect != null && restartButtonRect.contains(clickPoint)) {
-                // Use startNewGameLevel to ensure a completely fresh state (avoids slide
-                // glitch)
+            } else if (gameOverlay.getRestartButtonRect() != null
+                    && gameOverlay.getRestartButtonRect().contains(clickPoint)) {
                 startNewGameLevel(currentLevel);
                 menuState = MenuState.NONE;
-            } else if (exitButtonRect != null && exitButtonRect.contains(clickPoint)) {
-                // Salir al menú principal (cerrar ventana actual)
+            } else if (gameOverlay.getExitButtonRect() != null
+                    && gameOverlay.getExitButtonRect().contains(clickPoint)) {
                 Window window = SwingUtilities.getWindowAncestor(this);
                 if (window != null) {
                     window.dispose();
-                    // Reiniciar la app
                     Main.main(new String[] {});
                 }
             }
         } else if (menuState == MenuState.LOAD) {
-            if (backButtonRect != null && backButtonRect.contains(clickPoint)) {
+            if (gameOverlay.getBackButtonRect() != null && gameOverlay.getBackButtonRect().contains(clickPoint)) {
                 menuState = MenuState.MAIN;
             } else {
-                for (int i = 0; i < loadGameButtonRects.size(); i++) {
-                    if (loadGameButtonRects.get(i).contains(clickPoint)) {
+                List<Rectangle> loadRects = gameOverlay.getLoadGameButtonRects();
+                for (int i = 0; i < loadRects.size(); i++) {
+                    if (loadRects.get(i).contains(clickPoint)) {
                         String saveFile = savedGamesList.get(i);
                         try {
                             gameFacade.loadGame(saveFile);
-
-                            // Prevent ghost movement and sync level
                             resetAnimationState();
                             currentLevel = gameFacade.getLevel();
-
                             menuState = MenuState.NONE;
                             JOptionPane.showMessageDialog(this, "Partida cargada exitosamente.");
                         } catch (BadDopoException e) {
@@ -1319,108 +1017,26 @@ public class GamePanel extends JPanel {
         repaint();
     }
 
-    private void drawSummaryMenu(Graphics2D g2d) {
-        // Fondo semitransparente
-        g2d.setColor(new Color(0, 0, 0, 220));
-        g2d.fillRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
-
-        int centerX = WINDOW_WIDTH / 2;
-        int startY = 150;
-        int buttonWidth = 300;
-        int buttonHeight = 50;
-        int spacing = 20;
-
-        // Título
-        g2d.setFont(fontLoader.getBoldFont(60f));
-        String title = isVictory ? "¡VICTORIA!" : "GAME OVER";
-        Color titleColor = isVictory ? new Color(255, 215, 0) : new Color(255, 50, 50);
-        g2d.setColor(titleColor);
-        FontMetrics fm = g2d.getFontMetrics();
-        g2d.drawString(title, centerX - fm.stringWidth(title) / 2, 120);
-
-        // Puntuación / Ganador
-        g2d.setFont(fontLoader.getBoldFont(30f));
-        g2d.setColor(Color.WHITE);
-        fm = g2d.getFontMetrics();
-
-        int scoreY = 200;
-        if (numberOfPlayers == 0 || numberOfPlayers == 2) {
-            // PvP or Machine vs Machine
-            String p1Name = (numberOfPlayers == 0) ? "Máquina 1" : "Jugador 1";
-            String p2Name = (numberOfPlayers == 0) ? "Máquina 2" : "Jugador 2";
-            String winnerText = "¡Empate!";
-
-            boolean p1Alive = gameFacade.isPlayerAlive();
-            boolean p2Alive = gameFacade.isPlayer2Alive();
-
-            if (p1Alive && !p2Alive) {
-                winnerText = "Ganador: " + p1Name;
-            } else if (!p1Alive && p2Alive) {
-                winnerText = "Ganador: " + p2Name;
-            } else {
-                // Both alive (Time up) or both dead (Draw) -> Decide by score
-                if (gameFacade.getScore() > gameFacade.getScorePlayer2()) {
-                    winnerText = "Ganador: " + p1Name;
-                } else if (gameFacade.getScorePlayer2() > gameFacade.getScore()) {
-                    winnerText = "Ganador: " + p2Name;
-                }
-            }
-
-            g2d.drawString(winnerText, centerX - fm.stringWidth(winnerText) / 2, scoreY);
-            scoreY += 40;
-
-            String scoreText = p1Name + ": " + gameFacade.getScore() + " - " + p2Name + ": "
-                    + gameFacade.getScorePlayer2();
-            g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
-        } else {
-            // Single Player
-            String scoreText = "Puntuación Final: " + gameFacade.getScore();
-            g2d.drawString(scoreText, centerX - fm.stringWidth(scoreText) / 2, scoreY);
-        }
-
-        // Botones
-        int buttonY = 350;
-        g2d.setFont(fontLoader.getBoldFont(24f));
-
-        String restartText = isVictory ? "REINICIAR NIVEL" : "REINICIAR JUEGO";
-        summaryRestartButton = drawButton(g2d, restartText, centerX, buttonY, buttonWidth, buttonHeight);
-        buttonY += buttonHeight + spacing;
-
-        if (isVictory) {
-            summaryNextLevelButton = drawButton(g2d, "SIGUIENTE NIVEL", centerX, buttonY, buttonWidth, buttonHeight);
-            buttonY += buttonHeight + spacing;
-        } else {
-            summaryNextLevelButton = null;
-        }
-
-        summaryMenuButton = drawButton(g2d, "MENÚ PRINCIPAL", centerX, buttonY, buttonWidth, buttonHeight);
-    }
-
     private void handleSummaryMenuClick(Point clickPoint) {
-        if (summaryRestartButton != null && summaryRestartButton.contains(clickPoint)) {
+        if (gameOverlay.getSummaryRestartButton() != null
+                && gameOverlay.getSummaryRestartButton().contains(clickPoint)) {
             if (isVictory) {
-                // Victory: Restart current level
-                // Use startNewGameLevel to ensure a completely fresh state (avoids slide
-                // glitch)
                 startNewGameLevel(currentLevel);
             } else {
-                // Defeat: Restart game from Level 1
                 startNewGameLevel(1);
             }
-        } else if (summaryMenuButton != null && summaryMenuButton.contains(clickPoint)) {
-            // Volver al menú de selección de nivel (o personaje)
+        } else if (gameOverlay.getSummaryMenuButton() != null
+                && gameOverlay.getSummaryMenuButton().contains(clickPoint)) {
             Window window = SwingUtilities.getWindowAncestor(this);
             if (window != null) {
                 window.dispose();
-                // Reiniciar la app
                 Main.main(new String[] {});
             }
-        } else if (summaryNextLevelButton != null && summaryNextLevelButton.contains(clickPoint)) {
+        } else if (gameOverlay.getSummaryNextLevelButton() != null
+                && gameOverlay.getSummaryNextLevelButton().contains(clickPoint)) {
             if (currentLevel < 4) {
-                // Go to next level
                 startNewGameLevel(currentLevel + 1);
             } else {
-                // Level 3 finished
                 JOptionPane.showMessageDialog(this, "¡Próximamente más niveles!", "Próximamente",
                         JOptionPane.INFORMATION_MESSAGE);
             }
@@ -1435,7 +1051,7 @@ public class GamePanel extends JPanel {
     private void resetAnimationState() {
         // Reset Player 1
         Point p1Pos = gameFacade.getPlayerPosition();
-        System.out.println("DEBUG: resetAnimationState called. New Logical Pos: " + p1Pos +
+        domain.BadDopoLogger.logInfo("DEBUG: resetAnimationState called. New Logical Pos: " + p1Pos +
                 ", Old Pixel X: " + currentPixelX + ", Old Pixel Y: " + currentPixelY);
 
         this.targetGridPosition = new Point(p1Pos);
@@ -1471,10 +1087,8 @@ public class GamePanel extends JPanel {
             enemyIsMoving.put(id, false);
         }
 
-        // Reset Input State
-        this.pressedKeys.clear();
-        this.spaceWasPressed = false;
-        this.mWasPressed = false;
+        // Reset inputs
+        inputHandler.clearKeys();
 
         // Reset Ice Animation
         this.iceAnimationProgress.clear();

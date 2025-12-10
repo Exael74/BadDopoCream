@@ -360,10 +360,10 @@ public class CharacterSelectionPanel extends JPanel {
     }
 
     private void startGame() {
-        System.out.println("Starting game...");
-        System.out.println("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
+        domain.BadDopoLogger.logInfo("Starting game...");
+        domain.BadDopoLogger.logInfo("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
         if (numberOfPlayers == 2 || numberOfPlayers == 0) {
-            System.out.println("P2: " + selectedCharacterP2 + " (" + p2Name + ")");
+            domain.BadDopoLogger.logInfo("P2: " + selectedCharacterP2 + " (" + p2Name + ")");
         }
 
         cleanup();
