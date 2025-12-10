@@ -616,7 +616,7 @@ public class GameLogic {
 
                 if (fruit.isLethal()) {
                     player.die(); // Use existing die() method
-                    gameState.setGameOver(true); // Ensure Game Over flag is set
+                    // Game Over logic handled in central update() loop
                     return; // Player died, stop checking
                 }
 
@@ -773,12 +773,16 @@ public class GameLogic {
             boolean p1Dead = !player.isAlive() && !player.isDying();
             boolean p2Dead = (player2 != null) && !player2.isAlive() && !player2.isDying();
 
-            if ((p1Dead || p2Dead) && !gameState.isGameOver()) {
-                // In Co-op or Single Player, if anyone dies -> Game Over
-                // In PvP, we might want different logic, but for now standard rules:
-                // Actually, in PvP, if opponent dies, it's victory.
-                // But wait, GamePanel handles "Victory vs GameOver" via shouldRestartLevel
-                // We just need to ensure the game stops.
+            boolean shouldEndGame;
+            if (gameState.getNumberOfPlayers() == 2 || gameState.getNumberOfPlayers() == 0) {
+                // For 2 Players or MvM, BOTH must be dead
+                shouldEndGame = p1Dead && p2Dead;
+            } else {
+                // For 1 Player, just P1 needs to be dead
+                shouldEndGame = p1Dead;
+            }
+
+            if (shouldEndGame && !gameState.isGameOver()) {
                 gameState.setGameOver(true);
             }
 

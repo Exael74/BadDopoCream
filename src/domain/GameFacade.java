@@ -1004,9 +1004,12 @@ public class GameFacade {
         boolean p1Dead = !player.isDying() && !player.isAlive();
         boolean p2Dead = (player2 != null) && !player2.isDying() && !player2.isAlive();
 
-        // In PvP/MvM, game over if ANY player dies.
+        // In PvP/MvM, game over only if BOTH players die (GameLogic ensures isGameOver
+        // is set).
+        // Here we ensure we wait for BOTH animations to complete before showing
+        // summary.
         if (gameState.getNumberOfPlayers() == 2 || gameState.getNumberOfPlayers() == 0) {
-            return p1Dead || p2Dead;
+            return p1Dead && p2Dead;
         }
         return p1Dead;
     }
