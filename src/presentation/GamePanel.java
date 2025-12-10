@@ -263,55 +263,10 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     private void updateGame() {
         gameFacade.update();
         processMovement();
-        // Update enemy animations
-        updateEnemyAnimations();
+        // Enemy animations are handled in updateAnimation() via animationTimer
     }
 
-    private void updateEnemyAnimations() {
-        for (domain.dto.EnemySnapshot enemy : gameFacade.getEnemySnapshots()) {
-            String id = enemy.getId();
-            Point target = enemy.getPosition();
-
-            // Initialize if new
-            if (!enemyTargetPositions.containsKey(id)) {
-                enemyTargetPositions.put(id, target);
-                enemyCurrentPixelX.put(id, (float) (target.x * CELL_SIZE));
-                enemyCurrentPixelY.put(id, (float) (target.y * CELL_SIZE));
-                enemyIsMoving.put(id, false);
-            }
-
-            Point oldTarget = enemyTargetPositions.get(id);
-            if (!oldTarget.equals(target)) {
-                // Enemy moved to new tile
-                enemyTargetPositions.put(id, target);
-                enemyIsMoving.put(id, true);
-            }
-
-            // Interpolate
-            float targetX = target.x * CELL_SIZE;
-            float targetY = target.y * CELL_SIZE;
-            float currentX = enemyCurrentPixelX.get(id);
-            float currentY = enemyCurrentPixelY.get(id);
-
-            if (Math.abs(targetX - currentX) < SMOOTH_ANIMATION_SPEED
-                    && Math.abs(targetY - currentY) < SMOOTH_ANIMATION_SPEED) {
-                enemyCurrentPixelX.put(id, targetX);
-                enemyCurrentPixelY.put(id, targetY);
-                enemyIsMoving.put(id, false);
-            } else {
-                if (currentX < targetX)
-                    currentX += SMOOTH_ANIMATION_SPEED;
-                if (currentX > targetX)
-                    currentX -= SMOOTH_ANIMATION_SPEED;
-                if (currentY < targetY)
-                    currentY += SMOOTH_ANIMATION_SPEED;
-                if (currentY > targetY)
-                    currentY -= SMOOTH_ANIMATION_SPEED;
-                enemyCurrentPixelX.put(id, currentX);
-                enemyCurrentPixelY.put(id, currentY);
-            }
-        }
-    }
+    // Removed duplicate updateEnemyAnimations() method
 
     /**
      * Maneja la acción de SPACE (P1).
@@ -406,6 +361,8 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
             if (moved) {
                 updatePlayerAnimation();
             }
+        } else {
+            // System.out.println("DEBUG: Input blocked because isMoving=true");
         }
     }
 
@@ -467,6 +424,9 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
      * Actualiza la posición en píxeles del jugador 2.
      */
     private void updatePlayer2PixelPosition() {
+        if (player2TargetGridPosition == null)
+            return;
+
         if (player2IsMoving) {
             float targetPixelX = player2TargetGridPosition.x * CELL_SIZE;
             float targetPixelY = player2TargetGridPosition.y * CELL_SIZE;
@@ -662,13 +622,17 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         });
         gameTimer.start();
 
-        animationTimer = new javax.swing.Timer(FRAME_DELAY, e ->
-
-        {
-            if (gameFacade.isPaused())
-                return;
-            updateAnimation();
-            repaint();
+        animationTimer = new javax.swing.Timer(FRAME_DELAY, e -> {
+            try {
+                if (gameFacade.isPaused())
+                    return;
+                // System.out.println("DEBUG: Animation Tick");
+                updateAnimation();
+                repaint();
+            } catch (Exception ex) {
+                System.err.println("CRITICAL: Animation Timer Crashed!");
+                ex.printStackTrace();
+            }
         });
         animationTimer.start();
     }
@@ -695,6 +659,9 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
 
             float deltaX = targetPixelX - currentPixelX;
             float deltaY = targetPixelY - currentPixelY;
+
+            // System.out.println("DEBUG: Animating P1. Curr: " + currentPixelX + "," +
+            // currentPixelY + " Target: " + targetPixelX + "," + targetPixelY);
 
             // En MvM (0 players) usar velocidad suave, en PvP/1P usar velocidad rápida
             int speed = (numberOfPlayers == 0) ? SMOOTH_ANIMATION_SPEED : PLAYER_ANIMATION_SPEED;
