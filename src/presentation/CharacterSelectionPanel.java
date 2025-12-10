@@ -47,11 +47,11 @@ public class CharacterSelectionPanel extends JPanel {
     private ImageIcon victoryGif = null;
     private Rectangle victoryArea = null;
 
-    // AI Types for MvM
-    private domain.entity.AIType aiTypeP1 = null;
-    private domain.entity.AIType aiTypeP2 = null;
+    // AI Types for MvM (Stored as Strings to decouple from Domain)
+    private String aiTypeP1 = null;
+    private String aiTypeP2 = null;
 
-    private domain.entity.AIType selectAIType(String playerName) {
+    private String selectAIType(String playerName) {
         String[] options = { "Hambriento (Frutas)", "Miedoso (Seguro)", "Experto (Balanceado)" };
         int choice = JOptionPane.showOptionDialog(this,
                 "Selecciona la personalidad de " + playerName + ":",
@@ -64,13 +64,13 @@ public class CharacterSelectionPanel extends JPanel {
 
         switch (choice) {
             case 0:
-                return domain.entity.AIType.HUNGRY;
+                return "HUNGRY";
             case 1:
-                return domain.entity.AIType.FEARFUL;
+                return "FEARFUL";
             case 2:
-                return domain.entity.AIType.EXPERT;
+                return "EXPERT";
             default:
-                return domain.entity.AIType.EXPERT;
+                return "EXPERT";
         }
     }
 

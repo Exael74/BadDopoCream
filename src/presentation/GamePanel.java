@@ -3,7 +3,7 @@ package presentation;
 import domain.GameFacade;
 import domain.BadDopoException;
 import domain.dto.*;
-import domain.entity.*;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -66,9 +66,9 @@ public class GamePanel extends JPanel {
     private List<String> savedGamesList = new ArrayList<>();
     private boolean isVictory = false;
 
-    // AI Types
-    private domain.entity.AIType aiTypeP1;
-    private domain.entity.AIType aiTypeP2;
+    // AI Types (Strings)
+    private String aiTypeP1;
+    private String aiTypeP2;
     private boolean isP2CPU;
 
     // Variables para animación suave del jugador 1
@@ -109,7 +109,7 @@ public class GamePanel extends JPanel {
      * @param resources       Recursos cargados
      */
     public GamePanel(String character, String characterP2, String p1Name, String p2Name, int level, int numberOfPlayers,
-            ResourceLoader resources, domain.entity.AIType aiTypeP1, domain.entity.AIType aiTypeP2, boolean isP2CPU) {
+            ResourceLoader resources, String aiTypeP1, String aiTypeP2, boolean isP2CPU) {
         this.resources = resources;
         this.fontLoader = FontLoader.getInstance();
         this.selectedCharacter = character;

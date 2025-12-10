@@ -31,10 +31,23 @@ public class GameFacade {
      * @param level           Nivel a jugar (1, 2, 3)
      * @param numberOfPlayers Número de jugadores (0=IA vs IA, 1=1P, 2=2P)
      */
+    /**
+     * Constructor de la fachada del juego.
+     *
+     * @param characterType   Tipo de personaje ("Chocolate", "Fresa", "Vainilla")
+     * @param level           Nivel a jugar (1, 2, 3)
+     * @param numberOfPlayers Número de jugadores (0=IA vs IA, 1=1P, 2=2P)
+     * @param aiTypeP1        Tipo de IA para P1 (String)
+     * @param aiTypeP2        Tipo de IA para P2 (String)
+     */
     public GameFacade(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
-            int numberOfPlayers, AIType aiTypeP1, AIType aiTypeP2, boolean isP2CPU) {
+            int numberOfPlayers, String aiTypeP1, String aiTypeP2, boolean isP2CPU) {
         this.gameState = new GameState(characterType, level, numberOfPlayers);
         this.gameState.setP2CPU(isP2CPU);
+
+        // Convert Strings to Enums
+        AIType type1 = parseAIType(aiTypeP1);
+        AIType type2 = parseAIType(aiTypeP2);
 
         // Set Player 2 character type if applicable
         if (gameState.getPlayer2() != null && characterTypeP2 != null) {
@@ -47,15 +60,15 @@ public class GameFacade {
         if (numberOfPlayers == 0) {
             // Machine vs Machine
             if (gameState.getPlayer() != null)
-                gameState.getPlayer().setAIType(aiTypeP1);
+                gameState.getPlayer().setAIType(type1);
             if (gameState.getPlayer2() != null)
-                gameState.getPlayer2().setAIType(aiTypeP2);
+                gameState.getPlayer2().setAIType(type2);
         } else if (numberOfPlayers == 2 && isP2CPU) {
             // Player 1 vs Machine
             // P1 is human (no AI type set, or null)
             if (gameState.getPlayer2() != null) {
-                gameState.getPlayer2().setAIType(aiTypeP2 != null ? aiTypeP2 : AIType.EXPERT); // Default to Expert if
-                                                                                               // null
+                gameState.getPlayer2().setAIType(type2 != null ? type2 : AIType.EXPERT); // Default to Expert if
+                                                                                         // null
             }
         }
 
@@ -70,7 +83,7 @@ public class GameFacade {
     }
 
     public GameFacade(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
-            int numberOfPlayers, AIType aiTypeP1, AIType aiTypeP2) {
+            int numberOfPlayers, String aiTypeP1, String aiTypeP2) {
         this(characterType, characterTypeP2, p1Name, p2Name, level, numberOfPlayers, aiTypeP1, aiTypeP2, false);
     }
 
@@ -1136,6 +1149,33 @@ public class GameFacade {
             }
         }
         return types;
+    }
+
+    // ==================== DECOUPLING HELPERS (AIType) ====================
+
+    /**
+     * Obtiene los tipos de IA disponibles como Strings.
+     */
+    public List<String> getAvailableAITypes() {
+        List<String> types = new ArrayList<>();
+        for (AIType type : AIType.values()) {
+            types.add(type.name());
+        }
+        return types;
+    }
+
+    /**
+     * Parsea un String a AIType de forma segura.
+     */
+    private AIType parseAIType(String typeName) {
+        if (typeName == null)
+            return null; // Allow null to mean "no change" or "default" depending on context
+        try {
+            return AIType.valueOf(typeName);
+        } catch (IllegalArgumentException e) {
+            BadDopoLogger.logError("Invalid AI Type: " + typeName + ", defaulting to EXPERT", e);
+            return AIType.EXPERT;
+        }
     }
 
 }
