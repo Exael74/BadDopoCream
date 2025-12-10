@@ -326,14 +326,28 @@ public class GameLogic {
             enemy.update(deltaTime);
 
             if (enemy.shouldMove()) {
-                // Determine target based on distance
+                // Determine target based on distance AND liveness
                 Point targetPos = p1Pos;
-                if (p2Pos != null) {
-                    double dist1 = enemy.getPosition().distance(p1Pos.x, p1Pos.y);
-                    double dist2 = enemy.getPosition().distance(p2Pos.x, p2Pos.y);
-                    if (dist2 < dist1) {
-                        targetPos = p2Pos;
+                boolean p1Alive = gameState.getPlayer().isAlive();
+                boolean p2Alive = (gameState.getPlayer2() != null && gameState.getPlayer2().isAlive());
+
+                if (p1Alive && !p2Alive) {
+                    targetPos = p1Pos;
+                } else if (!p1Alive && p2Alive) {
+                    targetPos = p2Pos;
+                } else if (p1Alive && p2Alive) {
+                    // Both alive, pick closest
+                    if (p2Pos != null) {
+                        double dist1 = enemy.getPosition().distance(p1Pos.x, p1Pos.y);
+                        double dist2 = enemy.getPosition().distance(p2Pos.x, p2Pos.y);
+                        if (dist2 < dist1) {
+                            targetPos = p2Pos;
+                        }
                     }
+                } else {
+                    // Both dead, keep default (p1Pos) or stop?
+                    // Game should be over, so it doesn't matter much, but let's default to P1
+                    targetPos = p1Pos;
                 }
 
                 processEnemyMovement(enemy, targetPos, currentLevel, numberOfPlayers);
