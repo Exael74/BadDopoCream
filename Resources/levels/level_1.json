@@ -1,6 +1,6 @@
 {
   "levelId": 1,
-  "name": "Nivel 1 - Principiante",
+  "name": "Nivel 1",
   "timeLimit": 180000,
   "gridSize": 13,
   "mapLayout": {
@@ -210,40 +210,6 @@
         "W",
         "W"
       ]
-    ]
-  },
-  "enemies": {
-    "randomPlacement": true,
-    "types": [
-      {
-        "type": "TROLL",
-        "count": 2
-      }
-    ]
-  },
-  "fruits": {
-    "randomPlacement": true,
-    "waves": [
-      {
-        "waveNumber": 1,
-        "spawnOnStart": true,
-        "fruits": [
-          {
-            "type": "UVA",
-            "count": 16
-          }
-        ]
-      },
-      {
-        "waveNumber": 2,
-        "spawnOnStart": false,
-        "fruits": [
-          {
-            "type": "PLATANO",
-            "count": 16
-          }
-        ]
-      }
     ]
   }
 }

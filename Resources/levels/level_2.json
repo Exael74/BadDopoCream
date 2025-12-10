@@ -1,7 +1,7 @@
 {
     "levelId": 2,
-    "name": "Nivel 2 - Intermedio",
-    "timeLimit": 150000,
+    "name": "Nivel 2",
+    "timeLimit": 180000,
     "gridSize": 13,
     "mapLayout": {
         "legend": {
@@ -210,54 +210,6 @@
                 "W",
                 "W"
             ]
-        ]
-    },
-    "enemies": {
-        "randomPlacement": true,
-        "types": [
-            {
-                "type": "TROLL",
-                "count": 2
-            },
-            {
-                "type": "FANTASMA",
-                "count": 1
-            }
-        ]
-    },
-    "fruits": {
-        "randomPlacement": true,
-        "waves": [
-            {
-                "waveNumber": 1,
-                "spawnOnStart": true,
-                "fruits": [
-                    {
-                        "type": "UVA",
-                        "count": 14
-                    }
-                ]
-            },
-            {
-                "waveNumber": 2,
-                "spawnOnStart": false,
-                "fruits": [
-                    {
-                        "type": "PLATANO",
-                        "count": 14
-                    }
-                ]
-            },
-            {
-                "waveNumber": 3,
-                "spawnOnStart": false,
-                "fruits": [
-                    {
-                        "type": "PIÃ‘A",
-                        "count": 12
-                    }
-                ]
-            }
         ]
     }
 }

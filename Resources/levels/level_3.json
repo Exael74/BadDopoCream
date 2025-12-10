@@ -1,7 +1,7 @@
 {
     "levelId": 3,
-    "name": "Nivel 3 - Avanzado",
-    "timeLimit": 120000,
+    "name": "Nivel 3",
+    "timeLimit": 180000,
     "gridSize": 13,
     "mapLayout": {
         "legend": {
@@ -210,64 +210,6 @@
                 "W",
                 "W"
             ]
-        ]
-    },
-    "enemies": {
-        "randomPlacement": true,
-        "types": [
-            {
-                "type": "TROLL",
-                "count": 2
-            },
-            {
-                "type": "FANTASMA",
-                "count": 2
-            }
-        ]
-    },
-    "fruits": {
-        "randomPlacement": true,
-        "waves": [
-            {
-                "waveNumber": 1,
-                "spawnOnStart": true,
-                "fruits": [
-                    {
-                        "type": "UVA",
-                        "count": 12
-                    }
-                ]
-            },
-            {
-                "waveNumber": 2,
-                "spawnOnStart": false,
-                "fruits": [
-                    {
-                        "type": "PLATANO",
-                        "count": 12
-                    }
-                ]
-            },
-            {
-                "waveNumber": 3,
-                "spawnOnStart": false,
-                "fruits": [
-                    {
-                        "type": "PIÃ‘A",
-                        "count": 12
-                    }
-                ]
-            },
-            {
-                "waveNumber": 4,
-                "spawnOnStart": false,
-                "fruits": [
-                    {
-                        "type": "CACTUS",
-                        "count": 10
-                    }
-                ]
-            }
         ]
     }
 }
