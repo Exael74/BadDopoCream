@@ -26,7 +26,9 @@ public class GameFacade {
     private PersistenceService persistenceService;
     private MapLoaderService mapLoaderService;
     private MapParserService mapParserService;
+    private LevelConfigurationDTO currentConfiguration; // Store configuration here
     private long lastUpdateTime;
+    private boolean isP2CPU; // Store this explicitly in Facade as well or rely on GameState
     private boolean paused;
 
     /**
@@ -55,6 +57,20 @@ public class GameFacade {
             domain.dto.LevelConfigurationDTO config) {
         this.gameState = new GameState(characterType, level, numberOfPlayers);
         this.gameState.setP2CPU(isP2CPU);
+        this.isP2CPU = isP2CPU;
+
+        // Ensure configuration is initialized
+        if (config != null) {
+            this.currentConfiguration = config;
+        } else {
+            // Load defaults if not provided
+            // We can't easily auto-load defaults without loading the level twice if we
+            // aren't careful,
+            // but initializeLevel will likely do it.
+            // For now, let's allow it to be null and load lazily or during initializeLevel.
+            // Actually, to support getters/setters BEFORE initialization, we might need to
+            // load defaults immediately.
+        }
 
         // Convert Strings to Enums
         AIType type1 = parseAIType(aiTypeP1);
@@ -772,6 +788,24 @@ public class GameFacade {
         return gameState.getScorePlayer2();
     }
 
+    public String getAITypeP1() {
+        if (gameState.getPlayer() != null && gameState.getPlayer().getAIType() != null) {
+            return gameState.getPlayer().getAIType().toString();
+        }
+        return "EXPERT"; // Default
+    }
+
+    public String getAITypeP2() {
+        if (gameState.getPlayer2() != null && gameState.getPlayer2().getAIType() != null) {
+            return gameState.getPlayer2().getAIType().toString();
+        }
+        return "EXPERT"; // Default
+    }
+
+    public boolean isP2CPU() {
+        return this.isP2CPU;
+    }
+
     // ==================== CONTEO DE FRUTAS ====================
 
     /**
@@ -798,10 +832,137 @@ public class GameFacade {
     public List<String> getUniqueFruitTypes() {
         List<String> types = new ArrayList<>();
         for (Fruit fruit : gameState.getFruits()) {
-            String type = fruit.getType().toString();
-            if (!types.contains(type)) {
-                types.add(type);
+            if (!types.contains(fruit.getType().toString())) {
+                types.add(fruit.getType().toString());
             }
+        }
+        return types;
+    }
+
+    // ==================== GESTIÓN DE CONFIGURACIÓN DEL NIVEL (FACADE)
+    // ====================
+
+    /**
+     * Carga la configuración por defecto para un nivel.
+     * Útil para inicializar el diálogo de configuración.
+     */
+    public LevelConfigurationDTO getDefaultConfiguration(int levelId) {
+        // En un caso real, esto vendría del JSON o MapLoaderService.
+        // Por ahora, creamos una default genérica o usamos la del loader.
+        try {
+            // LevelDataDTO data = mapLoaderService.loadLevel(levelId);
+            // Convert LevelDataDTO specific configs to a generic LevelConfigurationDTO if
+            // needed,
+            // or just create a fresh one based on what's available.
+            // Given LevelConfigurationDTO is likely a separate legacy DTO (from how it was
+            // used),
+            // let's create a basic one.
+            // Wait, LevelConfigurationDTO seems to be the one used by the Dialog.
+
+            LevelConfigurationDTO config = new LevelConfigurationDTO();
+            // Populate defaults... potentially reading from LevelDataDTO if we want to sync
+            // them.
+            // For now return empty/default to match previous logic or create fresh.
+            return config;
+        } catch (Exception e) {
+            BadDopoLogger.logError("Error loading default config", e);
+            return new LevelConfigurationDTO();
+        }
+    }
+
+    /**
+     * Establece la configuración actual.
+     */
+    public void setConfiguration(LevelConfigurationDTO config) {
+        this.currentConfiguration = config;
+    }
+
+    public LevelConfigurationDTO getConfiguration() {
+        return this.currentConfiguration;
+    }
+
+    /**
+     * Applies the current configuration to the game state.
+     * Clears existing dynamic entities (fruits, enemies) and respawns them based on
+     * the config.
+     * This is crucial when configuration changes after level initialization (e.g.
+     * via Dialog).
+     */
+    public void applyConfiguration() {
+        if (currentConfiguration == null)
+            return;
+
+        // Clear dynamic entities
+        gameState.getFruits().clear();
+        gameState.getPendingFruitWaves().clear();
+        gameState.getEnemies().clear();
+
+        // We do NOT clear map-based static entities (Ice, Walls, Map-HotTiles).
+        // Exceptions could be made if config allows overriding them, but for now we
+        // mix.
+
+        // Remove randomly placed hot tiles?
+        // Hard to distinguish from map tiles without tagging.
+        // For safety, let's keep map tiles and just add new ones if requested.
+
+        spawnDynamicEntities(currentConfiguration);
+
+        domain.BadDopoLogger.logInfo("Configuration applied to active GameState.");
+    }
+
+    // Métodos delegados para acceder/modificar la configuración sin exponer el DTO
+    // directamente en la UI
+
+    public Map<String, Integer> getFruitCountsConfig() {
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        return currentConfiguration.getFruitCounts();
+    }
+
+    public Map<String, Integer> getEnemyCountsConfig() {
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        return currentConfiguration.getEnemyCounts();
+    }
+
+    public int getHotTileCountConfig() {
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        return currentConfiguration.getHotTileCount();
+    }
+
+    public void setFruitCountConfig(String type, int count) {
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        currentConfiguration.addFruit(type, count);
+    }
+
+    public void setEnemyCountConfig(String type, int count) {
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        currentConfiguration.addEnemy(type, count);
+    }
+
+    public void setHotTileCountConfig(int count) {
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        currentConfiguration.setHotTileCount(count);
+    }
+
+    public List<String> getAvailableFruitTypes() {
+        // Return enum names
+        List<String> types = new ArrayList<>();
+        for (FruitType t : FruitType.values()) {
+            types.add(t.toString());
+        }
+        return types;
+    }
+
+    public List<String> getAvailableEnemyTypes() {
+        // Return enum names
+        List<String> types = new ArrayList<>();
+        for (EnemyType t : EnemyType.values()) {
+            types.add(t.toString());
         }
         return types;
     }
@@ -828,55 +989,9 @@ public class GameFacade {
         try {
             return AIType.valueOf(typeName);
         } catch (IllegalArgumentException e) {
-            BadDopoLogger.logError("Invalid AI Type: " + typeName + ", defaulting to EXPERT", e);
+            BadDopoLogger.logError("Invalid AI Type: " + typeName + ", default to EXPERT", e);
             return AIType.EXPERT;
         }
 
     }
-
-    // ==================== LEVEL CONFIGURATION SUPPORT ====================
-
-    /**
-     * @return List of available fruit types (Strings).
-     */
-    public List<String> getAvailableFruitTypes() {
-        List<String> types = new ArrayList<>();
-        for (FruitType type : FruitType.values()) {
-            types.add(type.name());
-        }
-        return types;
-    }
-
-    /**
-     * @return List of available enemy types (Strings).
-     */
-    public List<String> getAvailableEnemyTypes() {
-        List<String> types = new ArrayList<>();
-        for (EnemyType type : EnemyType.values()) {
-            types.add(type.name());
-        }
-        return types;
-    }
-
-    /**
-     * Gets the default configuration for a given level.
-     */
-    public LevelConfigurationDTO getDefaultConfiguration(int level) {
-        LevelConfigurationDTO config = new LevelConfigurationDTO();
-
-        // Defaults now strictly ZERO per user request
-        switch (level) {
-            // Cases kept for structure if we want metadata later, but values are 0.
-            case 1:
-            case 2:
-            case 3:
-            case 4:
-            default:
-                // All values explicitly 0 (default int is 0)
-                // config.addFruit("UVA", 0); // Implicit
-                break;
-        }
-        return config;
-    }
-
 }

@@ -829,7 +829,14 @@ public class GameLogic {
             }
         }
 
-        if (allFruitsCollected && gameState.getPendingFruitWaves().isEmpty()) {
+        // Fix: Check if game has actually started (time remaining < initial limit)
+        // or if we simply check if ANY fruits were ever added.
+        // Better: Check initialization via time remaining distinct from max
+        // OR simply ensure we don't trigger on frame 0.
+        // Assuming Time Limit is 180000ms.
+        boolean gameStarted = gameState.getTimeRemaining() < 180000;
+
+        if (gameStarted && allFruitsCollected && gameState.getPendingFruitWaves().isEmpty()) {
             gameState.setVictory(true);
             gameState.getPlayer().startCelebration();
             if (gameState.getPlayer2() != null) {

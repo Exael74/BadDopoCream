@@ -365,23 +365,27 @@ public class CharacterSelectionPanel extends JPanel {
         // --- Level Configuration Step ---
         // Create temporary facade just to fetch defaults/types
         // Note: Character types for facade constructor don't matter here
-        domain.GameFacade tempFacade = new domain.GameFacade("Chocolate", selectedLevel, numberOfPlayers);
+        // Create Facade fully here. This is the new entry point for Facade creation.
+        // We need to pass all parameters to it now.
+        domain.GameFacade gameFacade = new domain.GameFacade(selectedCharacterP1, selectedCharacterP2, p1Name, p2Name,
+                selectedLevel, numberOfPlayers, aiTypeP1, aiTypeP2, isP2CPU);
 
-        domain.dto.LevelConfigurationDTO config = tempFacade.getDefaultConfiguration(selectedLevel);
-        java.util.List<String> fruits = tempFacade.getAvailableFruitTypes();
-        java.util.List<String> enemies = tempFacade.getAvailableEnemyTypes();
+        // Load defaults
+        gameFacade.setConfiguration(gameFacade.getDefaultConfiguration(selectedLevel));
 
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window instanceof JFrame) {
             LevelConfigurationDialog configDialog = new LevelConfigurationDialog(
-                    (JFrame) window, config, fruits, enemies);
+                    (JFrame) window, gameFacade);
             configDialog.setVisible(true);
 
             if (!configDialog.isConfirmed()) {
                 return; // User cancelled
             }
 
-            config = configDialog.getConfiguration();
+            // Configuration is already updated in facade DTO, now apply it to State
+            gameFacade.applyConfiguration();
+            // config = configDialog.getConfiguration();
 
             domain.BadDopoLogger.logInfo("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
             if (numberOfPlayers == 2 || numberOfPlayers == 0) {
@@ -397,8 +401,8 @@ public class CharacterSelectionPanel extends JPanel {
             String p2Char = (numberOfPlayers == 2 || numberOfPlayers == 0) ? selectedCharacterP2 : null;
 
             // Pass updated Config
-            new GameWindow(selectedCharacterP1, p2Char, p1Name, p2Name, selectedLevel, numberOfPlayers, resources,
-                    aiTypeP1, aiTypeP2, isP2CPU, config);
+            // Pass Facade to Window
+            new GameWindow(gameFacade, resources);
         }
     }
 

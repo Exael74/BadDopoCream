@@ -1,6 +1,6 @@
 package presentation;
 
-import domain.dto.LevelConfigurationDTO;
+import domain.GameFacade;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.List;
@@ -12,17 +12,20 @@ import javax.swing.*;
  */
 public class LevelConfigurationDialog extends JDialog {
 
-    private LevelConfigurationDTO configuration;
+    private GameFacade gameFacade;
     private boolean confirmed = false;
 
     private Map<String, JSpinner> fruitSpinners = new HashMap<>();
     private Map<String, JSpinner> enemySpinners = new HashMap<>();
     private JSpinner hotTileSpinner;
 
-    public LevelConfigurationDialog(Frame owner, LevelConfigurationDTO currentConfig, List<String> availableFruits,
-            List<String> availableEnemies) {
+    public LevelConfigurationDialog(Frame owner, GameFacade gameFacade) {
         super(owner, "Configuración del Nivel", true);
-        this.configuration = currentConfig;
+        this.gameFacade = gameFacade;
+
+        // Fetch available types via facade
+        List<String> availableFruits = gameFacade.getAvailableFruitTypes();
+        List<String> availableEnemies = gameFacade.getAvailableEnemyTypes();
 
         setLayout(new BorderLayout());
         setSize(500, 600);
@@ -36,7 +39,7 @@ public class LevelConfigurationDialog extends JDialog {
         mainPanel.add(createSectionHeader("Frutas"));
         JPanel fruitPanel = new JPanel(new GridLayout(0, 2, 10, 5));
         for (String fruit : availableFruits) {
-            int currentVal = currentConfig.getFruitCounts().getOrDefault(fruit, 0);
+            int currentVal = gameFacade.getFruitCountsConfig().getOrDefault(fruit, 0);
             JSpinner spinner = new JSpinner(new SpinnerNumberModel(currentVal, 0, 50, 1));
             fruitPanel.add(new JLabel(fruit + ":"));
             fruitPanel.add(spinner);
@@ -49,7 +52,7 @@ public class LevelConfigurationDialog extends JDialog {
         mainPanel.add(createSectionHeader("Enemigos"));
         JPanel enemyPanel = new JPanel(new GridLayout(0, 2, 10, 5));
         for (String enemy : availableEnemies) {
-            int currentVal = currentConfig.getEnemyCounts().getOrDefault(enemy, 0);
+            int currentVal = gameFacade.getEnemyCountsConfig().getOrDefault(enemy, 0);
             JSpinner spinner = new JSpinner(new SpinnerNumberModel(currentVal, 0, 10, 1));
             enemyPanel.add(new JLabel(enemy + ":"));
             enemyPanel.add(spinner);
@@ -61,7 +64,7 @@ public class LevelConfigurationDialog extends JDialog {
         // --- Obstacles Section ---
         mainPanel.add(createSectionHeader("Obstáculos"));
         JPanel obstaclePanel = new JPanel(new GridLayout(0, 2, 10, 5));
-        hotTileSpinner = new JSpinner(new SpinnerNumberModel(currentConfig.getHotTileCount(), 0, 20, 1));
+        hotTileSpinner = new JSpinner(new SpinnerNumberModel(gameFacade.getHotTileCountConfig(), 0, 20, 1));
         obstaclePanel.add(new JLabel("Baldosas Calientes:"));
         obstaclePanel.add(hotTileSpinner);
         mainPanel.add(obstaclePanel);
@@ -96,21 +99,19 @@ public class LevelConfigurationDialog extends JDialog {
     private void updateConfiguration() {
         // Update Fruit Counts
         for (Map.Entry<String, JSpinner> entry : fruitSpinners.entrySet()) {
-            configuration.addFruit(entry.getKey(), (Integer) entry.getValue().getValue());
+            gameFacade.setFruitCountConfig(entry.getKey(), (Integer) entry.getValue().getValue());
         }
         // Update Enemy Counts
         for (Map.Entry<String, JSpinner> entry : enemySpinners.entrySet()) {
-            configuration.addEnemy(entry.getKey(), (Integer) entry.getValue().getValue());
+            gameFacade.setEnemyCountConfig(entry.getKey(), (Integer) entry.getValue().getValue());
         }
         // Update Hot Tiles
-        configuration.setHotTileCount((Integer) hotTileSpinner.getValue());
+        gameFacade.setHotTileCountConfig((Integer) hotTileSpinner.getValue());
     }
 
     public boolean isConfirmed() {
         return confirmed;
     }
 
-    public LevelConfigurationDTO getConfiguration() {
-        return configuration;
-    }
+    // Configuration is updated directly in facade, no getter needed for DTO
 }

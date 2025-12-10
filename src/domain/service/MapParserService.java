@@ -73,7 +73,8 @@ public class MapParserService {
                         break;
 
                     case "ice_permanent":
-                        state.addIceBlock(new IceBlock(position, true));
+                        // User request: All ice must be breakable
+                        state.addIceBlock(new IceBlock(position, false));
                         break;
 
                     case "wall":

@@ -42,10 +42,8 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
 
     // Fachada del dominio
     private GameFacade gameFacade;
-    private GameWindow gameWindow;
 
     // Datos del nivel
-    private String selectedCharacter;
     private int currentLevel;
     private int numberOfPlayers;
 
@@ -67,21 +65,8 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     private List<String> savedGamesList = new ArrayList<>();
     private boolean isVictory = false;
 
-    // Almacenar parámetros de inicio para reiniciar
-    private String lastCharacterTypeP1;
-    private String lastCharacterTypeP2;
-    private String lastP1Name;
-    private String lastP2Name;
-    private int lastLevel;
-    private int lastNumberOfPlayers;
-    private String lastAITypeP1;
-    private String lastAITypeP2;
-    private boolean lastIsP2CPU;
-    private domain.dto.LevelConfigurationDTO lastConfig;
-
     // AI Types (Strings)
-    private String aiTypeP1;
-    private String aiTypeP2;
+    // AI Types (Strings)
     private boolean isP2CPU;
 
     // Variables para animación suave del jugador 1
@@ -126,39 +111,36 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
      * @param isP2CPU         Si P2 es CPU
      * @param config          Configuración del nivel
      */
-    public GamePanel(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
-            int numberOfPlayers, ResourceLoader loader, GameWindow window, String aiTypeP1, String aiTypeP2,
-            boolean isP2CPU, domain.dto.LevelConfigurationDTO config) {
+    public GamePanel(GameFacade facade, ResourceLoader loader, GameWindow window) {
         this.resources = loader;
-        this.gameWindow = window;
+        this.resources = loader;
         this.fontLoader = FontLoader.getInstance();
+        this.gameFacade = facade;
 
-        // Keep track of initialization parameters for restart
-        this.lastCharacterTypeP1 = characterType;
-        this.lastCharacterTypeP2 = characterTypeP2;
-        this.lastP1Name = p1Name;
-        this.lastP2Name = p2Name;
-        this.lastLevel = level;
-        this.lastNumberOfPlayers = numberOfPlayers;
-        this.lastAITypeP1 = aiTypeP1;
-        this.lastAITypeP2 = aiTypeP2;
-        this.lastIsP2CPU = isP2CPU;
-        this.lastConfig = config;
+        // Extract initial state from facade for local fields
+        this.currentLevel = facade.getLevel();
+        this.numberOfPlayers = facade.getNumberOfPlayers();
+        // this.selectedCharacter = facade.getPlayerCharacterType(); // Accessor needed
+        // if strictly required
+
+        // We can't easily set other local fields (aiType, etc) without accessors from
+        // facade,
+        // but they might not be needed if facade handles logic.
+        // Let's rely on facade for logic.
 
         // Active game state fields
-        this.currentLevel = level; // FIX: Initialize currentLevel
-        this.numberOfPlayers = numberOfPlayers;
-        this.aiTypeP1 = aiTypeP1;
-        this.aiTypeP2 = aiTypeP2;
-        this.isP2CPU = isP2CPU;
-        this.selectedCharacter = characterType; // Assuming this field exists based on usage in startNewGameLevel
+        this.currentLevel = facade.getLevel();
+        this.numberOfPlayers = facade.getNumberOfPlayers(); // Restored
+        this.isP2CPU = facade.isP2CPU(); // Restored
 
         setPreferredSize(new Dimension(1280, 768));
         setBackground(Color.BLACK);
         setFocusable(true);
 
-        this.gameFacade = new GameFacade(characterType, characterTypeP2, p1Name, p2Name, level, numberOfPlayers,
-                aiTypeP1, aiTypeP2, isP2CPU, config);
+        // Facade is already initialized and passed
+        // this.gameFacade = new GameFacade(characterType, characterTypeP2, p1Name,
+        // p2Name, level, numberOfPlayers,
+        // aiTypeP1, aiTypeP2, isP2CPU, config);
 
         // Initialize helper classes
         this.inputHandler = new GameInputHandler(this, gameFacade);
@@ -214,25 +196,21 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         }
 
         String modeText = numberOfPlayers == 0 ? "Machine vs Machine" : numberOfPlayers + " player(s)";
-        domain.BadDopoLogger.logInfo("GamePanel initialized for level " + level + " with " + modeText);
+        domain.BadDopoLogger.logInfo("GamePanel initialized for level " + currentLevel + " with " + modeText);
 
         inputHandler.setupListeners();
 
         startTimers();
     }
 
-    public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
-        this(character, null, "P1", "P2", level, numberOfPlayers, resources, null, null, null, false, null);
-    }
+    // Legacy/Helper constructors removed or adapted if strictly needed by existing
+    // code NOT calling GameWindow
+    // Ideally, GamePanel should ONLY be created by GameWindow with a Facade.
 
-    /**
-     * Legacy constructor for Main/Tests compatibility.
-     * Matches usage: new GamePanel(..., null, null, false)
-     */
-    public GamePanel(String characterType, String characterTypeP2, String p1Name, String p2Name, int level,
-            int numberOfPlayers, ResourceLoader loader, String aiTypeP1, String aiTypeP2, boolean isP2CPU) {
-        this(characterType, characterTypeP2, p1Name, p2Name, level, numberOfPlayers, loader, null, aiTypeP1, aiTypeP2,
-                isP2CPU, null);
+    // For "Quick Start" or Tests, we might need a helper that creates a default
+    // facade.
+    public GamePanel(String character, int level, int numberOfPlayers, ResourceLoader resources) {
+        this(new GameFacade(character, level, numberOfPlayers), resources, null);
     }
 
     private void initializeAnimationTimers() {
@@ -1172,18 +1150,26 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         // getAvailableFruitTypes is static-like or simple getter in facade?
 
         // Let's rely on gameFacade for DTO/Lists.
-        domain.dto.LevelConfigurationDTO defaultConfig = gameFacade.getDefaultConfiguration(targetLevel);
-        java.util.List<String> fruits = gameFacade.getAvailableFruitTypes();
-        java.util.List<String> enemies = gameFacade.getAvailableEnemyTypes();
+        // Setup done inside dialog via facade
 
         Window window = SwingUtilities.getWindowAncestor(this);
         if (window instanceof JFrame) {
+            // We use the CURRENT facade to configure settings.
+            // Note: This modifies the configuration in the current facade instance.
+            // We must retrieve it to pass to the next level's facade.
+
+            // Ensure we have a default config loaded in the facade for the TARGET level
+            // Ideally we should create a fresh config for the new level
+            domain.dto.LevelConfigurationDTO defaultConfig = gameFacade.getDefaultConfiguration(targetLevel);
+            gameFacade.setConfiguration(defaultConfig);
+
             LevelConfigurationDialog configDialog = new LevelConfigurationDialog(
-                    (JFrame) window, defaultConfig, fruits, enemies);
+                    (JFrame) window, gameFacade);
             configDialog.setVisible(true);
 
             if (configDialog.isConfirmed()) {
-                domain.dto.LevelConfigurationDTO newConfig = configDialog.getConfiguration();
+                // The facade now holds the updated configuration
+                domain.dto.LevelConfigurationDTO newConfig = gameFacade.getConfiguration();
                 startNewGameLevel(targetLevel, newConfig);
             }
         }
@@ -1246,9 +1232,7 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     /**
      * Helper method to start a new game level with preserved settings.
      */
-    private void startNewGameLevel(int targetLevel) {
-        startNewGameLevel(targetLevel, null);
-    }
+    // Helper method startNewGameLevel(int) removed as it was unused locally
 
     private void startNewGameLevel(int targetLevel, domain.dto.LevelConfigurationDTO newConfig) {
         if (gameTimer != null)
@@ -1288,11 +1272,25 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
                 // If startNewGameLevel(int) is called directly (e.g. from debug?), use
                 // lastConfig.
 
-                domain.dto.LevelConfigurationDTO configToUse = (newConfig != null) ? newConfig : lastConfig;
-                // Using lastConfig implies restarting with SAME settings.
+                // Determine configuration to use
+                domain.dto.LevelConfigurationDTO currentConfig = gameFacade.getConfiguration();
+                domain.dto.LevelConfigurationDTO configToUse = (newConfig != null) ? newConfig
+                        : (currentConfig != null ? currentConfig : gameFacade.getDefaultConfiguration(targetLevel));
 
-                GamePanel newGamePanel = new GamePanel(selectedCharacter, p2Char, p1Name, p2Name, targetLevel,
-                        numberOfPlayers, resources, (GameWindow) window, aiTypeP1, aiTypeP2, isP2CPU, configToUse);
+                // Create NEW Facade for the new level
+                domain.GameFacade newFacade = new domain.GameFacade(
+                        gameFacade.getPlayerCharacterType(),
+                        p2Char, // P2 Character
+                        p1Name,
+                        p2Name,
+                        targetLevel,
+                        gameFacade.getNumberOfPlayers(),
+                        gameFacade.getAITypeP1(),
+                        gameFacade.getAITypeP2(),
+                        gameFacade.isP2CPU(),
+                        configToUse);
+
+                GamePanel newGamePanel = new GamePanel(newFacade, resources, (GameWindow) window);
 
                 frame.add(newGamePanel);
                 frame.revalidate();
