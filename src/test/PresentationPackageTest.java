@@ -196,7 +196,7 @@ public class PresentationPackageTest {
     @Test
     public void testGamePanelHelpersDoNotThrow() {
         ResourceLoader rl = new ResourceLoader();
-        GamePanel gp = new GamePanel("Chocolate", null, "P1", "P2", 1, 1, rl);
+        GamePanel gp = new GamePanel("Chocolate", 1, 1, rl);
         try {
             gp.getPreferredSize();
         } finally {
@@ -332,5 +332,353 @@ public class PresentationPackageTest {
         GameWindow gw = new GameWindow(facade, rl);
         assertNotNull(gw);
         gw.dispose();
+    }
+
+    // ==================== ADDITIONAL PRESENTATION TESTS ====================
+
+    // GameHUD Tests
+    @Test
+    public void testGameHUDCreation() {
+        ResourceLoader rl = new ResourceLoader();
+        FontLoader fl = FontLoader.getInstance();
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        presentation.GameHUD hud = new presentation.GameHUD(gf, rl, fl);
+        assertNotNull(hud);
+    }
+
+    // GameOverlay Tests
+    @Test
+    public void testGameOverlayCreation() {
+        FontLoader fl = FontLoader.getInstance();
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        presentation.GameOverlay overlay = new presentation.GameOverlay(gf, fl, 1280, 768);
+        assertNotNull(overlay);
+    }
+
+    // GameInputHandler Tests
+    @Test
+    public void testGameInputHandlerCreation() {
+        ResourceLoader rl = new ResourceLoader();
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        GamePanel gp = new GamePanel(gf, rl, null);
+        presentation.GameInputHandler handler = new presentation.GameInputHandler(gp, gf);
+        assertNotNull(handler);
+        gp.cleanup();
+    }
+
+    // LevelConfigurationDialog Tests
+    @Test
+    public void testLevelConfigurationDialogCreation() {
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        javax.swing.JFrame frame = new javax.swing.JFrame();
+        presentation.LevelConfigurationDialog dialog = new presentation.LevelConfigurationDialog(frame, gf);
+        assertNotNull(dialog);
+        assertFalse(dialog.isConfirmed());
+        dialog.dispose();
+        frame.dispose();
+    }
+
+    // Additional ResourceLoader Tests
+    @Test
+    public void testResourceLoaderGetWallpaperImageField() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.wallpaperImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetIceBlockImage() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.iceBlockNormalImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetIgluImage() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.igluImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetHotTileImage() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.hotTileImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetWallpaperImage() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.wallpaperImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetTitleGif() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.titleGif);
+    }
+
+    @Test
+    public void testResourceLoaderGetStartButtonImage() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.startButtonImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetBackImage() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.backImage);
+    }
+
+    @Test
+    public void testResourceLoaderGetLevelSelectionGif() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.levelSelectionGif);
+    }
+
+    @Test
+    public void testResourceLoaderGetNivel1Image() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.nivel1Image);
+    }
+
+    @Test
+    public void testResourceLoaderGetNivel2Image() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.nivel2Image);
+    }
+
+    @Test
+    public void testResourceLoaderGetNivel3Image() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.nivel3Image);
+    }
+
+    @Test
+    public void testResourceLoaderGetNivel4Image() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.nivel4Image);
+    }
+
+    // Additional FontLoader Tests
+    @Test
+    public void testFontLoaderGetBoldFont() {
+        FontLoader fl = FontLoader.getInstance();
+        assertNotNull(fl.getBoldFont(16f));
+    }
+
+    @Test
+    public void testFontLoaderSingleton() {
+        FontLoader fl1 = FontLoader.getInstance();
+        FontLoader fl2 = FontLoader.getInstance();
+        assertSame(fl1, fl2);
+    }
+
+    // WelcomeScreen Additional Tests
+    @Test
+    public void testWelcomeScreenSize() {
+        WelcomeScreen ws = new WelcomeScreen();
+        assertEquals(1280, ws.getWidth());
+        assertEquals(720, ws.getHeight());
+        ws.dispose();
+    }
+
+    // LevelSelectionPanel Tests
+    @Test
+    public void testLevelSelectionPanelCreation() {
+        ResourceLoader rl = new ResourceLoader();
+        presentation.LevelSelectionPanel lsp = new presentation.LevelSelectionPanel(1, rl, false);
+        assertNotNull(lsp);
+        assertEquals(1280, lsp.getPreferredSize().width);
+    }
+
+    // CharacterSelectionPanel Tests
+    @Test
+    public void testCharacterSelectionPanelCreation() {
+        ResourceLoader rl = new ResourceLoader();
+        presentation.CharacterSelectionPanel csp = new presentation.CharacterSelectionPanel(1, 1, rl, false);
+        assertNotNull(csp);
+        assertEquals(1280, csp.getPreferredSize().width);
+    }
+
+    // GamePanel Additional Tests
+    @Test
+    public void testGamePanelGetPreferredSize() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp = new GamePanel("Chocolate", 1, 1, rl);
+        java.awt.Dimension size = gp.getPreferredSize();
+        assertEquals(1280, size.width);
+        assertEquals(768, size.height);
+        gp.cleanup();
+    }
+
+    @Test
+    public void testGamePanelIsFocusable() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp = new GamePanel("Chocolate", 1, 1, rl);
+        assertTrue(gp.isFocusable());
+        gp.cleanup();
+    }
+
+    // GameWindow Additional Tests
+    @Test
+    public void testGameWindowTitle() {
+        ResourceLoader rl = new ResourceLoader();
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        GameWindow gw = new GameWindow(gf, rl);
+        assertTrue(gw.getTitle().contains("Nivel"));
+        gw.dispose();
+    }
+
+    @Test
+    public void testGameWindowNotResizable() {
+        ResourceLoader rl = new ResourceLoader();
+        GameFacade gf = new GameFacade("Chocolate", 1, 1);
+        GameWindow gw = new GameWindow(gf, rl);
+        assertFalse(gw.isResizable());
+        gw.dispose();
+    }
+
+    // Edge Case Tests
+    @Test
+    public void testResourceLoaderMultipleInstances() {
+        ResourceLoader rl1 = new ResourceLoader();
+        ResourceLoader rl2 = new ResourceLoader();
+        assertNotNull(rl1);
+        assertNotNull(rl2);
+    }
+
+    @Test
+    public void testGamePanelWithDifferentCharacters() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp1 = new GamePanel("Chocolate", 1, 1, rl);
+        GamePanel gp2 = new GamePanel("Vainilla", 1, 1, rl);
+        GamePanel gp3 = new GamePanel("Fresa", 1, 1, rl);
+        assertNotNull(gp1);
+        assertNotNull(gp2);
+        assertNotNull(gp3);
+        gp1.cleanup();
+        gp2.cleanup();
+        gp3.cleanup();
+    }
+
+    @Test
+    public void testGamePanelWithDifferentLevels() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp1 = new GamePanel("Chocolate", 1, 1, rl);
+        GamePanel gp2 = new GamePanel("Chocolate", 2, 1, rl);
+        GamePanel gp3 = new GamePanel("Chocolate", 3, 1, rl);
+        assertNotNull(gp1);
+        assertNotNull(gp2);
+        assertNotNull(gp3);
+        gp1.cleanup();
+        gp2.cleanup();
+        gp3.cleanup();
+    }
+
+    @Test
+    public void testGamePanelWithDifferentPlayerCounts() {
+        ResourceLoader rl = new ResourceLoader();
+        GamePanel gp0 = new GamePanel("Chocolate", 1, 0, rl); // Machine vs Machine
+        GamePanel gp1 = new GamePanel("Chocolate", 1, 1, rl); // 1 Player
+        GamePanel gp2 = new GamePanel("Chocolate", 1, 2, rl); // 2 Players
+        assertNotNull(gp0);
+        assertNotNull(gp1);
+        assertNotNull(gp2);
+        gp0.cleanup();
+        gp1.cleanup();
+        gp2.cleanup();
+    }
+
+    // ResourceLoader GIF Tests for all characters
+    @Test
+    public void testResourceLoaderChocolateGifs() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Chocolate", "UP", false, false, false, false, false));
+        assertNotNull(rl.getPlayerGif("Chocolate", "DOWN", false, false, false, false, false));
+        assertNotNull(rl.getPlayerGif("Chocolate", "LEFT", false, false, false, false, false));
+        assertNotNull(rl.getPlayerGif("Chocolate", "RIGHT", false, false, false, false, false));
+    }
+
+    @Test
+    public void testResourceLoaderVainillaGifs() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Vainilla", "UP", false, false, false, false, false));
+        assertNotNull(rl.getPlayerGif("Vainilla", "DOWN", false, false, false, false, false));
+    }
+
+    @Test
+    public void testResourceLoaderFresaGifs() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Fresa", "UP", false, false, false, false, false));
+        assertNotNull(rl.getPlayerGif("Fresa", "DOWN", false, false, false, false, false));
+    }
+
+    // Enemy GIF Tests
+    @Test
+    public void testResourceLoaderTrollGifs() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getEnemyGif("TROLL", "UP", false));
+        assertNotNull(rl.getEnemyGif("TROLL", "DOWN", false));
+    }
+
+    @Test
+    public void testResourceLoaderMacetaGifs() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getEnemyGif("MACETA", "UP", false));
+        assertNotNull(rl.getEnemyGif("MACETA", "DOWN", false));
+    }
+
+    @Test
+    public void testResourceLoaderCalamarGifs() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getCalamarGif("UP", false));
+        assertNotNull(rl.getCalamarGif("DOWN", false));
+    }
+
+    // Fruit Image Tests
+    @Test
+    public void testResourceLoaderAllFruitImages() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getFruitImage("UVA"));
+        assertNotNull(rl.getFruitImage("PLATANO"));
+        assertNotNull(rl.getFruitImage("PIÑA"));
+        assertNotNull(rl.getFruitImage("CEREZA"));
+        assertNotNull(rl.getFruitImage("CACTUS"));
+    }
+
+    // Animation State Tests
+    @Test
+    public void testResourceLoaderPlayerSneezeGif() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Chocolate", "UP", false, true, false, false, false));
+    }
+
+    @Test
+    public void testResourceLoaderPlayerKickGif() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Chocolate", "UP", false, false, true, false, false));
+    }
+
+    @Test
+    public void testResourceLoaderPlayerDyingGif() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Chocolate", "UP", false, false, false, true, false));
+    }
+
+    @Test
+    public void testResourceLoaderPlayerCelebrationGif() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getPlayerGif("Chocolate", "UP", false, false, false, false, true));
+    }
+
+    // Enemy Animation Tests
+    @Test
+    public void testResourceLoaderEnemyBreakingIce() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getEnemyGif("CALAMAR", "UP", true));
+    }
+
+    @Test
+    public void testResourceLoaderCalamarBreakingIce() {
+        ResourceLoader rl = new ResourceLoader();
+        assertNotNull(rl.getCalamarGif("UP", true));
     }
 }
