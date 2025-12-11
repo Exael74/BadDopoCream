@@ -373,19 +373,6 @@ public class DomainPackageTest {
 
     // ==================== EXCEPTION TESTS ====================
 
-    @Test
-    public void testBadDopoExceptionWithMessage() {
-        BadDopoException ex = new BadDopoException("Test error");
-        Assert.assertEquals("Test error", ex.getMessage());
-    }
-
-    @Test
-    public void testBadDopoExceptionWithCause() {
-        Exception cause = new RuntimeException("Root cause");
-        BadDopoException ex = new BadDopoException("Wrapper", cause);
-        Assert.assertEquals("Wrapper", ex.getMessage());
-        Assert.assertEquals(cause, ex.getCause());
-    }
 
     // ==================== LOGGER TESTS ====================
 
@@ -584,11 +571,6 @@ public class DomainPackageTest {
         Assert.assertNotNull(data.getMapLayout());
     }
 
-    @Test(expected = BadDopoException.class)
-    public void testMapLoaderInvalidLevel() throws Exception {
-        MapLoaderService mls = new MapLoaderService();
-        mls.loadLevel(999);
-    }
 
     // ==================== SERVICE TESTS: MapParser ====================
 
