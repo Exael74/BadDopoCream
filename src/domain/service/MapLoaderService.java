@@ -1,6 +1,6 @@
 package domain.service;
 
-import domain.BadDopoException;
+import exceptions.BadDopoException;
 import domain.BadDopoLogger;
 import domain.dto.*;
 import org.json.JSONArray;
@@ -57,9 +57,9 @@ public class MapLoaderService {
             return levelData;
 
         } catch (IOException e) {
-            throw new BadDopoException("No se pudo leer el archivo de nivel: " + filename, e);
+            throw BadDopoException.levelLoadError(filename, e);
         } catch (Exception e) {
-            throw new BadDopoException("Error parseando JSON del nivel " + levelId + ": " + e.getMessage(), e);
+            throw BadDopoException.jsonParseError(levelId, e.getMessage(), e);
         }
     }
 
@@ -204,23 +204,23 @@ public class MapLoaderService {
      */
     private void validateLevelData(LevelDataDTO data) throws BadDopoException {
         if (data.getLevelId() <= 0) {
-            throw new BadDopoException("levelId inválido: " + data.getLevelId());
+            throw BadDopoException.invalidLevelId(data.getLevelId());
         }
 
         if (data.getGridSize() <= 0) {
-            throw new BadDopoException("gridSize inválido: " + data.getGridSize());
+            throw BadDopoException.invalidGridSize(data.getGridSize());
         }
 
         if (data.getMapLayout() != null) {
             String[][] grid = data.getMapLayout().getGrid();
             if (grid == null || grid.length != data.getGridSize()) {
-                throw new BadDopoException("El grid no coincide con gridSize: " + data.getGridSize());
+                throw BadDopoException.gridMismatch(data.getGridSize());
             }
 
             // Verificar que todas las filas tengan el mismo tamaño
             for (int i = 0; i < grid.length; i++) {
                 if (grid[i].length != data.getGridSize()) {
-                    throw new BadDopoException("Fila " + i + " tiene tamaño incorrecto: " + grid[i].length);
+                    throw BadDopoException.rowSizeMismatch(i, grid[i].length);
                 }
             }
         }

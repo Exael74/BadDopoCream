@@ -1,6 +1,6 @@
 package domain.service;
 
-import domain.BadDopoException;
+import exceptions.BadDopoException;
 import domain.BadDopoLogger;
 import domain.dto.MapLayoutDTO;
 import domain.entity.*;
@@ -29,14 +29,14 @@ public class MapParserService {
      */
     public void applyMapLayout(GameState state, MapLayoutDTO layout, int numberOfPlayers) throws BadDopoException {
         if (layout == null || layout.getGrid() == null) {
-            throw new BadDopoException("MapLayout o grid es null");
+            throw BadDopoException.mapLayoutNull();
         }
 
         String[][] grid = layout.getGrid();
         Map<String, String> legend = layout.getLegend();
 
         if (legend == null) {
-            throw new BadDopoException("Legend es null");
+            throw BadDopoException.legendNull();
         }
 
         // Limpiar estado actual

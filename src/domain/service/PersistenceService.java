@@ -1,6 +1,6 @@
 package domain.service;
 
-import domain.BadDopoException;
+import exceptions.BadDopoException;
 import domain.BadDopoLogger;
 import domain.state.GameState;
 import java.io.*;
@@ -69,7 +69,7 @@ public class PersistenceService {
             BadDopoLogger.logInfo("Partida guardada exitosamente: " + file.getName());
             return file.getName();
         } catch (IOException e) {
-            throw new BadDopoException("Error al guardar la partida: " + e.getMessage());
+            throw BadDopoException.saveError(e.getMessage());
         }
     }
 
@@ -83,7 +83,7 @@ public class PersistenceService {
     public GameState loadGame(String filename) throws BadDopoException {
         Path path = Paths.get(SAVE_DIRECTORY, filename);
         if (!Files.exists(path)) {
-            throw new BadDopoException("El archivo de guardado no existe: " + filename);
+            throw BadDopoException.saveFileNotFound(filename);
         }
 
         try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(path.toFile()))) {
@@ -91,7 +91,7 @@ public class PersistenceService {
             BadDopoLogger.logInfo("Partida cargada exitosamente: " + filename);
             return gameState;
         } catch (IOException | ClassNotFoundException e) {
-            throw new BadDopoException("Error al cargar la partida: " + e.getMessage());
+            throw BadDopoException.loadError(e.getMessage());
         }
     }
 

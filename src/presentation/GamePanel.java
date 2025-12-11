@@ -1,7 +1,7 @@
 package presentation;
 
 import domain.GameFacade;
-import domain.BadDopoException;
+import exceptions.BadDopoException;
 import domain.dto.*;
 
 import javax.swing.*;

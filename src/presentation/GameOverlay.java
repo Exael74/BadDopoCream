@@ -1,7 +1,7 @@
 package presentation;
 
 import domain.GameFacade;
-import domain.BadDopoException;
+import exceptions.BadDopoException;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.FontMetrics;

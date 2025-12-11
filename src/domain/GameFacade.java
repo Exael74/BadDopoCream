@@ -6,6 +6,7 @@ import domain.service.GameLogic;
 import domain.service.PersistenceService;
 import domain.service.MapLoaderService;
 import domain.service.MapParserService;
+import exceptions.BadDopoException;
 import domain.state.GameState;
 import java.awt.Point;
 import java.io.File;

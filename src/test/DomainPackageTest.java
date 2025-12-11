@@ -4,6 +4,7 @@ import domain.*;
 import domain.entity.*;
 import domain.service.*;
 import domain.state.GameState;
+import exceptions.BadDopoException;
 import org.junit.Test;
 import org.junit.Assert;
 import java.awt.Point;
