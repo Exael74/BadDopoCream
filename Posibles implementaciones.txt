@@ -1,0 +1,59 @@
+// Posibles extensiones para nuevos tipos
+
+// *
+// FruitType.java - Definir tipo
+// FruitState.java - Definir estados
+// Fruit.java - Lógica de transiciones de estado
+// GameLogic.java - Efecto de congelamiento
+// GameFacade.java - Configurar oleadas
+// ResourceLoader.java - Cargar sprites
+// GamePanel.java - Renderizar efecto visual
+// LevelConfigurationDialog.java - Menú de configuración
+// Resources/Fruits/Strawberry/ - Agregar archivos gráficos
+// */
+//
+// IMPLEMENTACIÓN DE FRUTA MANGO (ESCAPA Y SE ESCONDE)
+// ---------------------------------------------------
+// 1. FruitType.java:
+// - Agregar MANGO(true, false, 1000, 400)
+// - Agregar helper canEscape() { return this == MANGO; }
+//
+// 2. FruitState.java:
+// - Agregar estados: ESCAPING, HIDING, EMERGING
+//
+// 3. Fruit.java:
+// - Atributos: hidingPosition, escapeTimer
+// - Método update(): Lógica para EMERGING (timer > 1000 -> IDLE, clear
+// hidingPosition)
+// - Métodos: isHiding(), isEscaping(), hideInIce(Point), emerge(),
+// startEscaping()
+//
+// 4. GameLogic.java:
+// - updateFruits(): Si canEscape() -> llamar handleMangoEscape(fruit)
+// - handleMangoEscape():
+// - Calcular distancia a jugador
+// - Si está HIDING y jugador lejos (>5) -> emerge()
+// - Si está IDLE y jugador cerca (<4):
+// - Buscar hielo (radio 2) -> Si hay, hideInIce() y mover ahí
+// - Si no hay hielo -> startEscaping() y mover opuesto al jugador
+//
+// 5. ResourceLoader.java:
+// - Cargar ImageIcon: mangoIdle, mangoEscaping, mangoHiding, mangoEmerging,
+// mangoCollected
+// - getFruitGif(): Case MANGO con sus estados
+//
+// 6. GamePanel.java:
+// - drawFruits():
+// - Si HIDING -> setComposite(Alpha 0.3f) (transparente dentro del hielo)
+// - Si ESCAPING -> Dibujar normal (o con efecto si se desea)
+//
+// 7. LevelConfigurationDialog.java:
+// - Agregar mangoCheckbox ("Mango - Huidizo (400 pts)")
+// - Agregar al panel
+// - Start Logic: Si seleccionado -> Crear FruitConfigDTO(MANGO)
+//
+// 8. Resources:
+// - Crear carpeta Resources/Fruits/Mango/ con imágenes
+// ---------------------------------------------------
+
+	
