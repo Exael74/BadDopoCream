@@ -51,10 +51,43 @@ public class CharacterSelectionPanel extends JPanel {
     private String aiTypeP1 = null;
     private String aiTypeP2 = null;
 
+    private int showStyledConfirmDialog(String message, String title, int optionType) {
+        JLabel label = new JLabel(message);
+        label.setFont(fontLoader.getPlainFont(18f));
+        return JOptionPane.showConfirmDialog(this, label, title, optionType, JOptionPane.QUESTION_MESSAGE);
+    }
+
+    private String showStyledInputDialog(String message, String title) {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        JLabel label = new JLabel(message);
+        label.setFont(fontLoader.getPlainFont(18f));
+        JTextField textField = new JTextField(15);
+        textField.setFont(fontLoader.getPlainFont(18f));
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(textField, BorderLayout.CENTER);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, title, JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            return textField.getText();
+        }
+        return null;
+    }
+
     private String selectAIType(String playerName) {
         String[] options = { "Hambriento (Frutas)", "Miedoso (Seguro)", "Experto (Balanceado)" };
+
+        // Custom button rendering for options?
+        // JOptionPane options handles objects. We can pass Strings but the buttons will
+        // be default.
+        // To style buttons we might need UIManager or a very custom dialog.
+        // For now, let's style the message at least.
+
+        JLabel messageLabel = new JLabel("Selecciona la personalidad de " + playerName + ":");
+        messageLabel.setFont(fontLoader.getPlainFont(18f));
+
         int choice = JOptionPane.showOptionDialog(this,
-                "Selecciona la personalidad de " + playerName + ":",
+                messageLabel,
                 "Personalidad IA",
                 JOptionPane.DEFAULT_OPTION,
                 JOptionPane.QUESTION_MESSAGE,
@@ -73,8 +106,6 @@ public class CharacterSelectionPanel extends JPanel {
                 return "EXPERT";
         }
     }
-
-    // ... (fields)
 
     public CharacterSelectionPanel(int selectedLevel, int numberOfPlayers, ResourceLoader resources, boolean isP2CPU) {
         this.selectedLevel = selectedLevel;
@@ -191,19 +222,14 @@ public class CharacterSelectionPanel extends JPanel {
                 String msg = (numberOfPlayers == 0) ? "Máquina 1: ¿Elegir a " + character + "?"
                         : "Jugador 1: ¿Elegir a " + character + "?";
 
-                int response = JOptionPane.showConfirmDialog(
-                        this,
-                        msg,
-                        title,
-                        JOptionPane.NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
+                int response = showStyledConfirmDialog(msg, title, JOptionPane.NO_OPTION);
 
                 if (response == JOptionPane.YES_OPTION) {
                     selectedCharacterP1 = character;
 
                     // Ask for name if Machine vs Machine OR PvP
                     String defaultName = (numberOfPlayers == 0) ? "Máquina 1" : "Jugador 1";
-                    String inputName = JOptionPane.showInputDialog(this, "Nombre para " + defaultName + ":", "P1");
+                    String inputName = showStyledInputDialog("Nombre para " + defaultName + ":", "P1");
                     if (inputName != null && !inputName.trim().isEmpty()) {
                         p1Name = inputName.trim();
                     }
@@ -231,19 +257,14 @@ public class CharacterSelectionPanel extends JPanel {
                     msg = "Jugador 2: ¿Elegir a " + character + "?";
                 }
 
-                int response = JOptionPane.showConfirmDialog(
-                        this,
-                        msg,
-                        title,
-                        JOptionPane.YES_NO_OPTION,
-                        JOptionPane.QUESTION_MESSAGE);
+                int response = showStyledConfirmDialog(msg, title, JOptionPane.YES_NO_OPTION);
 
                 if (response == JOptionPane.YES_OPTION) {
                     selectedCharacterP2 = character;
 
                     // Ask for name
                     String defaultName = (numberOfPlayers == 0 || isP2CPU) ? "Máquina 2" : "Jugador 2";
-                    String inputName = JOptionPane.showInputDialog(this, "Nombre para " + defaultName + ":", "P2");
+                    String inputName = showStyledInputDialog("Nombre para " + defaultName + ":", "P2");
                     if (inputName != null && !inputName.trim().isEmpty()) {
                         p2Name = inputName.trim();
                     }
@@ -258,18 +279,16 @@ public class CharacterSelectionPanel extends JPanel {
             }
         } else {
             // Single player
-            int response = JOptionPane.showConfirmDialog(
-                    this,
+            int response = showStyledConfirmDialog(
                     "¿Estás seguro de elegir a " + character + "?",
                     "Confirmar selección",
-                    JOptionPane.YES_NO_OPTION,
-                    JOptionPane.QUESTION_MESSAGE);
+                    JOptionPane.YES_NO_OPTION);
 
             if (response == JOptionPane.YES_OPTION) {
                 selectedCharacterP1 = character;
 
                 // Ask for name for Single Player
-                String inputName = JOptionPane.showInputDialog(this, "Nombre para Jugador 1:", "P1");
+                String inputName = showStyledInputDialog("Nombre para Jugador 1:", "P1");
                 if (inputName != null && !inputName.trim().isEmpty()) {
                     p1Name = inputName.trim();
                 }

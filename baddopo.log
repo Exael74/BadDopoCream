@@ -9689,3 +9689,37 @@ Dec 12, 2025 7:25:52 PM domain.BadDopoLogger logInfo
 INFO: ✓ Next wave spawned!
 Dec 12, 2025 7:26:03 PM domain.BadDopoLogger logInfo
 INFO: ✓ Next wave spawned!
+Dec 12, 2025 7:33:51 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 1 jugadores.
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Mapa cargado desde JSON (entidades deshabilitadas temporalmente)
+Dec 12, 2025 7:34:02 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 inicializado completamente desde JSON
+Dec 12, 2025 7:34:21 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (Pepito)
+Dec 12, 2025 7:34:21 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 12, 2025 7:34:42 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 12, 2025 7:35:05 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 12, 2025 7:35:29 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 12, 2025 7:35:42 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
