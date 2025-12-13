@@ -129,17 +129,23 @@ public abstract class Enemy extends Entity {
     }
 
     public void processDefaultMovement(CollisionDetector collisionDetector) {
-        Point nextPos = getNextPosition();
-
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.isPositionBlocked(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, this)) { // "this" is Entity, might need override in
-                                                                     // CollisionDetector to accept
-                                                                     // domain.entity.enemy.Enemy
-            move(nextPos);
-        } else {
+        if (!tryMove(collisionDetector)) {
             changeDirection();
         }
+    }
+
+    /**
+     * Intenta mover al enemigo a la siguiente posición calculada.
+     * 
+     * @return true si se movió exitosamente, false si estaba bloqueado.
+     */
+    protected boolean tryMove(CollisionDetector collisionDetector) {
+        Point nextPos = getNextPosition();
+        if (collisionDetector.canEnemyMoveTo(nextPos, this)) {
+            move(nextPos);
+            return true;
+        }
+        return false;
     }
 
     public void setDirection(Direction direction) {

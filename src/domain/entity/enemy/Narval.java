@@ -139,9 +139,7 @@ public class Narval extends Enemy {
 
         // 3. Wander (Only if not drilling)
         Point nextPos = getNextPosition();
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.isPositionBlocked(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, this)) { // Check "this"
+        if (collisionDetector.canEnemyMoveTo(nextPos, this)) {
             move(nextPos);
         } else {
             changeDirection();

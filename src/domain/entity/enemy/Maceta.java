@@ -35,29 +35,18 @@ public class Maceta extends Enemy {
     @Override
     public void updateMovement(Point targetPosition, CollisionDetector collisionDetector) {
         chasePlayer(targetPosition);
-        Point nextPos = getNextPosition();
 
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.isPositionBlocked(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, this)) { // Assuming cast works or fix later
-            move(nextPos);
+        if (tryMove(collisionDetector)) {
+            // Moved successfully
         } else {
             boolean moved = false;
             int attempts = 0;
 
             while (!moved && attempts < 4) {
-                // Force re-calculation (ChaseMovement handles randomness so calling again might
-                // yield diff result?
-                // Actually ChaseBehavior uses random for "close" or "alternative".
-                // Calling chasePlayer again updates currentDirection.
-
                 chasePlayer(targetPosition);
-                nextPos = getNextPosition();
-
-                if (collisionDetector.isValidPosition(nextPos) &&
-                        !collisionDetector.isPositionBlocked(nextPos) &&
-                        !collisionDetector.hasOtherEnemyAt(nextPos, this)) {
-                    move(nextPos);
+                // tryMove uses getNextPosition internaly based on new direction from
+                // chasePlayer
+                if (tryMove(collisionDetector)) {
                     resetStuckCounter();
                     moved = true;
                 } else {

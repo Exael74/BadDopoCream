@@ -469,12 +469,7 @@ public class GameLogic {
                     && fruit.getState() == FruitState.IDLE) {
                 Point newPos = fruit.getRandomAdjacentPosition();
 
-                if (collisionDetector.isValidPosition(newPos) &&
-                        !collisionDetector.isPositionBlocked(newPos) && // Covers Ice, Iglu, Unbreakable
-                        !collisionDetector.hasEnemyAt(newPos) &&
-                        !collisionDetector.hasFruitAt(newPos) &&
-                        !collisionDetector.isPlayerAt(newPos) &&
-                        !isHotTile(newPos)) { // Also avoid Hot Tiles
+                if (collisionDetector.isPositionFree(newPos) && !isHotTile(newPos)) {
                     fruit.move(newPos);
                 }
             }
@@ -621,13 +616,7 @@ public class GameLogic {
         for (int x = 0; x < gridSize; x++) {
             for (int y = 0; y < gridSize; y++) {
                 Point pos = new Point(x, y);
-                if (!collisionDetector.isPlayerAt(pos) &&
-                        !collisionDetector.hasEnemyAt(pos) &&
-                        !collisionDetector.hasFruitAt(pos) &&
-                        !collisionDetector.hasIceAt(pos) &&
-                        !collisionDetector.hasIgluAt(pos) &&
-                        !collisionDetector.hasUnbreakableBlockAt(pos) &&
-                        !isHotTile(pos)) {
+                if (collisionDetector.isPositionFree(pos) && !isHotTile(pos)) {
                     emptyPositions.add(pos);
                 }
             }

@@ -189,12 +189,46 @@ public class CollisionDetector {
     /**
      * Obtiene el bloque de hielo en una posición específica.
      */
-    public domain.entity.IceBlock getIceBlockAt(Point position) {
-        for (domain.entity.IceBlock ice : gameState.getIceBlocks()) {
+    public IceBlock getIceBlockAt(Point position) {
+        for (IceBlock ice : gameState.getIceBlocks()) {
             if (ice.isAt(position)) {
                 return ice;
             }
         }
         return null;
+    }
+
+    // ==================== CONVENIENCE METHODS ====================
+
+    /**
+     * Checks if a position is completely free of static obstacles and enemies.
+     * Use this when you need an empty tile (e.g. for spawning or random placement).
+     *
+     * @param position Position to check
+     * @return true if position is valid and has no static obstacles or enemies
+     */
+    public boolean isPositionFree(Point position) {
+        return isValidPosition(position) &&
+                !isPositionBlocked(position) &&
+                !hasEnemyAt(position) &&
+                !isPlayerAt(position) && // Optional depending on context, but safe for spawning
+                !hasFruitAt(position);
+    }
+
+    /**
+     * Checks if a standard enemy can walk onto this position.
+     * Standard rules:
+     * - Within grid bounds
+     * - No static obstacles (Walls, Igloo, Ice)
+     * - No OTHER enemies (to prevent stacking)
+     *
+     * @param position Position to check
+     * @param self     The enemy checking (to ignore itself)
+     * @return true if the enemy can move to this position
+     */
+    public boolean canEnemyMoveTo(Point position, Enemy self) {
+        return isValidPosition(position) &&
+                !isPositionBlocked(position) && // Checks Ice, Iglu, Unbreakable
+                !hasOtherEnemyAt(position, self);
     }
 }

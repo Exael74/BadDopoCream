@@ -52,14 +52,8 @@ public class Calamar extends Enemy {
                 domain.BadDopoLogger.logInfo("✓ Calamar IA rompió hielo automáticamente");
             }
         }
-        // Si no hay hielo, moverse normalmente (pero respetar Iglú y Bloques
-        // Irrompibles)
-        else if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.hasIgluAt(nextPos) &&
-                !collisionDetector.hasUnbreakableBlockAt(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, this)) { // Check "this"
-            move(nextPos);
-        } else {
+        // Si no hay hielo, intentar moverse
+        else if (!tryMove(collisionDetector)) {
             changeDirection();
         }
     }
