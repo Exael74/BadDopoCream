@@ -1,5 +1,6 @@
 package domain.state;
 
+import domain.entity.enemy.Enemy;
 import domain.entity.*;
 import java.awt.Point;
 import java.util.ArrayList;

@@ -1,6 +1,6 @@
 package domain.dto;
 
-import domain.entity.Enemy;
+import domain.entity.enemy.Enemy;
 
 /**
  * Snapshot de un enemigo para transferencia a la capa de presentación.
@@ -43,7 +43,7 @@ public class EnemySnapshot extends EntitySnapshot {
                 .id(enemy.getId())
                 .position(enemy.getPosition())
                 .active(enemy.isActive())
-                .enemyType(enemy.getType().toString())
+                .enemyType(enemy.getTypeName())
                 .direction(enemy.getCurrentDirection().toString())
                 .controlledByPlayer(enemy.isControlledByPlayer())
                 .breakingIce(enemy.isBreakingIce())

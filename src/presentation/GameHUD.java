@@ -182,15 +182,3 @@ public class GameHUD {
         }
     }
 }
-
-// *
-// FruitType.java - Definir tipo
-// FruitState.java - Definir estados
-// Fruit.java - Lógica de transiciones de estado
-// GameLogic.java - Efecto de congelamiento
-// GameFacade.java - Configurar oleadas
-// ResourceLoader.java - Cargar sprites
-// GamePanel.java - Renderizar efecto visual
-// LevelConfigurationDialog.java - Menú de configuración
-// Resources/Fruits/Strawberry/ - Agregar archivos gráficos
-// */

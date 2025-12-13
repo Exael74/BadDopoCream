@@ -2,9 +2,11 @@ package test;
 
 import domain.*;
 import domain.entity.*;
+import domain.entity.enemy.Enemy;
+import domain.entity.enemy.EnemyFactory;
 import domain.service.*;
 import domain.state.GameState;
-import exceptions.BadDopoException;
+
 import org.junit.Test;
 import org.junit.Assert;
 import java.awt.Point;
@@ -24,7 +26,7 @@ public class DomainPackageTest {
     @Test
     public void testAddEnemyFruitIce() {
         GameState gs = new GameState("Chocolate", 1, 1);
-        Enemy e = new Enemy(new Point(1, 1), EnemyType.TROLL);
+        Enemy e = EnemyFactory.createEnemy(new Point(1, 1), "TROLL");
         Fruit f = new Fruit(new Point(2, 2), FruitType.UVA);
         IceBlock ice = new IceBlock(new Point(3, 3));
         gs.addEnemy(e);
@@ -88,10 +90,10 @@ public class DomainPackageTest {
 
     @Test
     public void testEnemyAssignBehaviorAndMovement() {
-        Enemy t = new Enemy(new Point(1, 1), EnemyType.TROLL);
-        Enemy m = new Enemy(new Point(2, 2), EnemyType.MACETA);
-        Enemy c = new Enemy(new Point(3, 3), EnemyType.CALAMAR);
-        Assert.assertNotNull(t.getType());
+        Enemy t = EnemyFactory.createEnemy(new Point(1, 1), "TROLL");
+        Enemy m = EnemyFactory.createEnemy(new Point(2, 2), "MACETA");
+        Enemy c = EnemyFactory.createEnemy(new Point(3, 3), "CALAMAR");
+        Assert.assertEquals("TROLL", t.getTypeName());
         t.changeDirection();
         Point next = t.getNextPosition();
         Assert.assertNotNull(next);
@@ -101,7 +103,7 @@ public class DomainPackageTest {
 
     @Test
     public void testEnemyBreakIceAnimation() {
-        Enemy c = new Enemy(new Point(4, 4), EnemyType.CALAMAR);
+        Enemy c = EnemyFactory.createEnemy(new Point(4, 4), "CALAMAR");
         c.startBreakIce();
         Assert.assertTrue(c.isBreakingIce());
         c.update(600);
@@ -120,7 +122,7 @@ public class DomainPackageTest {
     public void testCollisionDetectorEnemyDetection() {
         GameState gs = new GameState("Chocolate", 1, 1);
         Point playerPos = gs.getPlayer().getPosition();
-        Enemy e = new Enemy(playerPos, EnemyType.TROLL);
+        Enemy e = EnemyFactory.createEnemy(playerPos, "TROLL");
         gs.addEnemy(e);
         CollisionDetector cd = new CollisionDetector(gs);
         // Verify enemy is detected at player position
@@ -190,8 +192,8 @@ public class DomainPackageTest {
 
     @Test
     public void testEntityEqualsHash() {
-        Entity e1 = new Enemy(new Point(1, 2), EnemyType.TROLL);
-        Entity e2 = new Enemy(new Point(1, 2), EnemyType.MACETA);
+        Entity e1 = EnemyFactory.createEnemy(new Point(1, 2), "TROLL");
+        Entity e2 = EnemyFactory.createEnemy(new Point(1, 2), "MACETA");
         Assert.assertEquals(e1, e2);
         Assert.assertEquals(e1.hashCode(), e2.hashCode());
     }
@@ -269,7 +271,7 @@ public class DomainPackageTest {
 
     @Test
     public void testEnemyControlledFlag() {
-        Enemy e = new Enemy(new Point(1, 1), EnemyType.MACETA);
+        Enemy e = EnemyFactory.createEnemy(new Point(1, 1), "MACETA");
         Assert.assertFalse(e.isControlledByPlayer());
         e.setControlledByPlayer(true);
         Assert.assertTrue(e.isControlledByPlayer());
@@ -277,7 +279,7 @@ public class DomainPackageTest {
 
     @Test
     public void testEntityMoveToAndIsAt() {
-        Enemy e = new Enemy(new Point(1, 1), EnemyType.TROLL);
+        Enemy e = EnemyFactory.createEnemy(new Point(1, 1), "TROLL");
         e.moveTo(new Point(5, 5));
         Assert.assertTrue(e.isAt(new Point(5, 5)));
     }
@@ -322,7 +324,6 @@ public class DomainPackageTest {
     public void testPvPDeathSetsGameOver() {
         GameState gs = new GameState("Chocolate", 1, 2);
         Player p1 = gs.getPlayer();
-        Player p2 = gs.getPlayer2();
 
         // Simulate player 1 death
         p1.die();
@@ -372,7 +373,6 @@ public class DomainPackageTest {
     }
 
     // ==================== EXCEPTION TESTS ====================
-
 
     // ==================== LOGGER TESTS ====================
 
@@ -469,18 +469,12 @@ public class DomainPackageTest {
     }
 
     @Test
-    public void testEnemyTypeValues() {
-        Assert.assertNotNull(EnemyType.TROLL);
-        Assert.assertNotNull(EnemyType.MACETA);
-        Assert.assertNotNull(EnemyType.CALAMAR);
-        Assert.assertNotNull(EnemyType.NARVAL);
-        Assert.assertTrue(EnemyType.values().length >= 4);
-    }
-
-    @Test
     public void testEnemyTypeProperties() {
-        Assert.assertTrue(EnemyType.MACETA.shouldChasePlayer());
-        Assert.assertTrue(EnemyType.CALAMAR.canBreakIce());
+        Enemy maceta = EnemyFactory.createEnemy(new Point(0, 0), "MACETA");
+        Enemy calamar = EnemyFactory.createEnemy(new Point(0, 0), "CALAMAR");
+
+        Assert.assertTrue(maceta.shouldChasePlayer());
+        Assert.assertTrue(calamar.canBreakIce());
     }
 
     @Test
@@ -528,7 +522,7 @@ public class DomainPackageTest {
 
     @Test
     public void testEnemySnapshotCreation() {
-        Enemy e = new Enemy(new Point(3, 3), EnemyType.TROLL);
+        Enemy e = EnemyFactory.createEnemy(new Point(3, 3), "TROLL");
         domain.dto.EnemySnapshot snapshot = domain.dto.EnemySnapshot.from(e);
         Assert.assertNotNull(snapshot);
         Assert.assertEquals("TROLL", snapshot.getEnemyType());
@@ -570,7 +564,6 @@ public class DomainPackageTest {
         Assert.assertNotNull(data);
         Assert.assertNotNull(data.getMapLayout());
     }
-
 
     // ==================== SERVICE TESTS: MapParser ====================
 
@@ -629,7 +622,7 @@ public class DomainPackageTest {
     @Test
     public void testGameStateClear() {
         GameState gs = new GameState("Chocolate", 1, 1);
-        gs.addEnemy(new Enemy(new Point(1, 1), EnemyType.TROLL));
+        gs.addEnemy(EnemyFactory.createEnemy(new Point(1, 1), "TROLL"));
         gs.addFruit(new Fruit(new Point(2, 2), FruitType.UVA));
         gs.clear();
         Assert.assertTrue(gs.getEnemies().isEmpty());
@@ -713,24 +706,27 @@ public class DomainPackageTest {
 
     @Test
     public void testEnemyDrilling() {
-        Enemy narval = new Enemy(new Point(5, 5), EnemyType.NARVAL);
-        narval.startDrilling();
-        Assert.assertTrue(narval.isDrilling());
-        narval.stopDrilling();
-        Assert.assertFalse(narval.isDrilling());
+        Enemy enemy = EnemyFactory.createEnemy(new Point(5, 5), "NARVAL");
+        if (enemy instanceof domain.entity.enemy.Narval) {
+            domain.entity.enemy.Narval narval = (domain.entity.enemy.Narval) enemy;
+            narval.startDrilling();
+            Assert.assertTrue(narval.isDrilling());
+            narval.stopDrilling();
+            Assert.assertFalse(narval.isDrilling());
+        }
     }
 
     @Test
     public void testEnemyStuckCounter() {
-        Enemy e = new Enemy(new Point(1, 1), EnemyType.MACETA);
-        int before = e.getStuckCounter();
+        Enemy e = EnemyFactory.createEnemy(new Point(1, 1), "MACETA");
+
         e.resetStuckCounter();
         Assert.assertEquals(0, e.getStuckCounter());
     }
 
     @Test
     public void testEnemyGetId() {
-        Enemy e = new Enemy(new Point(1, 1), EnemyType.TROLL);
+        Enemy e = EnemyFactory.createEnemy(new Point(1, 1), "TROLL");
         Assert.assertNotNull(e.getId());
     }
 

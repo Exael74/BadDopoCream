@@ -1,5 +1,6 @@
 package domain.service;
 
+import domain.entity.enemy.Enemy;
 import domain.entity.*;
 import domain.state.GameState;
 import java.awt.Point;

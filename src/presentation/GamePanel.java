@@ -849,7 +849,9 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
             int size = ICE_SIZE; // Matches ice size per requirement (40px)
             int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - size) / 2;
             int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - size) / 2;
-            g2d.drawImage(resources.unbreakableBlockImage.getImage(), x, y, size, size, this);
+            if (resources.unbreakableBlockImage != null) {
+                g2d.drawImage(resources.unbreakableBlockImage.getImage(), x, y, size, size, this);
+            }
         }
     }
 

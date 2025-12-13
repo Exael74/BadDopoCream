@@ -1,6 +1,8 @@
 package domain.service;
 
+import domain.entity.enemy.Enemy;
 import domain.entity.*;
+
 import domain.state.GameState;
 import java.awt.Point;
 import java.util.ArrayList;
@@ -281,7 +283,7 @@ public class GameLogic {
             }
         }
 
-        if (controlledEnemy == null || !controlledEnemy.getType().canBreakIce()) {
+        if (controlledEnemy == null || !controlledEnemy.canBreakIce()) {
             return null;
         }
 
@@ -368,260 +370,15 @@ public class GameLogic {
     /**
      * Procesa el movimiento de un enemigo específico.
      */
-    private void processEnemyMovement(Enemy enemy, Point targetPosition, int currentLevel, int numberOfPlayers) {
-        EnemyType type = enemy.getType();
-
-        // Logic adapted for PvP: Enemies chase the closest player if applicable
-        if (type.shouldChasePlayer()) {
-            if (enemy.getType() == EnemyType.MACETA) {
-                processMacetaMovement(enemy, targetPosition);
-            } else if (enemy.getType() == EnemyType.CALAMAR) {
-                processCalamarMovement(enemy, targetPosition);
-            } else if (enemy.getType() == EnemyType.NARVAL) {
-                processNarvalMovement(enemy, targetPosition);
-            } else {
-                processDefaultMovement(enemy);
-            }
+    private void processEnemyMovement(domain.entity.enemy.Enemy enemy, Point targetPosition, int currentLevel,
+            int numberOfPlayers) {
+        // Delegar la lógica de movimiento a la propia entidad.
+        // La entidad ya contiene su comportamiento (Strategy) y tipo.
+        if (enemy.shouldChasePlayer()) {
+            enemy.updateMovement(targetPosition, collisionDetector);
         } else {
-            processDefaultMovement(enemy);
-        }
-    }
-
-    /**
-     * Procesa movimiento de Maceta (persecución con anti-atasco).
-     */
-    /**
-     * Procesa movimiento de Maceta (persecución con anti-atasco).
-     */
-    private void processMacetaMovement(Enemy enemy, Point targetPosition) {
-        enemy.chasePlayer(targetPosition);
-        Point nextPos = enemy.getNextPosition();
-
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.isPositionBlocked(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
-            enemy.move(nextPos);
-        } else {
-            boolean moved = false;
-            int attempts = 0;
-
-            while (!moved && attempts < 4) {
-                enemy.chasePlayer(targetPosition);
-                nextPos = enemy.getNextPosition();
-
-                if (collisionDetector.isValidPosition(nextPos) &&
-                        !collisionDetector.isPositionBlocked(nextPos) &&
-                        !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
-                    enemy.move(nextPos);
-                    enemy.resetStuckCounter();
-                    moved = true;
-                } else {
-                    enemy.changeDirection();
-                    attempts++;
-                }
-            }
-
-            if (!moved) {
-                enemy.resetStuckCounter();
-            }
-        }
-    }
-
-    /**
-     * Procesa movimiento de Calamar (persecución + romper hielo).
-     */
-    private void processCalamarMovement(Enemy enemy, Point targetPosition) {
-        enemy.chasePlayer(targetPosition);
-        Point nextPos = enemy.getNextPosition();
-
-        // Si hay hielo en el camino, romperlo
-        if (collisionDetector.isValidPosition(nextPos) && collisionDetector.hasIceAt(nextPos)) {
-            IceBlock ice = collisionDetector.getIceAt(nextPos);
-            if (ice != null) {
-                ice.startBreaking();
-                enemy.startBreakIce();
-                domain.BadDopoLogger.logInfo("✓ Calamar IA rompió hielo automáticamente");
-            }
-        }
-        // Si no hay hielo, moverse normalmente (pero respetar Iglú y Bloques
-        // Irrompibles)
-        else if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.hasIgluAt(nextPos) &&
-                !collisionDetector.hasUnbreakableBlockAt(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
-            enemy.move(nextPos);
-        } else {
-            enemy.changeDirection();
-        }
-    }
-
-    /**
-     * Procesa movimiento de Narval (persecución + taladrar/romper hielo).
-     */
-    /**
-     * Procesa movimiento de Narval (Wander + Charge).
-     * Behavior:
-     * 1. If Charging (isDrilling):
-     * - Move forward.
-     * - If Ice -> Break instantly.
-     * - If Wall/Iglu/Border -> Stop Charging.
-     * 2. If Not Charging:
-     * - Check Line of Sight to Player (Horiz/Vert).
-     * - If aligned -> Start Charging in that direction.
-     * - Else -> Random Wander.
-     */
-    private void processNarvalMovement(Enemy narval, Point targetPosition) {
-        // Heartbeat log to confirm method is running
-        // BadDopoLogger.logInfo("Processing Narval at " + narval.getPosition());
-
-        // 1. Detection (Always active if not drilling)
-        if (!narval.isDrilling()) {
-            // BadDopoLogger.logInfo("[DEBUG] Checking Narval: " + narval.getPosition() + "
-            // vs
-            // Player: " + targetPosition);
-
-            Direction chargeDir = getPlayerDirectionIfSeeing(narval.getPosition(), targetPosition);
-            if (chargeDir != null) {
-                // BadDopoLogger.logInfo("[NARVAL] Player spotted at " + chargeDir + "! engaging
-                // Drill Mode.");
-                narval.setDirection(chargeDir);
-                narval.startDrilling();
-                // Force immediate movement if we want instant reaction,
-                // but changing to isDrilling will lower the threshold in shouldMove()
-                // causing it to trigger very soon (likely this frame or next).
-            }
-        }
-
-        // 2. Movement Check
-        if (!narval.shouldMove())
-            return;
-
-        // 3. Execution
-        if (narval.isDrilling()) {
-            Point nextPos = narval.getNextPosition();
-
-            // Check bounds/obstacles
-            if (!collisionDetector.isValidPosition(nextPos) ||
-                    collisionDetector.hasIgluAt(nextPos) ||
-                    collisionDetector.hasUnbreakableBlockAt(nextPos)) {
-
-                // Hit wall -> Stop
-                narval.stopDrilling();
-                return; // Stop this turn
-            }
-
-            // Check Ice -> Destroy
-            IceBlock ice = collisionDetector.getIceBlockAt(nextPos);
-            if (ice != null) {
-                ice.startBreaking();
-                // Instant destroy for charge feeling
-                gameState.removeIceBlock(ice);
-                domain.BadDopoLogger.logInfo("[NARVAL] SMASHED Ice at " + nextPos);
-            }
-
-            // Move
-            narval.move(nextPos);
-            return;
-        }
-
-        // 4. Wander (Only if not drilling)
-        Point nextPos = narval.getNextPosition();
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.isPositionBlocked(nextPos) &&
-                !collisionDetector.hasEnemyAt(nextPos)) {
-            narval.move(nextPos);
-        } else {
-            narval.changeDirection();
-        }
-    }
-
-    /**
-     * Checks if player is aligned with enemy and visible (no unbreakable walls).
-     * Ice does NOT block vision for Narval.
-     */
-    private Direction getPlayerDirectionIfSeeing(Point enemyPos, Point playerPos) {
-        // Log attempts periodically or just always for now (user says it doesn't print)
-        // BadDopoLogger.logInfo("[DEBUG] Checking Narval: " + enemyPos + " vs Player: "
-        // +
-        // playerPos);
-
-        if (enemyPos.x == playerPos.x) {
-            // BadDopoLogger.logInfo("[DEBUG] Aligned Vertically! X=" + enemyPos.x);
-            // Vertical Alignment
-            if (enemyPos.y > playerPos.y) {
-                // Player is ABOVE
-                if (isPathClear(enemyPos, playerPos, Direction.UP)) {
-                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player UP");
-                    return Direction.UP;
-                } else {
-                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED UP");
-                }
-            } else {
-                // Player is BELOW
-                if (isPathClear(enemyPos, playerPos, Direction.DOWN)) {
-                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player DOWN");
-                    return Direction.DOWN;
-                } else {
-                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED DOWN");
-                }
-            }
-        } else if (enemyPos.y == playerPos.y) {
-            // Horizontal Alignment
-            // BadDopoLogger.logInfo("[DEBUG] Aligned Horizontally! Y=" + enemyPos.y);
-            if (enemyPos.x > playerPos.x) {
-                // Player is LEFT
-                if (isPathClear(enemyPos, playerPos, Direction.LEFT)) {
-                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player LEFT");
-                    return Direction.LEFT;
-                } else {
-                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED LEFT");
-                }
-            } else {
-                // Player is RIGHT
-                if (isPathClear(enemyPos, playerPos, Direction.RIGHT)) {
-                    // BadDopoLogger.logInfo("[DEBUG] Seeing Player RIGHT");
-                    return Direction.RIGHT;
-                } else {
-                    // BadDopoLogger.logInfo("[DEBUG] Path BLOCKED RIGHT");
-                }
-            }
-        }
-        return null;
-    }
-
-    private boolean isPathClear(Point start, Point end, Direction dir) {
-        Point p = new Point(start);
-        p.x += dir.getDeltaX();
-        p.y += dir.getDeltaY();
-
-        while (!p.equals(end)) {
-            // Check obstacles that block VISION (Unbreakable, Iglu).
-            // Ice does NOT block vision for Narval charge.
-            if (collisionDetector.hasUnbreakableBlockAt(p) || collisionDetector.hasIgluAt(p)) {
-                return false;
-            }
-            p.x += dir.getDeltaX();
-            p.y += dir.getDeltaY();
-
-            // Safety break for infinite loose loop (shouldn't happen on grid)
-            if (!collisionDetector.isValidPosition(p))
-                return false;
-        }
-        return true;
-    }
-
-    /**
-     * Procesa movimiento por defecto (cambiar dirección si está bloqueado).
-     */
-    private void processDefaultMovement(Enemy enemy) {
-        Point nextPos = enemy.getNextPosition();
-
-        if (collisionDetector.isValidPosition(nextPos) &&
-                !collisionDetector.isPositionBlocked(nextPos) &&
-                !collisionDetector.hasOtherEnemyAt(nextPos, enemy)) {
-            enemy.move(nextPos);
-        } else {
-            enemy.changeDirection();
+            // Comportamiento por defecto (Troll) también se maneja en updateMovement
+            enemy.updateMovement(targetPosition, collisionDetector);
         }
     }
 
