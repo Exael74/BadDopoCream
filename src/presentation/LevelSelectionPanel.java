@@ -97,47 +97,7 @@ public class LevelSelectionPanel extends JPanel {
     }
 
     private void setupBackButton() {
-        int backButtonWidth = 200;
-        int backButtonHeight = 100;
-        int backButtonWidthHover = 220;
-        int backButtonHeightHover = 110;
-
-        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight,
-                Image.SCALE_SMOOTH);
-        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover,
-                Image.SCALE_SMOOTH);
-
-        JLabel backButton = new JLabel(new ImageIcon(normalButton));
-        int backX = 30;
-        int backY = WINDOW_HEIGHT - backButtonHeight - 30;
-        backButton.setBounds(backX, backY, backButtonWidth, backButtonHeight);
-        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        final int originalX = backX;
-        final int originalY = backY;
-
-        backButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                backButton.setIcon(new ImageIcon(hoverButton));
-                int newX = originalX - (backButtonWidthHover - backButtonWidth) / 2;
-                int newY = originalY - (backButtonHeightHover - backButtonHeight) / 2;
-                backButton.setBounds(newX, newY, backButtonWidthHover, backButtonHeightHover);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                backButton.setIcon(new ImageIcon(normalButton));
-                backButton.setBounds(originalX, originalY, backButtonWidth, backButtonHeight);
-            }
-
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                goBackToMainMenu();
-            }
-        });
-
-        add(backButton);
+        UIHelper.addBackButton(this, resources, WINDOW_HEIGHT, this::goBackToMainMenu);
     }
 
     private void goToCharacterSelection(int level) {

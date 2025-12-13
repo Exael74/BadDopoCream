@@ -318,23 +318,10 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
 
     private void processHumanPlayerMovement() {
         if (!isMoving) {
-            boolean moved = false;
-
-            if (inputHandler.isKeyPressed(KeyEvent.VK_W)) {
-                gameFacade.movePlayerUp();
-                moved = true;
-            } else if (inputHandler.isKeyPressed(KeyEvent.VK_S)) {
-                gameFacade.movePlayerDown();
-                moved = true;
-            } else if (inputHandler.isKeyPressed(KeyEvent.VK_A)) {
-                gameFacade.movePlayerLeft();
-                moved = true;
-            } else if (inputHandler.isKeyPressed(KeyEvent.VK_D)) {
-                gameFacade.movePlayerRight();
-                moved = true;
-            } else {
-                gameFacade.stopPlayer();
-            }
+            boolean moved = handleMovementInput(
+                    KeyEvent.VK_W, KeyEvent.VK_S, KeyEvent.VK_A, KeyEvent.VK_D,
+                    gameFacade::movePlayerUp, gameFacade::movePlayerDown, gameFacade::movePlayerLeft,
+                    gameFacade::movePlayerRight, gameFacade::stopPlayer);
 
             if (moved) {
                 updatePlayerAnimation();
@@ -360,23 +347,10 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
      */
     private void processHumanPlayer2Movement() {
         if (!player2IsMoving) {
-            boolean moved = false;
-
-            if (inputHandler.isKeyPressed(KeyEvent.VK_UP)) {
-                gameFacade.movePlayer2Up();
-                moved = true;
-            } else if (inputHandler.isKeyPressed(KeyEvent.VK_DOWN)) {
-                gameFacade.movePlayer2Down();
-                moved = true;
-            } else if (inputHandler.isKeyPressed(KeyEvent.VK_LEFT)) {
-                gameFacade.movePlayer2Left();
-                moved = true;
-            } else if (inputHandler.isKeyPressed(KeyEvent.VK_RIGHT)) {
-                gameFacade.movePlayer2Right();
-                moved = true;
-            } else {
-                gameFacade.stopPlayer2();
-            }
+            boolean moved = handleMovementInput(
+                    KeyEvent.VK_UP, KeyEvent.VK_DOWN, KeyEvent.VK_LEFT, KeyEvent.VK_RIGHT,
+                    gameFacade::movePlayer2Up, gameFacade::movePlayer2Down, gameFacade::movePlayer2Left,
+                    gameFacade::movePlayer2Right, gameFacade::stopPlayer2);
 
             if (moved) {
                 updatePlayer2Animation();
@@ -409,27 +383,16 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
             float targetPixelX = player2TargetGridPosition.x * CELL_SIZE;
             float targetPixelY = player2TargetGridPosition.y * CELL_SIZE;
 
-            float deltaX = targetPixelX - player2CurrentPixelX;
-            float deltaY = targetPixelY - player2CurrentPixelY;
-
-            // En MvM/P1vsCPU usar velocidad suave
+            // MvM/P1vsCPU use smooth speed
             int speed = SMOOTH_ANIMATION_SPEED;
+            java.awt.geom.Point2D.Float nextPos = calculateSmoothPosition(player2CurrentPixelX, player2CurrentPixelY,
+                    targetPixelX, targetPixelY, speed);
 
-            if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
-                player2CurrentPixelX = targetPixelX;
-                player2CurrentPixelY = targetPixelY;
+            player2CurrentPixelX = nextPos.x;
+            player2CurrentPixelY = nextPos.y;
+
+            if (player2CurrentPixelX == targetPixelX && player2CurrentPixelY == targetPixelY) {
                 player2IsMoving = false;
-            } else {
-                // MANHATTAN INTERPOLATION
-                if (Math.abs(deltaX) > 0.5f) {
-                    player2CurrentPixelX += Math.signum(deltaX) * speed;
-                    if (Math.abs(deltaY) < speed)
-                        player2CurrentPixelY = targetPixelY;
-                } else if (Math.abs(deltaY) > 0.5f) {
-                    player2CurrentPixelY += Math.signum(deltaY) * speed;
-                    if (Math.abs(deltaX) < speed)
-                        player2CurrentPixelX = targetPixelX;
-                }
             }
         } else {
             // Force sync
@@ -478,9 +441,6 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
                     float targetX = actualPosition.x * CELL_SIZE;
                     float targetY = actualPosition.y * CELL_SIZE;
 
-                    float deltaX = targetX - currentX;
-                    float deltaY = targetY - currentY;
-
                     int speed = SMOOTH_ANIMATION_SPEED;
 
                     // High speed interpolation for Drilling Narval
@@ -488,21 +448,14 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
                         speed = 12; // Adjusted for 120ms logic speed (~8px/frame needed)
                     }
 
-                    if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
-                        enemyCurrentPixelX.put(enemyId, targetX);
-                        enemyCurrentPixelY.put(enemyId, targetY);
+                    java.awt.geom.Point2D.Float nextPos = calculateSmoothPosition(currentX, currentY, targetX, targetY,
+                            speed);
+
+                    enemyCurrentPixelX.put(enemyId, nextPos.x);
+                    enemyCurrentPixelY.put(enemyId, nextPos.y);
+
+                    if (nextPos.x == targetX && nextPos.y == targetY) {
                         enemyIsMoving.put(enemyId, false);
-                    } else {
-                        // MANHATTAN INTERPOLATION: Prevent diagonal slide
-                        if (Math.abs(deltaX) > 0.5f) {
-                            enemyCurrentPixelX.put(enemyId, currentX + Math.signum(deltaX) * speed);
-                            if (Math.abs(deltaY) < speed)
-                                enemyCurrentPixelY.put(enemyId, targetY);
-                        } else if (Math.abs(deltaY) > 0.5f) {
-                            enemyCurrentPixelY.put(enemyId, currentY + Math.signum(deltaY) * speed);
-                            if (Math.abs(deltaX) < speed)
-                                enemyCurrentPixelX.put(enemyId, targetX);
-                        }
                     }
                 }
             }
@@ -1300,5 +1253,62 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
                 newGamePanel.requestFocusInWindow();
             }
         });
+    }
+
+    // ==================== HELPERS ====================
+
+    /**
+     * Handles movement input for a player.
+     */
+    private boolean handleMovementInput(int upKey, int downKey, int leftKey, int rightKey,
+            Runnable moveUp, Runnable moveDown, Runnable moveLeft, Runnable moveRight, Runnable stop) {
+        boolean moved = false;
+        if (inputHandler.isKeyPressed(upKey)) {
+            moveUp.run();
+            moved = true;
+        } else if (inputHandler.isKeyPressed(downKey)) {
+            moveDown.run();
+            moved = true;
+        } else if (inputHandler.isKeyPressed(leftKey)) {
+            moveLeft.run();
+            moved = true;
+        } else if (inputHandler.isKeyPressed(rightKey)) {
+            moveRight.run();
+            moved = true;
+        } else {
+            stop.run();
+        }
+        return moved;
+    }
+
+    /**
+     * Calculates the next pixel position using Manhattan Interpolation (moves
+     * usually in one axis at a time).
+     */
+    private java.awt.geom.Point2D.Float calculateSmoothPosition(float currentX, float currentY, float targetX,
+            float targetY, int speed) {
+        float deltaX = targetX - currentX;
+        float deltaY = targetY - currentY;
+
+        float nextX = currentX;
+        float nextY = currentY;
+
+        if (Math.abs(deltaX) < speed && Math.abs(deltaY) < speed) {
+            nextX = targetX;
+            nextY = targetY;
+        } else {
+            // MANHATTAN INTERPOLATION: Prevent diagonal slide
+            if (Math.abs(deltaX) > 0.5f) {
+                nextX += Math.signum(deltaX) * speed;
+                // Only move Y if X is close enough (snap effect)
+                if (Math.abs(deltaY) < speed)
+                    nextY = targetY;
+            } else if (Math.abs(deltaY) > 0.5f) {
+                nextY += Math.signum(deltaY) * speed;
+                if (Math.abs(deltaX) < speed)
+                    nextX = targetX;
+            }
+        }
+        return new java.awt.geom.Point2D.Float(nextX, nextY);
     }
 }

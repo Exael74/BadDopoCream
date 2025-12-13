@@ -324,58 +324,18 @@ public class CharacterSelectionPanel extends JPanel {
     }
 
     private void setupBackButton() {
-        int backButtonWidth = 200;
-        int backButtonHeight = 100;
-        int backButtonWidthHover = 220;
-        int backButtonHeightHover = 110;
-
-        Image normalButton = resources.backImage.getScaledInstance(backButtonWidth, backButtonHeight,
-                Image.SCALE_SMOOTH);
-        Image hoverButton = resources.backImage.getScaledInstance(backButtonWidthHover, backButtonHeightHover,
-                Image.SCALE_SMOOTH);
-
-        JLabel backButton = new JLabel(new ImageIcon(normalButton));
-        int backX = 30;
-        int backY = WINDOW_HEIGHT - backButtonHeight - 30;
-        backButton.setBounds(backX, backY, backButtonWidth, backButtonHeight);
-        backButton.setCursor(new Cursor(Cursor.HAND_CURSOR));
-
-        final int originalX = backX;
-        final int originalY = backY;
-
-        backButton.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!showingVictory) {
-                    if (isSelectingP2) {
-                        // Go back to P1 selection
-                        isSelectingP2 = false;
-                        selectedCharacterP1 = null;
-                        repaint();
-                    } else {
-                        goBackToLevelSelection();
-                    }
+        UIHelper.addBackButton(this, resources, WINDOW_HEIGHT, () -> {
+            if (!showingVictory) {
+                if (isSelectingP2) {
+                    // Go back to P1 selection
+                    isSelectingP2 = false;
+                    selectedCharacterP1 = null;
+                    repaint();
+                } else {
+                    goBackToLevelSelection();
                 }
-            }
-
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                if (!showingVictory) {
-                    backButton.setIcon(new ImageIcon(hoverButton));
-                    int newX = originalX - (backButtonWidthHover - backButtonWidth) / 2;
-                    int newY = originalY - (backButtonHeightHover - backButtonHeight) / 2;
-                    backButton.setBounds(newX, newY, backButtonWidthHover, backButtonHeightHover);
-                }
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                backButton.setIcon(new ImageIcon(normalButton));
-                backButton.setBounds(originalX, originalY, backButtonWidth, backButtonHeight);
             }
         });
-
-        add(backButton);
     }
 
     private void startGame() {
@@ -533,75 +493,45 @@ public class CharacterSelectionPanel extends JPanel {
             int offsetX = (MARCO_SIZE - CHARACTER_SIZE) / 2;
             int offsetY = (MARCO_SIZE - CHARACTER_SIZE) / 2;
 
-            if (currentChocolateGif != null) {
-                Image chocolateImg = currentChocolateGif.getImage();
-                g2d.drawImage(chocolateImg,
-                        chocolateArea.x + offsetX,
-                        chocolateArea.y + offsetY,
-                        CHARACTER_SIZE,
-                        CHARACTER_SIZE,
-                        this);
+            drawCharacterPreview(g2d, "Chocolate", chocolateArea, currentChocolateGif, offsetX, offsetY);
+            drawCharacterPreview(g2d, "Fresa", fresaArea, currentFresaGif, offsetX, offsetY);
+            drawCharacterPreview(g2d, "Vainilla", vainillaArea, currentVainillaGif, offsetX, offsetY);
+
+            // Draw "P1" or "P2" badges
+            drawPlayerBadges(g2d);
+        }
+    }
+
+    private void drawCharacterPreview(Graphics2D g2d, String name, Rectangle area, ImageIcon gif, int offX, int offY) {
+        if (gif != null) {
+            g2d.drawImage(gif.getImage(), area.x + offX, area.y + offY, CHARACTER_SIZE, CHARACTER_SIZE, this);
+        }
+
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(fontLoader.getBoldFont(24f));
+        FontMetrics fm = g2d.getFontMetrics();
+        int textWidth = fm.stringWidth(name);
+
+        g2d.drawString(name, area.x + (MARCO_SIZE - textWidth) / 2, area.y + MARCO_SIZE + 40);
+    }
+
+    private void drawPlayerBadges(Graphics2D g2d) {
+        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && selectedCharacterP1 != null) {
+            Rectangle p1Area = null;
+            if ("Chocolate".equals(selectedCharacterP1))
+                p1Area = chocolateArea;
+            else if ("Fresa".equals(selectedCharacterP1))
+                p1Area = fresaArea;
+            else if ("Vainilla".equals(selectedCharacterP1))
+                p1Area = vainillaArea;
+
+            if (p1Area != null) {
+                g2d.setColor(new Color(100, 200, 255, 200));
+                g2d.fillOval(p1Area.x + 10, p1Area.y + 10, 40, 40);
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(fontLoader.getBoldFont(20f));
+                g2d.drawString("P1", p1Area.x + 18, p1Area.y + 38);
             }
-
-            if (currentFresaGif != null) {
-                Image fresaImg = currentFresaGif.getImage();
-                g2d.drawImage(fresaImg,
-                        fresaArea.x + offsetX,
-                        fresaArea.y + offsetY,
-                        CHARACTER_SIZE,
-                        CHARACTER_SIZE,
-                        this);
-            }
-
-            if (currentVainillaGif != null) {
-                Image vainillaImg = currentVainillaGif.getImage();
-                g2d.drawImage(vainillaImg,
-                        vainillaArea.x + offsetX,
-                        vainillaArea.y + offsetY,
-                        CHARACTER_SIZE,
-                        CHARACTER_SIZE,
-                        this);
-            }
-
-            // Draw "P1" or "P2" badges on selected characters if in 2 player mode
-            if ((numberOfPlayers == 2 || numberOfPlayers == 0) && selectedCharacterP1 != null) {
-                // Find which area corresponds to P1 selection
-                Rectangle p1Area = null;
-                if ("Chocolate".equals(selectedCharacterP1))
-                    p1Area = chocolateArea;
-                else if ("Fresa".equals(selectedCharacterP1))
-                    p1Area = fresaArea;
-                else if ("Vainilla".equals(selectedCharacterP1))
-                    p1Area = vainillaArea;
-
-                if (p1Area != null) {
-                    g2d.setColor(new Color(100, 200, 255, 200));
-                    g2d.fillOval(p1Area.x + 10, p1Area.y + 10, 40, 40);
-                    g2d.setColor(Color.WHITE);
-                    g2d.setFont(fontLoader.getBoldFont(20f));
-                    g2d.drawString("P1", p1Area.x + 18, p1Area.y + 38);
-                }
-            }
-
-            // Dibujar nombres con fuente personalizada
-            g2d.setColor(Color.WHITE);
-            g2d.setFont(fontLoader.getBoldFont(24f));
-
-            FontMetrics fm = g2d.getFontMetrics();
-
-            String chocolateText = "Chocolate";
-            int chocolateTextWidth = fm.stringWidth(chocolateText);
-            g2d.drawString(chocolateText, chocolateArea.x + (MARCO_SIZE - chocolateTextWidth) / 2,
-                    chocolateArea.y + MARCO_SIZE + 40);
-
-            String fresaText = "Fresa";
-            int fresaTextWidth = fm.stringWidth(fresaText);
-            g2d.drawString(fresaText, fresaArea.x + (MARCO_SIZE - fresaTextWidth) / 2, fresaArea.y + MARCO_SIZE + 40);
-
-            String vainillaText = "Vainilla";
-            int vainillaTextWidth = fm.stringWidth(vainillaText);
-            g2d.drawString(vainillaText, vainillaArea.x + (MARCO_SIZE - vainillaTextWidth) / 2,
-                    vainillaArea.y + MARCO_SIZE + 40);
         }
     }
 

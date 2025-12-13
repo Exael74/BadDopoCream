@@ -9805,3 +9805,101 @@ Dec 12, 2025 8:10:27 PM domain.BadDopoLogger logInfo
 INFO: ✓ Next wave spawned!
 Dec 12, 2025 8:10:39 PM domain.BadDopoLogger logInfo
 INFO: ✓ Calamar IA rompió hielo automáticamente
+Dec 12, 2025 9:21:51 PM domain.BadDopoLogger logInfo
+INFO: ✓ Fuente personalizada cargada: Retro_Gaming.ttf
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 1 jugadores.
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Mapa cargado desde JSON (entidades deshabilitadas temporalmente)
+Dec 12, 2025 9:22:00 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 inicializado completamente desde JSON
+Dec 12, 2025 9:22:11 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (P1)
+Dec 12, 2025 9:22:11 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 12, 2025 9:22:36 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 12, 2025 9:23:04 PM domain.BadDopoLogger logInfo
+INFO: ✓ Next wave spawned!
+Dec 12, 2025 9:23:24 PM domain.BadDopoLogger logInfo
+INFO: Partida guardada exitosamente: Revisando.dat
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 con 1 jugadores y config personalizada.
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: Estructura del mapa nivel 1 cargada desde JSON
+Dec 12, 2025 9:23:36 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 1 player(s)
+Dec 12, 2025 9:23:39 PM domain.BadDopoLogger logInfo
+INFO: Partida cargada exitosamente: Revisando.dat
+Dec 12, 2025 9:23:39 PM domain.BadDopoLogger logInfo
+INFO: DEBUG: resetAnimationState called. New Logical Pos: java.awt.Point[x=4,y=5], Old Pixel X: 50.0, Old Pixel Y: 50.0
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Starting game...
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Iniciando nivel 1 desde JSON con 2 jugadores.
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Validación de nivel 1 exitosa
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 cargado exitosamente desde Resources/levels/level_1.json
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Parseando mapa de 13x13
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Iglú creado en java.awt.Point[x=5,y=4]
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Player 1 spawn: java.awt.Point[x=1,y=1]
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Player 2 spawn: java.awt.Point[x=11,y=11]
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Mapa aplicado: 23 hielos, 48 paredes, 4 baldosas calientes
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Mapa cargado desde JSON (entidades deshabilitadas temporalmente)
+Dec 12, 2025 9:24:07 PM domain.BadDopoLogger logInfo
+INFO: Nivel 1 inicializado completamente desde JSON
+Dec 12, 2025 9:24:16 PM domain.BadDopoLogger logInfo
+INFO: P1: Fresa (yeah)
+Dec 12, 2025 9:24:16 PM domain.BadDopoLogger logInfo
+INFO: P2: Vainilla (dam)
+Dec 12, 2025 9:24:16 PM domain.BadDopoLogger logInfo
+INFO: GamePanel initialized for level 1 with 2 player(s)

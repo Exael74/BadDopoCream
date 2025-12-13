@@ -180,92 +180,88 @@ public class GameLogic {
     /**
      * Crea una línea de hielo desde el jugador.
      */
-    public List<Point> performIceSneeze(Player player) {
-        if (player.isBusy()) {
-            return new ArrayList<>();
+    /**
+     * Helper to trace a line from a starting point in a direction.
+     * 
+     * @param start             Starting position (exclusive)
+     * @param dir               Direction to trace
+     * @param continueCondition Predicate that returns true if tracing should
+     *                          continue
+     * @param action            Action to perform on each valid step
+     * @return List of processed points
+     */
+    private List<Point> traceRay(Point start, Direction dir, java.util.function.Predicate<Point> continueCondition,
+            java.util.function.Consumer<Point> action) {
+        List<Point> processedPoints = new ArrayList<>();
+        Point current = new Point(start.x + dir.getDeltaX(), start.y + dir.getDeltaY());
+
+        while (continueCondition.test(current)) {
+            processedPoints.add(new Point(current));
+            if (action != null) {
+                action.accept(current);
+            }
+            current.x += dir.getDeltaX();
+            current.y += dir.getDeltaY();
         }
+        return processedPoints;
+    }
 
+    public List<Point> performIceSneeze(Player player) {
+        if (player.isBusy())
+            return new ArrayList<>();
         player.startSneeze();
-
-        List<Point> icePositions = new ArrayList<>();
         Point playerPos = player.getPosition();
         Direction direction = player.getFacingDirection();
 
-        Point current = new Point(
-                playerPos.x + direction.getDeltaX(),
-                playerPos.y + direction.getDeltaY());
+        return traceRay(playerPos, direction,
+                pos -> {
+                    // Continue if position is valid and NOT checking collision with obstacles
+                    // Wait, Sneeze STOPS on obstacles.
+                    // So condition is: Valid AND Not Blocked.
+                    boolean valid = collisionDetector.isValidPosition(pos);
+                    if (!valid)
+                        return false;
 
-        while (collisionDetector.isValidPosition(current)) {
-            if (collisionDetector.hasEnemyAt(current) || collisionDetector.hasIceAt(current) ||
-                    collisionDetector.hasIgluAt(current) || collisionDetector.hasUnbreakableBlockAt(current)) {
-                break;
-            }
-
-            // Cannot place ice on hot tiles
-            if (isHotTile(current)) {
-                // "Melt immediately": Do not add block, but CONTINUE the stream
-                // Logically the ice passes over and melts, so valid spaces beyond are still
-                // filled.
-                // We just do nothing here.
-            } else {
-                gameState.addIceBlock(new IceBlock(current));
-                icePositions.add(new Point(current));
-            }
-
-            current.x += direction.getDeltaX();
-            current.y += direction.getDeltaY();
-        }
-
-        return icePositions;
+                    boolean blocked = collisionDetector.hasEnemyAt(pos) || collisionDetector.hasIceAt(pos) ||
+                            collisionDetector.hasIgluAt(pos) || collisionDetector.hasUnbreakableBlockAt(pos);
+                    return !blocked;
+                },
+                pos -> {
+                    if (!isHotTile(pos)) {
+                        gameState.addIceBlock(new IceBlock(pos));
+                    }
+                });
     }
 
-    /**
-     * Sobrecarga para IA: Realiza sneeze con el jugador principal.
-     */
     public List<Point> performIceSneeze() {
         return performIceSneeze(gameState.getPlayer());
     }
 
-    /**
-     * Rompe una línea de hielo desde el jugador.
-     */
     public List<Point> performIceKick(Player player) {
-        if (player.isBusy()) {
+        if (player.isBusy())
             return new ArrayList<>();
-        }
 
         Point playerPos = player.getPosition();
         Direction direction = player.getFacingDirection();
+        Point firstCheck = new Point(playerPos.x + direction.getDeltaX(), playerPos.y + direction.getDeltaY());
 
-        Point checkPos = new Point(
-                playerPos.x + direction.getDeltaX(),
-                playerPos.y + direction.getDeltaY());
-
-        if (!collisionDetector.isValidPosition(checkPos) || !collisionDetector.hasIceAt(checkPos)) {
+        // Kick requires immediate ice to start
+        if (!collisionDetector.isValidPosition(firstCheck) || !collisionDetector.hasIceAt(firstCheck)) {
             return new ArrayList<>();
         }
 
         player.startKick();
 
-        List<Point> brokenIcePositions = new ArrayList<>();
-        Point current = new Point(checkPos);
-
-        while (collisionDetector.isValidPosition(current) && collisionDetector.hasIceAt(current)) {
-            IceBlock ice = collisionDetector.getIceAt(current);
-            if (ice != null && !ice.isPermanent()) {
-                ice.startBreaking();
-                brokenIcePositions.add(new Point(current));
-            }
-            current.x += direction.getDeltaX();
-            current.y += direction.getDeltaY();
-        }
-
-        return brokenIcePositions;
+        return traceRay(playerPos, direction,
+                pos -> collisionDetector.isValidPosition(pos) && collisionDetector.hasIceAt(pos),
+                pos -> {
+                    IceBlock ice = collisionDetector.getIceAt(pos);
+                    if (ice != null && !ice.isPermanent()) {
+                        ice.startBreaking();
+                    }
+                });
     }
 
-    /**
-     * Sobrecarga para IA: Realiza kick con el jugador principal.
-     */
     public List<Point> performIceKick() {
         return performIceKick(gameState.getPlayer());
     }
