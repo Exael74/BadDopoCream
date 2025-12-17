@@ -1,0 +1,543 @@
+package presentation;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+
+public class CharacterSelectionPanel extends JPanel {
+
+    private static final int WINDOW_WIDTH = 1280;
+    private static final int WINDOW_HEIGHT = 720;
+
+    private ResourceLoader resources;
+    private FontLoader fontLoader;
+    private int selectedLevel;
+    private int numberOfPlayers;
+    private boolean isP2CPU; // New flag
+
+    private String hoveredCharacter = null;
+
+    // Selection state
+    private String selectedCharacterP1 = null;
+    private String selectedCharacterP2 = null;
+    private String p1Name = "P1";
+    private String p2Name = "P2";
+    private boolean isSelectingP2 = false; // False = Selecting P1, True = Selecting P2
+
+    // Áreas de los personajes (clickeables)
+    private Rectangle chocolateArea;
+    private Rectangle fresaArea;
+    private Rectangle vainillaArea;
+
+    // GIFs animados de personajes
+    private ImageIcon currentChocolateGif;
+    private ImageIcon currentFresaGif;
+    private ImageIcon currentVainillaGif;
+
+    // Timer para actualizar las animaciones
+    private javax.swing.Timer animationTimer;
+
+    // Tamaño del marco y del personaje
+    private static final int MARCO_SIZE = 220;
+    private static final int CHARACTER_SIZE = 150;
+
+    // Control de animación de victoria
+    private boolean showingVictory = false;
+    private ImageIcon victoryGif = null;
+    private Rectangle victoryArea = null;
+
+    // AI Types for MvM (Stored as Strings to decouple from Domain)
+    private String aiTypeP1 = null;
+    private String aiTypeP2 = null;
+
+    private int showStyledConfirmDialog(String message, String title, int optionType) {
+        JLabel label = new JLabel(message);
+        label.setFont(fontLoader.getPlainFont(18f));
+        return JOptionPane.showConfirmDialog(this, label, title, optionType, JOptionPane.QUESTION_MESSAGE);
+    }
+
+    private String showStyledInputDialog(String message, String title) {
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        JLabel label = new JLabel(message);
+        label.setFont(fontLoader.getPlainFont(18f));
+        JTextField textField = new JTextField(15);
+        textField.setFont(fontLoader.getPlainFont(18f));
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(textField, BorderLayout.CENTER);
+
+        int result = JOptionPane.showConfirmDialog(this, panel, title, JOptionPane.OK_CANCEL_OPTION,
+                JOptionPane.PLAIN_MESSAGE);
+        if (result == JOptionPane.OK_OPTION) {
+            return textField.getText();
+        }
+        return null;
+    }
+
+    private String selectAIType(String playerName) {
+        String[] options = { "Hambriento (Frutas)", "Miedoso (Seguro)", "Experto (Balanceado)" };
+
+        // Custom button rendering for options?
+        // JOptionPane options handles objects. We can pass Strings but the buttons will
+        // be default.
+        // To style buttons we might need UIManager or a very custom dialog.
+        // For now, let's style the message at least.
+
+        JLabel messageLabel = new JLabel("Selecciona la personalidad de " + playerName + ":");
+        messageLabel.setFont(fontLoader.getPlainFont(18f));
+
+        int choice = JOptionPane.showOptionDialog(this,
+                messageLabel,
+                "Personalidad IA",
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.QUESTION_MESSAGE,
+                null,
+                options,
+                options[2]); // Default to Expert
+
+        switch (choice) {
+            case 0:
+                return "HUNGRY";
+            case 1:
+                return "FEARFUL";
+            case 2:
+                return "EXPERT";
+            default:
+                return "EXPERT";
+        }
+    }
+
+    public CharacterSelectionPanel(int selectedLevel, int numberOfPlayers, ResourceLoader resources, boolean isP2CPU) {
+        this.selectedLevel = selectedLevel;
+        this.numberOfPlayers = numberOfPlayers;
+        this.resources = resources;
+        this.isP2CPU = isP2CPU;
+        this.fontLoader = FontLoader.getInstance();
+
+        setPreferredSize(new Dimension(WINDOW_WIDTH, WINDOW_HEIGHT));
+        setLayout(null);
+
+        // Inicializar con animaciones de quieto
+        currentChocolateGif = resources.chocolateIdleDownGif;
+        currentFresaGif = resources.rosaIdleDownGif;
+        currentVainillaGif = resources.vainillaIdleDownGif;
+
+        setupCharacterAreas();
+        setupMouseListeners();
+        setupBackButton();
+        startAnimationTimer();
+    }
+
+    private void setupCharacterAreas() {
+        int spacing = 100;
+        int totalWidth = (MARCO_SIZE * 3) + (spacing * 2);
+        int startX = (WINDOW_WIDTH - totalWidth) / 2;
+        int characterY = 320;
+
+        chocolateArea = new Rectangle(startX, characterY, MARCO_SIZE, MARCO_SIZE);
+        fresaArea = new Rectangle(startX + MARCO_SIZE + spacing, characterY, MARCO_SIZE, MARCO_SIZE);
+        vainillaArea = new Rectangle(startX + (MARCO_SIZE + spacing) * 2, characterY, MARCO_SIZE, MARCO_SIZE);
+    }
+
+    private void setupMouseListeners() {
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (showingVictory)
+                    return;
+
+                Point clickPoint = e.getPoint();
+                String clickedChar = null;
+
+                if (chocolateArea.contains(clickPoint)) {
+                    clickedChar = "Chocolate";
+                } else if (fresaArea.contains(clickPoint)) {
+                    clickedChar = "Fresa";
+                } else if (vainillaArea.contains(clickPoint)) {
+                    clickedChar = "Vainilla";
+                }
+
+                if (clickedChar != null) {
+                    handleSelection(clickedChar);
+                }
+            }
+        });
+
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                if (showingVictory)
+                    return;
+
+                Point mousePoint = e.getPoint();
+                String previousHovered = hoveredCharacter;
+
+                if (chocolateArea.contains(mousePoint)) {
+                    hoveredCharacter = "Chocolate";
+                } else if (fresaArea.contains(mousePoint)) {
+                    hoveredCharacter = "Fresa";
+                } else if (vainillaArea.contains(mousePoint)) {
+                    hoveredCharacter = "Vainilla";
+                } else {
+                    hoveredCharacter = null;
+                }
+
+                if (!java.util.Objects.equals(previousHovered, hoveredCharacter)) {
+                    updateCharacterAnimations();
+                }
+            }
+        });
+    }
+
+    private void updateCharacterAnimations() {
+        if ("Chocolate".equals(hoveredCharacter)) {
+            currentChocolateGif = resources.chocolateWalkDownGif;
+        } else {
+            currentChocolateGif = resources.chocolateIdleDownGif;
+        }
+
+        if ("Fresa".equals(hoveredCharacter)) {
+            currentFresaGif = resources.rosaWalkDownGif;
+        } else {
+            currentFresaGif = resources.rosaIdleDownGif;
+        }
+
+        if ("Vainilla".equals(hoveredCharacter)) {
+            currentVainillaGif = resources.vainillaWalkDownGif;
+        } else {
+            currentVainillaGif = resources.vainillaIdleDownGif;
+        }
+    }
+
+    private void startAnimationTimer() {
+        animationTimer = new javax.swing.Timer(33, e -> repaint());
+        animationTimer.start();
+    }
+
+    private void handleSelection(String character) {
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
+            if (!isSelectingP2) {
+                // P1 selection
+                String title = (numberOfPlayers == 0) ? "Confirmar Máquina 1" : "Confirmar Jugador 1";
+                String msg = (numberOfPlayers == 0) ? "Máquina 1: ¿Elegir a " + character + "?"
+                        : "Jugador 1: ¿Elegir a " + character + "?";
+
+                int response = showStyledConfirmDialog(msg, title, JOptionPane.NO_OPTION);
+
+                if (response == JOptionPane.YES_OPTION) {
+                    selectedCharacterP1 = character;
+
+                    // Ask for name if Machine vs Machine OR PvP
+                    String defaultName = (numberOfPlayers == 0) ? "Máquina 1" : "Jugador 1";
+                    String inputName = showStyledInputDialog("Nombre para " + defaultName + ":", "P1");
+                    if (inputName != null && !inputName.trim().isEmpty()) {
+                        p1Name = inputName.trim();
+                    }
+
+                    // For MvM, select AI Type for P1
+                    if (numberOfPlayers == 0) {
+                        aiTypeP1 = selectAIType("Máquina 1");
+                    }
+
+                    isSelectingP2 = true;
+                    repaint();
+                }
+            } else {
+                // P2 selection
+                String title;
+                String msg;
+                if (numberOfPlayers == 0) {
+                    title = "Confirmar Máquina 2";
+                    msg = "Máquina 2: ¿Elegir a " + character + "?";
+                } else if (isP2CPU) {
+                    title = "Confirmar Máquina (P2)";
+                    msg = "Máquina (P2): ¿Elegir a " + character + "?";
+                } else {
+                    title = "Confirmar Jugador 2";
+                    msg = "Jugador 2: ¿Elegir a " + character + "?";
+                }
+
+                int response = showStyledConfirmDialog(msg, title, JOptionPane.YES_NO_OPTION);
+
+                if (response == JOptionPane.YES_OPTION) {
+                    selectedCharacterP2 = character;
+
+                    // Ask for name
+                    String defaultName = (numberOfPlayers == 0 || isP2CPU) ? "Máquina 2" : "Jugador 2";
+                    String inputName = showStyledInputDialog("Nombre para " + defaultName + ":", "P2");
+                    if (inputName != null && !inputName.trim().isEmpty()) {
+                        p2Name = inputName.trim();
+                    }
+
+                    // For MvM OR P1 vs Machine, select AI Type for P2
+                    if (numberOfPlayers == 0 || isP2CPU) {
+                        aiTypeP2 = selectAIType((isP2CPU) ? "Máquina (P2)" : "Máquina 2");
+                    }
+
+                    showVictoryAnimation(character); // Show victory for P2's choice then start
+                }
+            }
+        } else {
+            // Single player
+            int response = showStyledConfirmDialog(
+                    "¿Estás seguro de elegir a " + character + "?",
+                    "Confirmar selección",
+                    JOptionPane.YES_NO_OPTION);
+
+            if (response == JOptionPane.YES_OPTION) {
+                selectedCharacterP1 = character;
+
+                // Ask for name for Single Player
+                String inputName = showStyledInputDialog("Nombre para Jugador 1:", "P1");
+                if (inputName != null && !inputName.trim().isEmpty()) {
+                    p1Name = inputName.trim();
+                }
+
+                showVictoryAnimation(character);
+            }
+        }
+    }
+
+    private void showVictoryAnimation(String character) {
+        showingVictory = true;
+
+        switch (character) {
+            case "Chocolate":
+                victoryGif = resources.chocolateVictoryGif;
+                victoryArea = chocolateArea;
+                break;
+            case "Fresa":
+                victoryGif = resources.rosaVictoryGif;
+                victoryArea = fresaArea;
+                break;
+            case "Vainilla":
+                victoryGif = resources.vainillaVictoryGif;
+                victoryArea = vainillaArea;
+                break;
+        }
+
+        javax.swing.Timer victoryTimer = new javax.swing.Timer(2000, e -> {
+            startGame();
+        });
+        victoryTimer.setRepeats(false);
+        victoryTimer.start();
+    }
+
+    private void setupBackButton() {
+        UIHelper.addBackButton(this, resources, WINDOW_HEIGHT, () -> {
+            if (!showingVictory) {
+                if (isSelectingP2) {
+                    // Go back to P1 selection
+                    isSelectingP2 = false;
+                    selectedCharacterP1 = null;
+                    repaint();
+                } else {
+                    goBackToLevelSelection();
+                }
+            }
+        });
+    }
+
+    private void startGame() {
+        domain.BadDopoLogger.logInfo("Starting game...");
+
+        // --- Level Configuration Step ---
+        // Create temporary facade just to fetch defaults/types
+        // Note: Character types for facade constructor don't matter here
+        // Create Facade fully here. This is the new entry point for Facade creation.
+        // We need to pass all parameters to it now.
+        domain.GameFacade gameFacade = new domain.GameFacade(selectedCharacterP1, selectedCharacterP2, p1Name, p2Name,
+                selectedLevel, numberOfPlayers, aiTypeP1, aiTypeP2, isP2CPU);
+
+        // Load defaults
+        gameFacade.setConfiguration(gameFacade.getDefaultConfiguration(selectedLevel));
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            LevelConfigurationDialog configDialog = new LevelConfigurationDialog(
+                    (JFrame) window, gameFacade);
+            configDialog.setVisible(true);
+
+            if (!configDialog.isConfirmed()) {
+                return; // User cancelled
+            }
+
+            // Configuration is already updated in facade DTO, now apply it to State
+            gameFacade.applyConfiguration();
+            // config = configDialog.getConfiguration();
+
+            domain.BadDopoLogger.logInfo("P1: " + selectedCharacterP1 + " (" + p1Name + ")");
+            if (numberOfPlayers == 2 || numberOfPlayers == 0) {
+                domain.BadDopoLogger.logInfo("P2: " + selectedCharacterP2 + " (" + p2Name + ")");
+            }
+
+            cleanup();
+
+            JFrame frame = (JFrame) window;
+            frame.dispose();
+
+            // Pass both characters if 2 players or Machine vs Machine, otherwise just P1
+            String p2Char = (numberOfPlayers == 2 || numberOfPlayers == 0) ? selectedCharacterP2 : null;
+
+            // Pass updated Config
+            // Pass Facade to Window
+            new GameWindow(gameFacade, resources);
+        }
+    }
+
+    private void goBackToLevelSelection() {
+        cleanup();
+
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window instanceof JFrame) {
+            JFrame frame = (JFrame) window;
+            frame.getContentPane().removeAll();
+
+            LevelSelectionPanel levelPanel = new LevelSelectionPanel(numberOfPlayers, resources, isP2CPU);
+            frame.add(levelPanel);
+            frame.revalidate();
+            frame.repaint();
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        Graphics2D g2d = (Graphics2D) g;
+
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+
+        // Dibujar fondo
+        if (resources.wallpaperImage != null) {
+            g2d.drawImage(resources.wallpaperImage, 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, this);
+        }
+
+        // Dibujar título de selección de personaje
+        if (resources.characterSelectionGif != null) {
+            Image titleImage = resources.characterSelectionGif.getImage();
+            int titleWidth = 600;
+            int titleHeight = 150;
+            int titleX = (WINDOW_WIDTH - titleWidth) / 2;
+            int titleY = 50;
+            g2d.drawImage(titleImage, titleX, titleY, titleWidth, titleHeight, this);
+        }
+
+        // Draw prompt for current player
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(fontLoader.getBoldFont(32f));
+        String prompt = "Selecciona tu personaje";
+        if (numberOfPlayers == 2 || numberOfPlayers == 0) {
+            if (!isSelectingP2) {
+                prompt = (numberOfPlayers == 0) ? "Máquina 1: Selecciona personaje"
+                        : "Jugador 1: Selecciona tu personaje";
+                g2d.setColor(new Color(100, 200, 255)); // Blueish for P1
+            } else {
+                prompt = (numberOfPlayers == 0) ? "Máquina 2: Selecciona personaje"
+                        : "Jugador 2: Selecciona tu personaje";
+                g2d.setColor(new Color(255, 100, 100)); // Reddish for P2
+            }
+        }
+        FontMetrics fmPrompt = g2d.getFontMetrics();
+        int promptWidth = fmPrompt.stringWidth(prompt);
+        g2d.drawString(prompt, (WINDOW_WIDTH - promptWidth) / 2, 220);
+
+        if (showingVictory && victoryGif != null && victoryArea != null) {
+            // Dibujar el marco del personaje seleccionado
+            if (resources.marcoSeleccionImage != null) {
+                g2d.drawImage(resources.marcoSeleccionImage, victoryArea.x, victoryArea.y, MARCO_SIZE, MARCO_SIZE,
+                        this);
+            }
+
+            // Dibujar la animación de victoria centrada
+            int offsetX = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+            int offsetY = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+
+            Image victoryImage = victoryGif.getImage();
+            g2d.drawImage(victoryImage,
+                    victoryArea.x + offsetX,
+                    victoryArea.y + offsetY,
+                    CHARACTER_SIZE,
+                    CHARACTER_SIZE,
+                    this);
+
+            // Dibujar nombre del personaje con fuente personalizada
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(fontLoader.getBoldFont(28f));
+            FontMetrics fm = g2d.getFontMetrics();
+            String charName = (isSelectingP2) ? selectedCharacterP2 : selectedCharacterP1;
+            if (charName == null)
+                charName = ""; // Safety check
+            int textWidth = fm.stringWidth(charName);
+            g2d.drawString(charName, victoryArea.x + (MARCO_SIZE - textWidth) / 2, victoryArea.y + MARCO_SIZE + 40);
+
+        } else {
+            // Mostrar todos los personajes normalmente
+
+            // Dibujar marcos
+            if (resources.marcoSeleccionImage != null) {
+                if ("Chocolate".equals(hoveredCharacter)) {
+                    g2d.drawImage(resources.marcoSeleccionImage, chocolateArea.x, chocolateArea.y, MARCO_SIZE,
+                            MARCO_SIZE, this);
+                }
+                if ("Fresa".equals(hoveredCharacter)) {
+                    g2d.drawImage(resources.marcoSeleccionImage, fresaArea.x, fresaArea.y, MARCO_SIZE, MARCO_SIZE,
+                            this);
+                }
+                if ("Vainilla".equals(hoveredCharacter)) {
+                    g2d.drawImage(resources.marcoSeleccionImage, vainillaArea.x, vainillaArea.y, MARCO_SIZE, MARCO_SIZE,
+                            this);
+                }
+            }
+
+            // Dibujar personajes
+            int offsetX = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+            int offsetY = (MARCO_SIZE - CHARACTER_SIZE) / 2;
+
+            drawCharacterPreview(g2d, "Chocolate", chocolateArea, currentChocolateGif, offsetX, offsetY);
+            drawCharacterPreview(g2d, "Fresa", fresaArea, currentFresaGif, offsetX, offsetY);
+            drawCharacterPreview(g2d, "Vainilla", vainillaArea, currentVainillaGif, offsetX, offsetY);
+
+            // Draw "P1" or "P2" badges
+            drawPlayerBadges(g2d);
+        }
+    }
+
+    private void drawCharacterPreview(Graphics2D g2d, String name, Rectangle area, ImageIcon gif, int offX, int offY) {
+        if (gif != null) {
+            g2d.drawImage(gif.getImage(), area.x + offX, area.y + offY, CHARACTER_SIZE, CHARACTER_SIZE, this);
+        }
+
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(fontLoader.getBoldFont(24f));
+        FontMetrics fm = g2d.getFontMetrics();
+        int textWidth = fm.stringWidth(name);
+
+        g2d.drawString(name, area.x + (MARCO_SIZE - textWidth) / 2, area.y + MARCO_SIZE + 40);
+    }
+
+    private void drawPlayerBadges(Graphics2D g2d) {
+        if ((numberOfPlayers == 2 || numberOfPlayers == 0) && selectedCharacterP1 != null) {
+            Rectangle p1Area = null;
+            if ("Chocolate".equals(selectedCharacterP1))
+                p1Area = chocolateArea;
+            else if ("Fresa".equals(selectedCharacterP1))
+                p1Area = fresaArea;
+            else if ("Vainilla".equals(selectedCharacterP1))
+                p1Area = vainillaArea;
+
+            if (p1Area != null) {
+                g2d.setColor(new Color(100, 200, 255, 200));
+                g2d.fillOval(p1Area.x + 10, p1Area.y + 10, 40, 40);
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(fontLoader.getBoldFont(20f));
+                g2d.drawString("P1", p1Area.x + 18, p1Area.y + 38);
+            }
+        }
+    }
+
+    public void cleanup() {
+        if (animationTimer != null) {
+            animationTimer.stop();
+        }
+    }
+}

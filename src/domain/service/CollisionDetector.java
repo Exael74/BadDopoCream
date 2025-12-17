@@ -1,0 +1,234 @@
+package domain.service;
+
+import domain.entity.enemy.Enemy;
+import domain.entity.*;
+import domain.state.GameState;
+import java.awt.Point;
+
+/**
+ * Servicio responsable de detectar colisiones entre entidades del juego.
+ * Separa la lógica de detección de colisiones de la lógica principal del juego.
+ */
+public class CollisionDetector {
+
+    private GameState gameState;
+
+    /**
+     * Constructor del detector de colisiones.
+     *
+     * @param gameState Estado del juego
+     */
+    public CollisionDetector(GameState gameState) {
+        this.gameState = gameState;
+    }
+
+    /**
+     * Verifica si hay un enemigo en la posición especificada.
+     *
+     * @param position Posición a verificar
+     * @return true si hay un enemigo activo en esa posición
+     */
+    public boolean hasEnemyAt(Point position) {
+        for (Enemy enemy : gameState.getEnemies()) {
+            if (enemy.isActive() && enemy.isAt(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Verifica si hay un enemigo diferente al especificado en la posición.
+     *
+     * @param position     Posición a verificar
+     * @param currentEnemy Enemigo a excluir de la verificación
+     * @return true si hay otro enemigo en esa posición
+     */
+    public boolean hasOtherEnemyAt(Point position, Enemy currentEnemy) {
+        for (Enemy enemy : gameState.getEnemies()) {
+            if (enemy != currentEnemy && enemy.isActive() && enemy.isAt(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Verifica si hay hielo en la posición especificada.
+     *
+     * @param position Posición a verificar
+     * @return true si hay un bloque de hielo en esa posición
+     */
+    public boolean hasIceAt(Point position) {
+        for (IceBlock ice : gameState.getIceBlocks()) {
+            if (ice.getPosition().equals(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean hasIgluAt(Point position) {
+        if (gameState.getIglu() != null) {
+            return gameState.getIglu().collidesWith(position);
+        }
+        return false;
+    }
+
+    public boolean hasUnbreakableBlockAt(Point position) {
+        for (UnbreakableBlock block : gameState.getUnbreakableBlocks()) {
+            if (block.getPosition().equals(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Obtiene el bloque de hielo en la posición especificada.
+     *
+     * @param position Posición a verificar
+     * @return Bloque de hielo o null si no hay ninguno
+     */
+    public IceBlock getIceAt(Point position) {
+        for (IceBlock ice : gameState.getIceBlocks()) {
+            if (ice.isAt(position)) {
+                return ice;
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Verifica si hay una fruta no recolectada en la posición especificada.
+     *
+     * @param position Posición a verificar
+     * @return true si hay una fruta no recolectada en esa posición
+     */
+    public boolean hasFruitAt(Point position) {
+        for (Fruit fruit : gameState.getFruits()) {
+            if (!fruit.isCollected() && fruit.isAt(position)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Verifica si el jugador está en la posición especificada.
+     *
+     * @param position Posición a verificar
+     * @return true si el jugador está en esa posición
+     */
+    public boolean isPlayerAt(Point position) {
+        return gameState.getPlayer().isAt(position);
+    }
+
+    /**
+     * Verifica si la posición está bloqueada (por hielo u otro obstáculo).
+     *
+     * @param position Posición a verificar
+     * @return true si la posición está bloqueada
+     */
+    public boolean isPositionBlocked(Point position) {
+        return hasIceAt(position) || hasIgluAt(position) || hasUnbreakableBlockAt(position);
+    }
+
+    /**
+     * Verifica si la posición está válida dentro del grid del juego.
+     *
+     * @param position Posición a verificar
+     * @return true si la posición está dentro de los límites
+     */
+    public boolean isValidPosition(Point position) {
+        int gridSize = GameState.getGridSize();
+        return position.x >= 0 && position.x < gridSize &&
+                position.y >= 0 && position.y < gridSize;
+    }
+
+    /**
+     * Detecta y procesa colisiones de los jugadores con otras entidades.
+     * Maneja colisiones con enemigos (muerte) y frutas (recolección).
+     */
+    public void checkCollisions() {
+        // Verificar colisiones para Jugador 1
+        checkPlayerCollisions(gameState.getPlayer(), false);
+
+        // Verificar colisiones para Jugador 2 (si existe)
+        if (gameState.getPlayer2() != null) {
+            checkPlayerCollisions(gameState.getPlayer2(), true);
+        }
+    }
+
+    /**
+     * Verifica colisiones para un jugador específico.
+     *
+     * @param player Jugador a verificar
+     * @param isP2   Si es el jugador 2
+     */
+    private void checkPlayerCollisions(Player player, boolean isP2) {
+        if (player == null || !player.isActive() || player.isDying()) {
+            return;
+        }
+
+        Point pos = player.getPosition();
+
+        // 1. Enemy Collision (Death)
+        for (Enemy enemy : gameState.getEnemies()) {
+            if (enemy.isActive() && enemy.getPosition().equals(pos)) {
+                // Si el jugador es invulnerable o está atacando, quizás no muera?
+                // Por ahora, colisión simple = muerte.
+                // Excepto si el enemigo está spawneando? (Future proofing)
+                player.die();
+                return;
+            }
+        }
+
+    }
+
+    /**
+     * Obtiene el bloque de hielo en una posición específica.
+     */
+    public IceBlock getIceBlockAt(Point position) {
+        for (IceBlock ice : gameState.getIceBlocks()) {
+            if (ice.isAt(position)) {
+                return ice;
+            }
+        }
+        return null;
+    }
+
+    // ==================== CONVENIENCE METHODS ====================
+
+    /**
+     * Checks if a position is completely free of static obstacles and enemies.
+     * Use this when you need an empty tile (e.g. for spawning or random placement).
+     *
+     * @param position Position to check
+     * @return true if position is valid and has no static obstacles or enemies
+     */
+    public boolean isPositionFree(Point position) {
+        return isValidPosition(position) &&
+                !isPositionBlocked(position) &&
+                !hasEnemyAt(position) &&
+                !isPlayerAt(position) && // Optional depending on context, but safe for spawning
+                !hasFruitAt(position);
+    }
+
+    /**
+     * Checks if a standard enemy can walk onto this position.
+     * Standard rules:
+     * - Within grid bounds
+     * - No static obstacles (Walls, Igloo, Ice)
+     * - No OTHER enemies (to prevent stacking)
+     *
+     * @param position Position to check
+     * @param self     The enemy checking (to ignore itself)
+     * @return true if the enemy can move to this position
+     */
+    public boolean canEnemyMoveTo(Point position, Enemy self) {
+        return isValidPosition(position) &&
+                !isPositionBlocked(position) && // Checks Ice, Iglu, Unbreakable
+                !hasOtherEnemyAt(position, self);
+    }
+}
