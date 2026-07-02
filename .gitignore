@@ -1,0 +1,24 @@
+# Build output
+bin/
+out/
+
+# Logs
+*.log
+*.log.*
+*.lck
+
+# Save files
+saves/*.dat
+
+# IDE - IntelliJ
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/shelf/
+.idea/libraries/*.jar
+
+# IDE - VS Code
+.vscode/
+
+# OS
+.DS_Store
+Thumbs.db

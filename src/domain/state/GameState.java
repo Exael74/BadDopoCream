@@ -79,6 +79,10 @@ public class GameState implements Serializable {
         return GRID_SIZE;
     }
 
+    public static long getTimeLimit() {
+        return TIME_LIMIT;
+    }
+
     // ==================== GETTERS DE ENTIDADES ====================
 
     public Player getPlayer() {

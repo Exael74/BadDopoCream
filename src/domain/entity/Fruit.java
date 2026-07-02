@@ -208,4 +208,11 @@ public class Fruit extends Entity {
     public boolean canTeleport() {
         return type.canTeleport();
     }
+
+    /**
+     * Retorna el nombre del tipo de fruta, consistente con Enemy.getTypeName().
+     */
+    public String getTypeName() {
+        return type.toString();
+    }
 }

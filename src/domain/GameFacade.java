@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.Map;
+import java.util.EnumMap;
 
 /**
  * Fachada del dominio del juego.
@@ -203,27 +204,40 @@ public class GameFacade {
     // ==================== REINICIO Y SALIDA ====================
 
     public void restartLevel() {
-        // Reiniciar con la misma configuración
-        String charType = gameState.getPlayer().getCharacterType();
         int level = gameState.getLevel();
         int players = gameState.getNumberOfPlayers();
-
-        // Preserve P2 type if exists
+        String charType = gameState.getPlayer().getCharacterType();
         String charType2 = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getCharacterType() : "Vainilla";
         String name1 = gameState.getPlayer().getName();
         String name2 = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getName() : "P2";
 
+        AIType aiType1 = gameState.getPlayer().getAIType();
+        AIType aiType2 = (gameState.getPlayer2() != null) ? gameState.getPlayer2().getAIType() : null;
+        boolean wasP2CPU = this.isP2CPU;
+        LevelConfigurationDTO savedConfig = this.currentConfiguration;
+
         this.gameState = new GameState(charType, level, players);
+        this.gameState.setP2CPU(wasP2CPU);
+        this.isP2CPU = wasP2CPU;
+
         if (players == 2 || players == 0) {
             setPlayer2CharacterType(charType2);
         }
         this.gameState.setPlayerNames(name1, name2);
 
+        if (aiType1 != null) gameState.getPlayer().setAIType(aiType1);
+        if (aiType2 != null && gameState.getPlayer2() != null) gameState.getPlayer2().setAIType(aiType2);
+
+        this.currentConfiguration = savedConfig;
         this.gameLogic = new GameLogic(gameState);
         this.paused = false;
         this.lastUpdateTime = System.currentTimeMillis();
 
-        initializeLevel(level, players);
+        if (savedConfig != null) {
+            initializeLevel(level, players, savedConfig);
+        } else {
+            initializeLevel(level, players);
+        }
     }
 
     // ==================== INICIALIZACIÓN DE NIVELES ====================
@@ -371,12 +385,51 @@ public class GameFacade {
         initializeFogatas(config.getFogataCount());
     }
 
-    /**
-     * Spawns entities based on LevelDataDTO from JSON.
-     * TEMPORARILY DISABLED - Only loading map structure
-     */
     private void spawnDynamicEntitiesFromJSON(LevelDataDTO levelData) {
-        BadDopoLogger.logInfo("Mapa cargado desde JSON (entidades deshabilitadas temporalmente)");
+        BadDopoLogger.logInfo("Generando entidades desde JSON...");
+
+        // 1. Spawn Fruits from waves
+        if (levelData.getFruitConfig() != null) {
+            for (FruitWaveDTO wave : levelData.getFruitConfig().getWaves()) {
+                List<Fruit> waveFruits = new ArrayList<>();
+                for (FruitSpawnDTO spawn : wave.getFruits()) {
+                    try {
+                        FruitType type = FruitType.valueOf(spawn.getType());
+                        for (int i = 0; i < spawn.getCount(); i++) {
+                            Point pos = findFreePosition();
+                            if (pos != null) {
+                                waveFruits.add(new Fruit(pos, type));
+                            }
+                        }
+                    } catch (IllegalArgumentException e) {
+                        BadDopoLogger.logError("Unknown Fruit Type in JSON: " + spawn.getType(), e);
+                    }
+                }
+                if (!waveFruits.isEmpty()) {
+                    if (wave.isSpawnOnStart()) {
+                        for (Fruit f : waveFruits) {
+                            gameState.addFruit(f);
+                        }
+                    } else {
+                        gameState.addPendingFruitWave(waveFruits);
+                    }
+                }
+            }
+        }
+
+        // 2. Spawn Enemies
+        if (levelData.getEnemyConfig() != null) {
+            for (EnemySpawnDTO spawn : levelData.getEnemyConfig().getTypes()) {
+                String type = spawn.getType();
+                for (int i = 0; i < spawn.getCount(); i++) {
+                    spawnEnemy(type);
+                }
+            }
+        }
+
+        // 3. Hot tiles from map layout already handled by MapParserService
+        // 4. Fogatas - use default count for now
+        initializeFogatas(2);
     }
 
     // Helper for Spawning specific enemy type
@@ -388,9 +441,6 @@ public class GameFacade {
         }
     }
 
-    /**
-     * Finds a random free position in the grid (not occupied by walls, ice, etc).
-     */
     private Point findFreePosition() {
         Random random = new Random();
         int attempts = 0;
@@ -398,11 +448,6 @@ public class GameFacade {
             int x = random.nextInt(GameState.getGridSize());
             int y = random.nextInt(GameState.getGridSize());
             Point p = new Point(x, y);
-
-            // Check collision with walls, iglu, ice, other entities
-            // For simplicity, checking if GameState says it's empty
-            // But GameState might not have a unified "isOccupied" for strictly spawning.
-            // We'll check basic constraints.
 
             if (gameState.getIglu() != null && gameState.getIglu().collidesWith(p))
                 continue;
@@ -414,7 +459,12 @@ public class GameFacade {
                 continue;
             if (hasFogataAt(p))
                 continue;
-            // Check fruits/enemies? Ideally yes, but for now simple check.
+            if (hasEnemyAt(p))
+                continue;
+            if (hasFruitAt(p))
+                continue;
+            if (hasPlayerAt(p))
+                continue;
 
             return p;
         }
@@ -422,10 +472,12 @@ public class GameFacade {
     }
 
     private boolean isWall(Point p) {
-        // Simple border check if walls are only borders
         int s = GameState.getGridSize();
-        return p.x == 0 || p.x == s - 1 || p.y == 0 || p.y == s - 1;
-        // Also check Unbreakable blocks list if needed.
+        if (p.x == 0 || p.x == s - 1 || p.y == 0 || p.y == s - 1) return true;
+        for (UnbreakableBlock b : gameState.getUnbreakableBlocks()) {
+            if (b.getPosition().equals(p)) return true;
+        }
+        return false;
     }
 
     private void updateFogatas(int dt) {
@@ -472,6 +524,20 @@ public class GameFacade {
 
     private boolean hasFogataAt(Point p) {
         return gameState.getFogatas().stream().anyMatch(f -> f.getPosition().equals(p));
+    }
+
+    private boolean hasEnemyAt(Point p) {
+        return gameState.getEnemies().stream().anyMatch(e -> e.isActive() && e.getPosition().equals(p));
+    }
+
+    private boolean hasFruitAt(Point p) {
+        return gameState.getFruits().stream().anyMatch(f -> f.isActive() && !f.isCollected() && f.getPosition().equals(p));
+    }
+
+    private boolean hasPlayerAt(Point p) {
+        if (gameState.getPlayer() != null && gameState.getPlayer().getPosition().equals(p)) return true;
+        if (gameState.getPlayer2() != null && gameState.getPlayer2().getPosition().equals(p)) return true;
+        return false;
     }
 
     // ==================== COMANDOS DE MOVIMIENTO P1 ====================
@@ -698,7 +764,7 @@ public class GameFacade {
     }
 
     public boolean isPlayer2Alive() {
-        return gameState.getPlayer2() == null || gameState.getPlayer2().isAlive();
+        return gameState.getPlayer2() != null && gameState.getPlayer2().isAlive();
     }
 
     /**
@@ -802,9 +868,9 @@ public class GameFacade {
     }
 
     public void setFogataCountConfig(int count) {
-        if (currentConfiguration != null) {
-            currentConfiguration.setFogataCount(count);
-        }
+        if (currentConfiguration == null)
+            currentConfiguration = new LevelConfigurationDTO();
+        currentConfiguration.setFogataCount(count);
     }
 
     public int getFogataCountConfig() {

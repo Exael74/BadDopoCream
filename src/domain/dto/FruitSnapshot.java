@@ -36,10 +36,8 @@ public class FruitSnapshot extends EntitySnapshot {
     public static FruitSnapshot from(Fruit fruit) {
         return new Builder()
                 .position(fruit.getPosition())
-                .active(!fruit.isCollected() || fruit.getState() == domain.entity.FruitState.COLLECTED) // Keep active
-                                                                                                        // during
-                                                                                                        // animation
-                .fruitType(fruit.getType().toString())
+                .active(!fruit.isCollected() || fruit.getState() == domain.entity.FruitState.COLLECTED)
+                .fruitType(fruit.getTypeName())
                 .state(fruit.getState().toString())
                 .collected(fruit.isCollected())
                 .build();

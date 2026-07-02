@@ -85,14 +85,14 @@ public class GameLogic {
      * Mueve al jugador 1 en la dirección especificada.
      */
     public void movePlayer(Direction direction) {
-        movePlayerEntity(gameState.getPlayer(), direction);
+        movePlayerEntity(gameState.getPlayer(), direction, false);
     }
 
     /**
      * Mueve al jugador 2 en la dirección especificada.
      */
     public void movePlayer2(Direction direction) {
-        movePlayerEntity(gameState.getPlayer2(), direction);
+        movePlayerEntity(gameState.getPlayer2(), direction, true);
     }
 
     /**
@@ -128,7 +128,7 @@ public class GameLogic {
     /**
      * Lógica común de movimiento para cualquier jugador.
      */
-    private void movePlayerEntity(Player player, Direction direction) {
+    private void movePlayerEntity(Player player, Direction direction, boolean isP2) {
         if (gameState.isGameOver() || gameState.isVictory() || player == null || player.isBusy()) {
             return;
         }
@@ -156,9 +156,7 @@ public class GameLogic {
             return;
         }
 
-        // IMPROVED: Check fruit collision immediately after player lands on tile
-        // This ensures collection happens BEFORE fruits have a chance to move away
-        checkPlayerFruitCollision(player);
+        checkPlayerFruitCollision(player, isP2);
 
         collisionDetector.checkCollisions();
 
@@ -230,7 +228,8 @@ public class GameLogic {
                         return false;
 
                     boolean blocked = collisionDetector.hasEnemyAt(pos) || collisionDetector.hasIceAt(pos) ||
-                            collisionDetector.hasIgluAt(pos) || collisionDetector.hasUnbreakableBlockAt(pos);
+                            collisionDetector.hasIgluAt(pos) || collisionDetector.hasUnbreakableBlockAt(pos) ||
+                            hasFogataAt(pos);
                     return !blocked;
                 },
                 pos -> {
@@ -365,12 +364,6 @@ public class GameLogic {
 
         if (!gameState.isGameOver()) {
             collisionDetector.checkCollisions();
-            // Check fruit collisions separately as we need specific logic for
-            // lethality/animations now
-            checkPlayerFruitCollision(gameState.getPlayer());
-            if (gameState.getPlayer2() != null) {
-                checkPlayerFruitCollision(gameState.getPlayer2());
-            }
         }
     }
 
@@ -392,14 +385,12 @@ public class GameLogic {
     /**
      * Actualiza todas las frutas del juego.
      */
-    private void checkPlayerFruitCollision(Player player) {
+    private void checkPlayerFruitCollision(Player player, boolean isP2) {
         Iterator<Fruit> iterator = gameState.getFruits().iterator();
         while (iterator.hasNext()) {
             Fruit fruit = iterator.next();
             if (fruit.isActive() && !fruit.isCollected() && fruit.getPosition().equals(player.getPosition())) {
 
-                // If player is already dead/dying, ignore lethal collision to prevent infinite
-                // death loop
                 if (fruit.isLethal()) {
                     if (!player.isDying() && player.isAlive()) {
                         player.die();
@@ -407,17 +398,12 @@ public class GameLogic {
                     return;
                 }
 
-                // Normal Collection
-                fruit.collect(); // Sets state to COLLECTED
-                gameState.addScore(fruit.getType().getScore()); // Score is in GameState usually? Or Player?
-                // Checking Player.java will confirm where score is.
-                // If Player has no addScore, GameState likely holds it.
-                // Let's assume GameState.addScore based on previous logic view
-                // (gameState.getScore()).
-                // Wait, logic earlier said player.addScore().
-
-                // Do NOT remove immediately.
-                // iterator.remove();
+                fruit.collect();
+                if (isP2) {
+                    gameState.addScorePlayer2(fruit.getType().getScore());
+                } else {
+                    gameState.addScore(fruit.getType().getScore());
+                }
             }
         }
     }
@@ -450,14 +436,6 @@ public class GameLogic {
             }
 
             if (fruit.isCollected()) {
-                // If collected, we just wait for it to become inactive (handled inside
-                // Fruit.update eventually? No, I need to add that logic to Fruit or here)
-                // Actually, let's make Fruit handle its own inactivation after animation.
-                continue;
-            }
-
-            if (fruit.isCollected()) {
-                // If collected, we just wait for it to become inactive
                 continue;
             }
 
@@ -593,8 +571,7 @@ public class GameLogic {
         // or if we simply check if ANY fruits were ever added.
         // Better: Check initialization via time remaining distinct from max
         // OR simply ensure we don't trigger on frame 0.
-        // Assuming Time Limit is 180000ms.
-        boolean gameStarted = gameState.getTimeRemaining() < 180000;
+        boolean gameStarted = gameState.getTimeRemaining() < GameState.getTimeLimit();
 
         if (gameStarted && allFruitsCollected && gameState.getPendingFruitWaves().isEmpty()) {
             gameState.setVictory(true);
