@@ -211,5 +211,39 @@
         "W"
       ]
     ]
+  },
+  "enemies": {
+    "randomPlacement": true,
+    "types": [
+      {
+        "type": "TROLL",
+        "count": 2
+      }
+    ]
+  },
+  "fruits": {
+    "randomPlacement": true,
+    "waves": [
+      {
+        "waveNumber": 1,
+        "spawnOnStart": true,
+        "fruits": [
+          {
+            "type": "UVA",
+            "count": 5
+          }
+        ]
+      },
+      {
+        "waveNumber": 2,
+        "spawnOnStart": false,
+        "fruits": [
+          {
+            "type": "PLATANO",
+            "count": 3
+          }
+        ]
+      }
+    ]
   }
 }

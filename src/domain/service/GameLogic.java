@@ -15,7 +15,7 @@ import java.util.Random;
  * Maneja movimiento, acciones, actualización de entidades y detección de
  * victoria.
  */
-public class GameLogic {
+public final class GameLogic {
 
     private GameState gameState;
     private CollisionDetector collisionDetector;
@@ -168,7 +168,9 @@ public class GameLogic {
      * Detiene el movimiento del jugador 1.
      */
     public void stopPlayer() {
-        gameState.getPlayer().stopMoving();
+        if (gameState.getPlayer() != null) {
+            gameState.getPlayer().stopMoving();
+        }
     }
 
     /**
@@ -182,9 +184,6 @@ public class GameLogic {
 
     // ==================== ACCIONES DE HIELO ====================
 
-    /**
-     * Crea una línea de hielo desde el jugador.
-     */
     /**
      * Helper to trace a line from a starting point in a direction.
      * 
@@ -295,7 +294,7 @@ public class GameLogic {
 
         Point enemyPos = controlledEnemy.getPosition();
         // Romper hielo en las 4 direcciones adyacentes
-        for (Direction dir : Direction.values()) {
+        for (Direction dir : Direction.movementValues()) {
             Point checkPos = new Point(
                     enemyPos.x + dir.getDeltaX(),
                     enemyPos.y + dir.getDeltaY());
@@ -372,14 +371,9 @@ public class GameLogic {
      */
     private void processEnemyMovement(domain.entity.enemy.Enemy enemy, Point targetPosition, int currentLevel,
             int numberOfPlayers) {
-        // Delegar la lógica de movimiento a la propia entidad.
-        // La entidad ya contiene su comportamiento (Strategy) y tipo.
-        if (enemy.shouldChasePlayer()) {
-            enemy.updateMovement(targetPosition, collisionDetector);
-        } else {
-            // Comportamiento por defecto (Troll) también se maneja en updateMovement
-            enemy.updateMovement(targetPosition, collisionDetector);
-        }
+        // Delegar la lógica de movimiento a la propia entidad. Cada enemigo ya conoce
+        // su estrategia (Strategy), tanto si persigue al jugador como si patrulla.
+        enemy.updateMovement(targetPosition, collisionDetector);
     }
 
     /**
@@ -567,13 +561,13 @@ public class GameLogic {
             }
         }
 
-        // Fix: Check if game has actually started (time remaining < initial limit)
-        // or if we simply check if ANY fruits were ever added.
-        // Better: Check initialization via time remaining distinct from max
-        // OR simply ensure we don't trigger on frame 0.
+        // La partida debe haber empezado (el reloj ya corrió) y el nivel debe haber
+        // tenido frutas alguna vez. Sin esta segunda condición un nivel mal
+        // configurado, sin ninguna fruta, se daría por ganado en el primer frame.
         boolean gameStarted = gameState.getTimeRemaining() < GameState.getTimeLimit();
+        boolean levelHadFruits = gameState.getTotalFruitsSpawned() > 0;
 
-        if (gameStarted && allFruitsCollected && gameState.getPendingFruitWaves().isEmpty()) {
+        if (gameStarted && levelHadFruits && allFruitsCollected && gameState.getPendingFruitWaves().isEmpty()) {
             gameState.setVictory(true);
             gameState.getPlayer().startCelebration();
             if (gameState.getPlayer2() != null) {

@@ -211,5 +211,57 @@
                 "W"
             ]
         ]
+    },
+    "enemies": {
+        "randomPlacement": true,
+        "types": [
+            {
+                "type": "TROLL",
+                "count": 2
+            },
+            {
+                "type": "MACETA",
+                "count": 2
+            },
+            {
+                "type": "CALAMAR",
+                "count": 1
+            }
+        ]
+    },
+    "fruits": {
+        "randomPlacement": true,
+        "waves": [
+            {
+                "waveNumber": 1,
+                "spawnOnStart": true,
+                "fruits": [
+                    {
+                        "type": "PLATANO",
+                        "count": 4
+                    }
+                ]
+            },
+            {
+                "waveNumber": 2,
+                "spawnOnStart": false,
+                "fruits": [
+                    {
+                        "type": "PIÑA",
+                        "count": 3
+                    }
+                ]
+            },
+            {
+                "waveNumber": 3,
+                "spawnOnStart": false,
+                "fruits": [
+                    {
+                        "type": "CEREZA",
+                        "count": 2
+                    }
+                ]
+            }
+        ]
     }
 }

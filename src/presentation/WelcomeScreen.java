@@ -3,15 +3,17 @@ package presentation;
 import javax.swing.*;
 import java.awt.*;
 
-public class WelcomeScreen extends JFrame {
+public final class WelcomeScreen extends JFrame {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int WINDOW_WIDTH = 1280;
     private static final int WINDOW_HEIGHT = 720;
 
     private JPanel mainPanel;
     private JLabel titleLabel;
-    private ResourceLoader resources;
-    private ScreenManager screenManager;
+    private transient ResourceLoader resources;
+    private transient ScreenManager screenManager;
 
     public WelcomeScreen() {
         setTitle("BAD DOPO CREAM");

@@ -68,7 +68,9 @@ public class MapLoaderService {
      */
     private String readFile(String filename) throws IOException {
         Path path = Paths.get(filename);
-        return new String(Files.readAllBytes(path));
+        // Los niveles se guardan en UTF-8 (contienen nombres como "PIÑA"), así que el
+        // charset debe ser explícito y no depender del sistema donde se ejecute.
+        return new String(Files.readAllBytes(path), java.nio.charset.StandardCharsets.UTF_8);
     }
 
     /**

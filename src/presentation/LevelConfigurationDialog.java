@@ -10,13 +10,15 @@ import javax.swing.*;
 /**
  * Dialog to configure Level parameters (Fruits, Enemies, HotTiles).
  */
-public class LevelConfigurationDialog extends JDialog {
+public final class LevelConfigurationDialog extends JDialog {
 
-    private GameFacade gameFacade;
+    private static final long serialVersionUID = 1L;
+
+    private transient GameFacade gameFacade;
     private boolean confirmed = false;
 
-    private Map<String, JSpinner> fruitSpinners = new HashMap<>();
-    private Map<String, JSpinner> enemySpinners = new HashMap<>();
+    private transient Map<String, JSpinner> fruitSpinners = new HashMap<>();
+    private transient Map<String, JSpinner> enemySpinners = new HashMap<>();
     private JSpinner hotTileSpinner;
     private JSpinner fogataSpinner;
 

@@ -28,7 +28,9 @@ public class MapParserService {
      * @throws BadDopoException si hay errores en el layout
      */
     public void applyMapLayout(GameState state, MapLayoutDTO layout, int numberOfPlayers) throws BadDopoException {
-        if (layout == null || layout.getGrid() == null) {
+        // Una rejilla vacía se trata igual que una ausente: más abajo se accede a
+        // grid[0] para registrar el tamaño y reventaría con IndexOutOfBounds.
+        if (layout == null || layout.getGrid() == null || layout.getGrid().length == 0) {
             throw BadDopoException.mapLayoutNull();
         }
 

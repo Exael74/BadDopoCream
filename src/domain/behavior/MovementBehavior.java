@@ -4,10 +4,6 @@ import domain.entity.Direction;
 import java.awt.Point;
 import java.util.Random;
 
-/**
- * Estrategia de movimiento para enemigos.
- * Implementa el patrón Strategy para diferentes comportamientos de movimiento.
- */
 import java.io.Serializable;
 
 /**

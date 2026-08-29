@@ -7,6 +7,8 @@ import java.awt.Point;
 
 public class Maceta extends Enemy {
 
+    private static final long serialVersionUID = 1L;
+
     public Maceta(Point position) {
         super(position);
         this.movementBehavior = new ChaseMovement();

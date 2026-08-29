@@ -5,13 +5,15 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class CharacterSelectionPanel extends JPanel {
+public final class CharacterSelectionPanel extends JPanel {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int WINDOW_WIDTH = 1280;
     private static final int WINDOW_HEIGHT = 720;
 
-    private ResourceLoader resources;
-    private FontLoader fontLoader;
+    private transient ResourceLoader resources;
+    private transient FontLoader fontLoader;
     private int selectedLevel;
     private int numberOfPlayers;
     private boolean isP2CPU; // New flag

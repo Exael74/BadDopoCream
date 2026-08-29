@@ -8,6 +8,8 @@ import java.awt.Point;
 
 public class Calamar extends Enemy {
 
+    private static final long serialVersionUID = 1L;
+
     public Calamar(Point position) {
         super(position);
         this.movementBehavior = new ChaseMovement();

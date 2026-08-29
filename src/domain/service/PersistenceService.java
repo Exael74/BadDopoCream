@@ -50,8 +50,16 @@ public class PersistenceService {
      */
     public String saveGame(GameState gameState) throws BadDopoException {
         String timestamp = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss").format(new Date());
-        String filename = "save_" + timestamp + SAVE_EXTENSION;
-        Path path = Paths.get(SAVE_DIRECTORY, filename);
+        Path path = Paths.get(SAVE_DIRECTORY, "save_" + timestamp + SAVE_EXTENSION);
+
+        // Dos guardados dentro del mismo segundo generan el mismo nombre; sin este
+        // sufijo el segundo sobrescribiría al primero sin avisar.
+        int suffix = 1;
+        while (Files.exists(path)) {
+            path = Paths.get(SAVE_DIRECTORY, "save_" + timestamp + "_" + suffix + SAVE_EXTENSION);
+            suffix++;
+        }
+
         return saveGame(gameState, path.toFile());
     }
 

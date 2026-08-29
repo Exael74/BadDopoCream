@@ -11,6 +11,8 @@ import java.util.Random;
  */
 public class ChaseMovement implements MovementBehavior {
 
+    private static final long serialVersionUID = 1L;
+
     @Override
     public Direction calculateDirection(Point currentPosition, Point targetPosition,
                                         int stuckCounter, Random random) {

@@ -11,6 +11,8 @@ import java.io.Serializable;
  */
 public abstract class Entity implements Serializable {
 
+    private static final long serialVersionUID = 1L;
+
     protected Point position;
     protected boolean active;
     protected String id;
@@ -110,6 +112,15 @@ public abstract class Entity implements Serializable {
         return position.equals(pos);
     }
 
+    /**
+     * Dos entidades son la misma si comparten identificador.
+     * <p>
+     * La identidad no puede basarse en la posición: las entidades se mueven, con lo
+     * que su hashCode cambiaría estando dentro de un HashSet/HashMap y dejarían de
+     * poder encontrarse. Además dos entidades distintas que coincidan en la misma
+     * casilla no son la misma entidad, y {@code List.remove} borraría la que no
+     * era.
+     */
     @Override
     public boolean equals(Object obj) {
         if (this == obj)
@@ -117,11 +128,11 @@ public abstract class Entity implements Serializable {
         if (obj == null || getClass() != obj.getClass())
             return false;
         Entity entity = (Entity) obj;
-        return position.equals(entity.position);
+        return id.equals(entity.id);
     }
 
     @Override
     public int hashCode() {
-        return position.hashCode();
+        return id.hashCode();
     }
 }

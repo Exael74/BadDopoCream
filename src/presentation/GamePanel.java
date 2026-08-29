@@ -16,7 +16,9 @@ import javax.swing.filechooser.FileNameExtensionFilter;
  * Panel principal del juego que maneja renderizado y captura de inputs.
  * Solo responsable de la presentación visual, sin lógica de negocio.
  */
-public class GamePanel extends JPanel implements java.awt.event.ActionListener {
+public final class GamePanel extends JPanel implements java.awt.event.ActionListener {
+
+    private static final long serialVersionUID = 1L;
 
     // Constantes del juego
     private static final int WINDOW_WIDTH = 1280;
@@ -37,11 +39,11 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     private static final int FRAME_DELAY = 16;
 
     // Recursos
-    private ResourceLoader resources;
-    private FontLoader fontLoader;
+    private transient ResourceLoader resources;
+    private transient FontLoader fontLoader;
 
     // Fachada del dominio
-    private GameFacade gameFacade;
+    private transient GameFacade gameFacade;
 
     // Datos del nivel
     private int currentLevel;
@@ -52,9 +54,9 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     private javax.swing.Timer animationTimer;
 
     // Helper Classes
-    private GameInputHandler inputHandler;
-    private GameHUD gameHUD;
-    private GameOverlay gameOverlay;
+    private transient GameInputHandler inputHandler;
+    private transient GameHUD gameHUD;
+    private transient GameOverlay gameOverlay;
 
     // Menú de Pausa y Resumen
     public enum MenuState {
@@ -62,11 +64,9 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     }
 
     private MenuState menuState = MenuState.NONE;
-    private List<String> savedGamesList = new ArrayList<>();
+    private transient List<String> savedGamesList = new ArrayList<>();
     private boolean isVictory = false;
 
-    // AI Types (Strings)
-    // AI Types (Strings)
     private boolean isP2CPU;
 
     // Variables para animación suave del jugador 1
@@ -82,14 +82,14 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     private boolean player2IsMoving;
 
     // Variables para animación suave de enemigos (mapeadas por ID de entidad)
-    private Map<String, Point> enemyTargetPositions;
-    private Map<String, Float> enemyCurrentPixelX;
-    private Map<String, Float> enemyCurrentPixelY;
-    private Map<String, Boolean> enemyIsMoving;
+    private transient Map<String, Point> enemyTargetPositions;
+    private transient Map<String, Float> enemyCurrentPixelX;
+    private transient Map<String, Float> enemyCurrentPixelY;
+    private transient Map<String, Boolean> enemyIsMoving;
 
     // Animación de hielo
-    private Map<Point, Integer> iceAnimationProgress;
-    private Queue<Point> icePlacementQueue;
+    private transient Map<Point, Integer> iceAnimationProgress;
+    private transient Queue<Point> icePlacementQueue;
     private javax.swing.Timer icePlacementTimer;
 
     // Control de reinicio
@@ -113,25 +113,13 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
      */
     public GamePanel(GameFacade facade, ResourceLoader loader, GameWindow window) {
         this.resources = loader;
-        this.resources = loader;
         this.fontLoader = FontLoader.getInstance();
         this.gameFacade = facade;
 
-        // Extract initial state from facade for local fields
+        // Estado inicial tomado de la fachada
         this.currentLevel = facade.getLevel();
         this.numberOfPlayers = facade.getNumberOfPlayers();
-        // this.selectedCharacter = facade.getPlayerCharacterType(); // Accessor needed
-        // if strictly required
-
-        // We can't easily set other local fields (aiType, etc) without accessors from
-        // facade,
-        // but they might not be needed if facade handles logic.
-        // Let's rely on facade for logic.
-
-        // Active game state fields
-        this.currentLevel = facade.getLevel();
-        this.numberOfPlayers = facade.getNumberOfPlayers(); // Restored
-        this.isP2CPU = facade.isP2CPU(); // Restored
+        this.isP2CPU = facade.isP2CPU();
 
         setPreferredSize(new Dimension(1280, 768));
         setBackground(Color.BLACK);
@@ -151,10 +139,9 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
 
         // Listeners are setup by inputHandler.setupListeners() later
 
-        gameTimer = new javax.swing.Timer(16, this); // ~60 FPS
-        gameTimer.start();
-
-        initializeAnimationTimers();
+        // Los timers definitivos se crean en startTimers(), al final del constructor.
+        // Arrancar aquí uno provisional solo lo dejaba corriendo sobre un panel a medio
+        // inicializar hasta que startTimers() lo reemplazaba.
 
         // Animation State Initialization
         this.iceAnimationProgress = new HashMap<>();
@@ -213,42 +200,20 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         this(new GameFacade(character, level, numberOfPlayers), resources, null);
     }
 
-    private void initializeAnimationTimers() {
-        // Placeholder for additional animation timers if needed
-    }
-
-    // ==================== CONFIGURACIÓN DE LISTENERS ====================
-
     // ==================== MANEJO DE ACCIONES ====================
 
+    /**
+     * El bucle de juego y el de animación se registran como lambdas en
+     * {@link #startTimers()}; este método permanece por el contrato de
+     * ActionListener y solo repinta ante cualquier otro origen.
+     */
     @Override
     public void actionPerformed(java.awt.event.ActionEvent e) {
-        if (e.getSource() == gameTimer) {
-            if (menuState != MenuState.NONE && menuState != MenuState.SUMMARY) {
-                repaint();
-                return;
-            }
-
-            if (isVictory || gameFacade.isGameOver()) {
-                // Logic for game over/victory handled in draw or separate check
-            } else {
-                updateGame();
-            }
-            repaint();
-        }
-    }
-
-    private void updateGame() {
-        gameFacade.update();
-        processMovement();
-        // Enemy animations are handled in updateAnimation() via animationTimer
+        repaint();
     }
 
     // Removed duplicate updateEnemyAnimations() method
 
-    /**
-     * Maneja la acción de SPACE (P1).
-     */
     /**
      * Maneja la acción de SPACE (P1).
      */
@@ -263,9 +228,6 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         }
     }
 
-    /**
-     * Maneja la acción de M (P2).
-     */
     /**
      * Maneja la acción de M (P2).
      */
@@ -401,9 +363,6 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         }
     }
 
-    /**
-     * Actualiza la posición en píxeles de enemigos.
-     */
     /**
      * Actualiza la posición en píxeles de enemigos.
      */
@@ -623,10 +582,6 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
         updateIceAnimationProgress();
     }
 
-    /**
-     * Maneja el reinicio del nivel.
-     */
-
     // ==================== RENDERING ====================
 
     @Override
@@ -770,16 +725,15 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
      * Dibuja todas las baldosas calientes del juego.
      */
     private void drawHotTiles(Graphics2D g2d, int offsetX, int offsetY) {
+        if (resources.hotTileImage == null) {
+            return;
+        }
         for (HotTileSnapshot tileSnapshot : gameFacade.getHotTileSnapshots()) {
             Point pos = tileSnapshot.getPosition();
             int size = ICE_SIZE; // Use ICE_SIZE (40) as requested
-            int CELDA_SIZE = 50; // Re-declare locally or use static if accessible (GamePanel.CELL_SIZE is
-                                 // private static)
-            // Fix: access static CELL_SIZE
-            int cellSize = CELL_SIZE;
 
-            int x = offsetX + pos.x * cellSize + (cellSize - size) / 2;
-            int y = offsetY + pos.y * cellSize + (cellSize - size) / 2;
+            int x = offsetX + pos.x * CELL_SIZE + (CELL_SIZE - size) / 2;
+            int y = offsetY + pos.y * CELL_SIZE + (CELL_SIZE - size) / 2;
             g2d.drawImage(resources.hotTileImage.getImage(), x, y, size, size, this);
         }
     }
@@ -814,7 +768,7 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
      */
     private void drawIglu(Graphics2D g2d, int offsetX, int offsetY) {
         IgluSnapshot iglu = gameFacade.getIgluSnapshot();
-        if (iglu != null) {
+        if (iglu != null && resources.igluImage != null) {
             Point pos = iglu.getPosition();
             int width = iglu.getWidth() * CELL_SIZE;
             int height = iglu.getHeight() * CELL_SIZE;
@@ -987,16 +941,6 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     }
 
     /**
-     * Dibuja los controles según el modo de juego.
-     */
-
-    // ==================== PANEL LATERAL ====================
-
-    /**
-     * Dibuja el panel lateral con temporizador y contador de frutas.
-     */
-
-    /**
      * Limpia los recursos del panel al cerrarse.
      */
     public void cleanup() {
@@ -1008,11 +952,30 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
             icePlacementTimer.stop();
     }
 
+    /**
+     * Cierra la partida actual y vuelve al menú principal.
+     * <p>
+     * Los timers deben pararse explícitamente: {@code dispose()} no dispara
+     * {@code windowClosing}, así que sin este cleanup seguirían ejecutándose
+     * indefinidamente contra una ventana ya cerrada.
+     */
+    private void returnToMainMenu() {
+        Window window = SwingUtilities.getWindowAncestor(this);
+        if (window != null) {
+            cleanup();
+            window.dispose();
+            Main.main(new String[] {});
+        }
+    }
+
     void handleMouseClick(Point point) {
-        if (gameFacade.isPaused()) {
-            handlePauseMenuClick(point);
-        } else if (menuState == MenuState.SUMMARY) {
+        // El resumen tiene prioridad, igual que en paintComponent: si el juego quedó
+        // pausado y luego terminó, el menú de pausa ya no se dibuja y sus rectángulos
+        // son de un fotograma anterior, así que no deben recibir clics.
+        if (menuState == MenuState.SUMMARY) {
             handleSummaryMenuClick(point);
+        } else if (gameFacade.isPaused()) {
+            handlePauseMenuClick(point);
         }
     }
 
@@ -1066,18 +1029,17 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
                 menuState = MenuState.NONE;
             } else if (gameOverlay.getExitButtonRect() != null
                     && gameOverlay.getExitButtonRect().contains(clickPoint)) {
-                Window window = SwingUtilities.getWindowAncestor(this);
-                if (window != null) {
-                    window.dispose();
-                    Main.main(new String[] {});
-                }
+                returnToMainMenu();
             }
         } else if (menuState == MenuState.LOAD) {
             if (gameOverlay.getBackButtonRect() != null && gameOverlay.getBackButtonRect().contains(clickPoint)) {
                 menuState = MenuState.MAIN;
             } else {
                 List<Rectangle> loadRects = gameOverlay.getLoadGameButtonRects();
-                for (int i = 0; i < loadRects.size(); i++) {
+                // El overlay puede dibujar más o menos botones que partidas haya en la
+                // lista, así que se recorre solo el rango común y se sale al primer clic.
+                int selectableCount = Math.min(loadRects.size(), savedGamesList.size());
+                for (int i = 0; i < selectableCount; i++) {
                     if (loadRects.get(i).contains(clickPoint)) {
                         String saveFile = savedGamesList.get(i);
                         try {
@@ -1089,6 +1051,7 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
                         } catch (BadDopoException e) {
                             JOptionPane.showMessageDialog(this, "Error al cargar: " + e.getMessage());
                         }
+                        break;
                     }
                 }
             }
@@ -1108,11 +1071,7 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
             }
         } else if (gameOverlay.getSummaryMenuButton() != null
                 && gameOverlay.getSummaryMenuButton().contains(clickPoint)) {
-            Window window = SwingUtilities.getWindowAncestor(this);
-            if (window != null) {
-                window.dispose();
-                Main.main(new String[] {});
-            }
+            returnToMainMenu();
         } else if (gameOverlay.getSummaryNextLevelButton() != null
                 && gameOverlay.getSummaryNextLevelButton().contains(clickPoint)) {
             if (currentLevel < 4) {
@@ -1215,11 +1174,6 @@ public class GamePanel extends JPanel implements java.awt.event.ActionListener {
     /**
      * Helper method to start a new game level with preserved settings.
      */
-    /**
-     * Helper method to start a new game level with preserved settings.
-     */
-    // Helper method startNewGameLevel(int) removed as it was unused locally
-
     private void startNewGameLevel(int targetLevel, domain.dto.LevelConfigurationDTO newConfig) {
         if (gameTimer != null)
             gameTimer.stop();

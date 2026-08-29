@@ -10,6 +10,8 @@ import java.awt.Point;
  */
 public class IceBlock extends Entity {
 
+    private static final long serialVersionUID = 1L;
+
     private boolean breaking;
     private long breakStartTime;
     private boolean permanent;

@@ -11,6 +11,8 @@ import java.awt.Point;
  */
 public class Player extends Entity {
 
+    private static final long serialVersionUID = 1L;
+
     private Direction currentDirection;
     private Direction facingDirection;
     private boolean alive;

@@ -435,7 +435,10 @@ public class ResourceLoader {
 
     public ImageIcon getPlayerGif(String characterType, String direction, boolean isMoving, boolean isSneezing,
             boolean isKicking, boolean isDying, boolean isCelebrating) {
-        String character = characterType.toLowerCase();
+        String character = characterType == null ? "" : characterType.toLowerCase();
+        if (direction == null) {
+            direction = "DOWN";
+        }
 
         if (isDying) {
             if (character.equals("chocolate")) {
@@ -512,6 +515,9 @@ public class ResourceLoader {
     }
 
     public ImageIcon getEnemyGif(String enemyType, String direction, boolean isBreakingIce) {
+        if (enemyType == null) {
+            return trollIdleGif;
+        }
         if (enemyType.equals("TROLL")) {
             return getTrollGif(direction);
         } else if (enemyType.equals("MACETA")) {
@@ -525,6 +531,7 @@ public class ResourceLoader {
     }
 
     public ImageIcon getNarvalGif(String direction, boolean isBreakingIce, boolean isDrilling) {
+        direction = safeDirection(direction);
         if (isDrilling) {
             switch (direction) {
                 case "UP":
@@ -569,7 +576,7 @@ public class ResourceLoader {
     }
 
     public ImageIcon getTrollGif(String direction) {
-        switch (direction) {
+        switch (safeDirection(direction)) {
             case "UP":
                 return trollWalkUpGif;
             case "DOWN":
@@ -584,7 +591,7 @@ public class ResourceLoader {
     }
 
     public ImageIcon getMacetaGif(String direction) {
-        switch (direction) {
+        switch (safeDirection(direction)) {
             case "UP":
                 return macetaWalkUpGif;
             case "DOWN":
@@ -599,6 +606,7 @@ public class ResourceLoader {
     }
 
     public ImageIcon getCalamarGif(String direction, boolean isBreakingIce) {
+        direction = safeDirection(direction);
         if (isBreakingIce) {
             switch (direction) {
                 case "UP":
@@ -629,6 +637,9 @@ public class ResourceLoader {
     }
 
     public ImageIcon getFruitImage(String fruitType) {
+        if (fruitType == null) {
+            return uvaImage;
+        }
         switch (fruitType) {
             case "UVA":
                 return uvaImage;
@@ -638,6 +649,8 @@ public class ResourceLoader {
                 return pinaImage;
             case "CEREZA":
                 return cerezaImage;
+            case "CACTUS":
+                return cactusIdleGif;
             default:
                 return uvaImage;
         }
@@ -647,8 +660,14 @@ public class ResourceLoader {
         FruitState fruitState;
         try {
             fruitState = domain.entity.FruitState.valueOf(state);
-        } catch (IllegalArgumentException e) {
+        } catch (IllegalArgumentException | NullPointerException e) {
+            // valueOf lanza NullPointerException (no IllegalArgumentException) si el
+            // nombre es null, así que ambos casos deben caer al estado por defecto.
             fruitState = domain.entity.FruitState.IDLE;
+        }
+
+        if (fruitType == null) {
+            return uvaImage;
         }
 
         switch (fruitType) {
@@ -710,5 +729,13 @@ public class ResourceLoader {
             default:
                 return uvaImage;
         }
+    }
+
+    /**
+     * Normaliza una dirección recibida desde el dominio. Devuelve "DOWN" cuando el
+     * valor es null para que los switch de sprites nunca lancen NullPointerException.
+     */
+    private String safeDirection(String direction) {
+        return direction == null ? "DOWN" : direction;
     }
 }

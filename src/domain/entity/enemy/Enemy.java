@@ -17,6 +17,8 @@ import java.util.Random;
  */
 public abstract class Enemy extends Entity {
 
+    private static final long serialVersionUID = 1L;
+
     // protected EnemyType type; // Removed
     protected Direction currentDirection;
     protected int moveTimer;
@@ -41,7 +43,7 @@ public abstract class Enemy extends Entity {
         super(position);
         // this.type = type; // Removed
         this.random = new Random();
-        this.currentDirection = getRandomDirection();
+        this.currentDirection = pickRandomDirection(this.random);
         this.moveTimer = 0;
         this.controlledByPlayer = false;
         this.targetPosition = null;
@@ -153,7 +155,18 @@ public abstract class Enemy extends Entity {
     }
 
     protected Direction getRandomDirection() {
-        Direction[] directions = { Direction.UP, Direction.DOWN, Direction.LEFT, Direction.RIGHT };
+        return pickRandomDirection(random);
+    }
+
+    /**
+     * Elige una dirección de movimiento al azar.
+     * <p>
+     * Es estático a propósito: el constructor de Enemy necesita una dirección
+     * inicial, y llamar ahí a un método sobrescribible ejecutaría código de la
+     * subclase antes de que ésta terminara de construirse.
+     */
+    private static Direction pickRandomDirection(Random random) {
+        Direction[] directions = Direction.movementValues();
         return directions[random.nextInt(directions.length)];
     }
 

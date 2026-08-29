@@ -11,6 +11,8 @@ import java.util.Random;
  */
 public class Fruit extends Entity {
 
+    private static final long serialVersionUID = 1L;
+
     private FruitType type;
     private FruitState state;
     private boolean collected;
@@ -181,6 +183,10 @@ public class Fruit extends Entity {
     public void collect() {
         this.collected = true;
         this.state = FruitState.COLLECTED;
+        // El temporizador debe reiniciarse: mientras la fruta esperaba en IDLE siguió
+        // acumulando tiempo, y sin este reset la animación de recolección se daría por
+        // terminada de inmediato y la fruta desaparecería sin mostrarse.
+        this.animationTimer = 0;
         // logic will keep it active until animation finishes or handled by GameLogic
         // cleanup
     }

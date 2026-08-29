@@ -24,23 +24,20 @@ import java.util.EnumMap;
  */
 public class GameFacade {
 
+    /** Número de fogatas que se generan cuando el nivel no indica otra cosa. */
+    private static final int DEFAULT_FOGATA_COUNT = 2;
+
     private GameState gameState;
     private GameLogic gameLogic;
     private PersistenceService persistenceService;
     private MapLoaderService mapLoaderService;
     private MapParserService mapParserService;
     private LevelConfigurationDTO currentConfiguration; // Store configuration here
+    private final Random spawnRandom = new Random();
     private long lastUpdateTime;
     private boolean isP2CPU; // Store this explicitly in Facade as well or rely on GameState
     private boolean paused;
 
-    /**
-     * Constructor de la fachada del juego.
-     *
-     * @param characterType   Tipo de personaje ("Chocolate", "Fresa", "Vainilla")
-     * @param level           Nivel a jugar (1, 2, 3)
-     * @param numberOfPlayers Número de jugadores (0=IA vs IA, 1=1P, 2=2P)
-     */
     /**
      * Constructor de la fachada del juego.
      *
@@ -243,9 +240,6 @@ public class GameFacade {
     // ==================== INICIALIZACIÓN DE NIVELES ====================
 
     /**
-     * Inicializa el nivel especificado.
-     */
-    /**
      * Inicializa el nivel especificado usando JSON.
      */
     private void initializeLevel(int level, int numberOfPlayers) {
@@ -429,46 +423,65 @@ public class GameFacade {
 
         // 3. Hot tiles from map layout already handled by MapParserService
         // 4. Fogatas - use default count for now
-        initializeFogatas(2);
+        initializeFogatas(DEFAULT_FOGATA_COUNT);
     }
 
     // Helper for Spawning specific enemy type
     private void spawnEnemy(String type) {
         Point position = findFreePosition();
-        if (position != null) {
+        if (position == null) {
+            return;
+        }
+        try {
             domain.entity.enemy.Enemy enemy = domain.entity.enemy.EnemyFactory.createEnemy(position, type);
             gameState.addEnemy(enemy);
+        } catch (IllegalArgumentException e) {
+            // Un tipo desconocido no debe abortar la generación del resto de entidades
+            BadDopoLogger.logError("Tipo de enemigo desconocido: " + type, e);
         }
     }
 
+    /**
+     * Busca una casilla libre del tablero para colocar una entidad nueva.
+     * Recorre todas las casillas y elige una al azar entre las disponibles, de modo
+     * que devuelve null únicamente cuando el tablero está realmente lleno.
+     *
+     * @return Una posición libre aleatoria, o null si no queda ninguna
+     */
     private Point findFreePosition() {
-        Random random = new Random();
-        int attempts = 0;
-        while (attempts < 100) {
-            int x = random.nextInt(GameState.getGridSize());
-            int y = random.nextInt(GameState.getGridSize());
-            Point p = new Point(x, y);
+        int gridSize = GameState.getGridSize();
+        List<Point> freePositions = new ArrayList<>();
 
-            if (gameState.getIglu() != null && gameState.getIglu().collidesWith(p))
-                continue;
-            if (isWall(p))
-                continue;
-            if (hasIceAt(p))
-                continue;
-            if (hasHotTileAt(p))
-                continue;
-            if (hasFogataAt(p))
-                continue;
-            if (hasEnemyAt(p))
-                continue;
-            if (hasFruitAt(p))
-                continue;
-            if (hasPlayerAt(p))
-                continue;
-
-            return p;
+        for (int x = 0; x < gridSize; x++) {
+            for (int y = 0; y < gridSize; y++) {
+                Point p = new Point(x, y);
+                if (isFreeForSpawn(p)) {
+                    freePositions.add(p);
+                }
+            }
         }
-        return null;
+
+        if (freePositions.isEmpty()) {
+            BadDopoLogger.logInfo("No queda ninguna casilla libre para generar una entidad");
+            return null;
+        }
+
+        return freePositions.get(spawnRandom.nextInt(freePositions.size()));
+    }
+
+    /**
+     * Indica si una casilla está completamente libre para generar una entidad.
+     */
+    private boolean isFreeForSpawn(Point p) {
+        if (gameState.getIglu() != null && gameState.getIglu().collidesWith(p))
+            return false;
+        return !isWall(p)
+                && !hasIceAt(p)
+                && !hasHotTileAt(p)
+                && !hasFogataAt(p)
+                && !hasEnemyAt(p)
+                && !hasFruitAt(p)
+                && !hasPlayerAt(p);
     }
 
     private boolean isWall(Point p) {
@@ -1020,15 +1033,14 @@ public class GameFacade {
         if (currentConfiguration != null) {
             // Clear existing logic if needed or just spawn new entities
             // Clear existing dynamic entities but PRESERVE map structure (walls, ice, iglu)
-            gameState.getFruits().clear();
-
-            // Clear pending waves as well
-            if (gameState.getPendingFruitWaves() != null) {
-                gameState.getPendingFruitWaves().clear();
-            }
+            // Reinicia frutas, oleadas pendientes y el contador de frutas generadas.
+            gameState.resetFruits();
 
             gameState.getEnemies().clear();
             gameState.getHotTiles().clear();
+            // Las fogatas también se regeneran desde la configuración; si no se limpian
+            // aquí se acumulan sobre las creadas al inicializar el nivel.
+            gameState.getFogatas().clear();
 
             // Setup entities again based on configuration
             spawnDynamicEntities(currentConfiguration);
@@ -1050,19 +1062,57 @@ public class GameFacade {
      * Útil para inicializar el diálogo de configuración.
      */
     public LevelConfigurationDTO getDefaultConfiguration(int levelId) {
-        // En un caso real, esto vendría del JSON o MapLoaderService.
-        // Por ahora, creamos una default genérica o usamos la del loader.
+        LevelConfigurationDTO config = new LevelConfigurationDTO();
         try {
-            // LevelDataDTO data = mapLoaderService.loadLevel(levelId);
-            // Convert LevelDataDTO specific configs to a generic LevelConfigurationDTO if
-            // needed,
-            // or just create a fresh one based on what's available.
+            LevelDataDTO data = mapLoaderService.loadLevel(levelId);
 
-            LevelConfigurationDTO config = new LevelConfigurationDTO();
-            return config;
+            // Frutas: se suman las cantidades de todas las oleadas del nivel.
+            if (data.getFruitConfig() != null && data.getFruitConfig().getWaves() != null) {
+                for (FruitWaveDTO wave : data.getFruitConfig().getWaves()) {
+                    if (wave.getFruits() == null)
+                        continue;
+                    for (FruitSpawnDTO spawn : wave.getFruits()) {
+                        int previous = config.getFruitCounts().getOrDefault(spawn.getType(), 0);
+                        config.addFruit(spawn.getType(), previous + spawn.getCount());
+                    }
+                }
+            }
+
+            // Enemigos definidos por el nivel.
+            if (data.getEnemyConfig() != null && data.getEnemyConfig().getTypes() != null) {
+                for (EnemySpawnDTO spawn : data.getEnemyConfig().getTypes()) {
+                    int previous = config.getEnemyCounts().getOrDefault(spawn.getType(), 0);
+                    config.addEnemy(spawn.getType(), previous + spawn.getCount());
+                }
+            }
+
+            // Baldosas calientes: las que el propio mapa dibuja con la letra "H".
+            config.setHotTileCount(countHotTilesInLayout(data.getMapLayout()));
+            config.setFogataCount(DEFAULT_FOGATA_COUNT);
+
         } catch (Exception e) {
             BadDopoLogger.logError("Error loading default config", e);
-            return new LevelConfigurationDTO();
         }
+        return config;
+    }
+
+    /**
+     * Cuenta las baldosas calientes declaradas en el mapa del nivel.
+     */
+    private int countHotTilesInLayout(MapLayoutDTO layout) {
+        if (layout == null || layout.getGrid() == null) {
+            return 0;
+        }
+        int count = 0;
+        for (String[] row : layout.getGrid()) {
+            if (row == null)
+                continue;
+            for (String cell : row) {
+                if ("H".equals(cell)) {
+                    count++;
+                }
+            }
+        }
+        return count;
     }
 }

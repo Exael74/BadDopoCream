@@ -6,6 +6,8 @@ package exceptions;
  */
 public class BadDopoException extends Exception {
 
+    private static final long serialVersionUID = 1L;
+
     // Constantes para mensajes fijos
     public static final String MSG_MAP_LAYOUT_NULL = "MapLayout o grid es null";
     public static final String MSG_LEGEND_NULL = "Legend es null";

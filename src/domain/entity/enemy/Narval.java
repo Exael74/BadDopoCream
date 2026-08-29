@@ -8,6 +8,8 @@ import java.awt.Point;
 
 public class Narval extends Enemy {
 
+    private static final long serialVersionUID = 1L;
+
     private boolean isDrilling;
 
     public Narval(Point position) {

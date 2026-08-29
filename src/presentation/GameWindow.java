@@ -5,7 +5,9 @@ import javax.swing.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 
-public class GameWindow extends JFrame {
+public final class GameWindow extends JFrame {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int WINDOW_WIDTH = 1280;
     private static final int WINDOW_HEIGHT = 768;

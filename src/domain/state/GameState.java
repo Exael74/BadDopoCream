@@ -20,14 +20,17 @@ public class GameState implements Serializable {
 
     private Player player;
     private Player player2;
-    private List<Enemy> enemies;
-    private List<Fruit> fruits;
-    private List<List<Fruit>> pendingFruitWaves;
-    private List<IceBlock> iceBlocks;
-    private List<HotTile> hotTiles;
-    private List<Fogata> fogatas;
+    // Estos campos forman parte del archivo de guardado, así que se declaran como
+    // ArrayList (Serializable) y no como List: así se garantiza en compilación que
+    // lo que se escribe al disco es serializable, en lugar de fallar al guardar.
+    private ArrayList<Enemy> enemies;
+    private ArrayList<Fruit> fruits;
+    private ArrayList<List<Fruit>> pendingFruitWaves;
+    private ArrayList<IceBlock> iceBlocks;
+    private ArrayList<HotTile> hotTiles;
+    private ArrayList<Fogata> fogatas;
     private Iglu iglu;
-    private List<UnbreakableBlock> unbreakableBlocks;
+    private ArrayList<UnbreakableBlock> unbreakableBlocks;
     private boolean gameOver;
     private boolean victory;
     private int level;
@@ -37,6 +40,7 @@ public class GameState implements Serializable {
     private int score;
     private int scorePlayer2;
     private boolean p2CPU;
+    private int totalFruitsSpawned;
 
     /**
      * Constructor del estado del juego.
@@ -68,6 +72,7 @@ public class GameState implements Serializable {
         this.score = 0;
         this.scorePlayer2 = 0;
         this.p2CPU = false;
+        this.totalFruitsSpawned = 0;
     }
 
     // ==================== GETTERS ESTÁTICOS ====================
@@ -127,6 +132,29 @@ public class GameState implements Serializable {
      */
     public void addFruit(Fruit fruit) {
         fruits.add(fruit);
+        totalFruitsSpawned++;
+    }
+
+    /**
+     * Número total de frutas que han llegado a aparecer en la partida.
+     * Sirve para distinguir "el jugador recolectó todo" de "el nivel nunca tuvo
+     * frutas", que de otro modo se confundirían al comprobar la victoria.
+     *
+     * @return Cantidad acumulada de frutas generadas
+     */
+    public int getTotalFruitsSpawned() {
+        return totalFruitsSpawned;
+    }
+
+    /**
+     * Elimina todas las frutas y oleadas pendientes, dejando el contador de frutas
+     * generadas a cero. Se usa al reconfigurar un nivel para que el estado quede
+     * igual que en una partida recién creada.
+     */
+    public void resetFruits() {
+        fruits.clear();
+        pendingFruitWaves.clear();
+        totalFruitsSpawned = 0;
     }
 
     /**
@@ -143,9 +171,6 @@ public class GameState implements Serializable {
         iceBlocks.remove(iceBlock);
     }
 
-    /**
-     * Agrega una baldosa caliente al juego.
-     */
     /**
      * Agrega una baldosa caliente al juego.
      */
@@ -196,7 +221,7 @@ public class GameState implements Serializable {
      */
     public void clear() {
         enemies.clear();
-        fruits.clear();
+        resetFruits();
         iceBlocks.clear();
         hotTiles.clear();
         fogatas.clear();
@@ -287,14 +312,14 @@ public class GameState implements Serializable {
     }
 
     public void addPendingFruitWave(List<Fruit> wave) {
-        this.pendingFruitWaves.add(wave);
+        // Copia defensiva a ArrayList: garantiza que la oleada encolada es
+        // serializable, sea cual sea la implementación de List que llegue.
+        this.pendingFruitWaves.add(new ArrayList<>(wave));
     }
 
     public void addFruitWave(List<Fruit> wave) {
-        // Alias for backward compatibility or immediate add if desired?
-        // Logic uses pendingFruitWaves for sequential waves.
-        // Existing code used addFruitWave which likely added to pending.
-        this.pendingFruitWaves.add(wave);
+        // Alias mantenido por compatibilidad: ambas rutas encolan una oleada pendiente.
+        addPendingFruitWave(wave);
     }
 
     public boolean isP2CPU() {

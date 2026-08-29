@@ -5,7 +5,9 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-public class LevelSelectionPanel extends JPanel {
+public final class LevelSelectionPanel extends JPanel {
+
+    private static final long serialVersionUID = 1L;
 
     private static final int WINDOW_WIDTH = 1280;
     private static final int WINDOW_HEIGHT = 720;
@@ -14,8 +16,8 @@ public class LevelSelectionPanel extends JPanel {
     private static final int BUTTON_WIDTH_HOVER = 400;
     private static final int BUTTON_HEIGHT_HOVER = 200;
 
-    private ResourceLoader resources;
-    private FontLoader fontLoader;
+    private transient ResourceLoader resources;
+    private transient FontLoader fontLoader;
     private int numberOfPlayers;
     private boolean isP2CPU;
 

@@ -249,11 +249,17 @@ public class AIController {
         Fruit targetFruit = findBestFruitBFS(playerPos, true); // true = avoid enemies
 
         if (targetFruit != null) {
+            // El objetivo debe registrarse siempre: processAIPlayerActions lo necesita
+            // para decidir si patea hielo o estornuda, y sin él el EXPERT nunca actúa.
+            setCurrentTarget(targetFruit.getPosition(), isPlayer1);
+
             Point nextStep = getNextStepBFS(playerPos, targetFruit.getPosition(), true);
             if (nextStep != null) {
                 moveToStep(playerPos, nextStep, isPlayer1);
                 return;
             }
+        } else {
+            setCurrentTarget(null, isPlayer1);
         }
 
         // 3. Fallback: moverse random (que suele ser evasivo si se bloquea)
@@ -280,14 +286,21 @@ public class AIController {
         }
     }
 
-    private void moveToTarget(Point playerPos, Point target, boolean isPlayer1, int failedMoves) {
+    /**
+     * Registra el objetivo actual de la IA indicada.
+     */
+    private void setCurrentTarget(Point target, boolean isPlayer1) {
         if (isPlayer1)
             aiPlayer1Target = target;
         else
             aiPlayer2Target = target;
+    }
+
+    private void moveToTarget(Point playerPos, Point target, boolean isPlayer1, int failedMoves) {
+        setCurrentTarget(target, isPlayer1);
 
         if (failedMoves > 2) {
-            moveAlternative(playerPos, target, isPlayer1);
+            moveAlternative(isPlayer1);
         } else {
             moveTowards(playerPos, target, isPlayer1);
         }
@@ -311,10 +324,7 @@ public class AIController {
                 boolean randomSneeze = aiRandom.nextInt(100) < 30; // 30% chance per tick if conditions met
 
                 if (dist > 2 && dist <= 7 && randomSneeze && shouldCreateIceFearful(player, enemy.getPosition())) {
-                    if (isPlayer1)
-                        gameLogic.performIceSneeze(player);
-                    else
-                        gameLogic.performIceSneeze(player);
+                    gameLogic.performIceSneeze(player);
                     return;
                 }
             }
@@ -325,24 +335,19 @@ public class AIController {
         if (target == null)
             return;
 
-        if (shouldBreakIce(player, target)) {
-            if (isPlayer1)
-                gameLogic.performIceKick(player);
-            else
-                gameLogic.performIceKick(player);
+        if (shouldBreakIce(player)) {
+            gameLogic.performIceKick(player);
         } else if (type == AIType.EXPERT && shouldCreateIce(player)) {
             // EXPERT: Intelligent use of ice block
-            if (isPlayer1)
-                gameLogic.performIceSneeze(player);
-            else
-                gameLogic.performIceSneeze(player);
+            gameLogic.performIceSneeze(player);
         }
     }
 
     // ==================== MOVIMIENTOS ====================
 
     private void moveRandomly(boolean isPlayer1) {
-        Direction dir = Direction.values()[aiRandom.nextInt(4)];
+        Direction[] options = Direction.movementValues();
+        Direction dir = options[aiRandom.nextInt(options.length)];
         executeMove(dir, isPlayer1);
     }
 
@@ -366,7 +371,7 @@ public class AIController {
         Direction bestDir = null;
         int maxDist = -1;
 
-        for (Direction dir : Direction.values()) {
+        for (Direction dir : Direction.movementValues()) {
             Point next = new Point(from.x + dir.getDeltaX(), from.y + dir.getDeltaY());
 
             if (isValidMove(next)) {
@@ -386,9 +391,26 @@ public class AIController {
         }
     }
 
-    private void moveAlternative(Point from, Point to, boolean isPlayer1) {
-        List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.values()));
+    /**
+     * Movimiento de desatasco: prueba una dirección transitable al azar en lugar de
+     * insistir en la ruta directa hacia el objetivo.
+     */
+    private void moveAlternative(boolean isPlayer1) {
+        List<Direction> directions = new ArrayList<>(Arrays.asList(Direction.movementValues()));
         Collections.shuffle(directions);
+
+        Player player = isPlayer1 ? gameState.getPlayer() : gameState.getPlayer2();
+        if (player != null) {
+            Point from = player.getPosition();
+            for (Direction dir : directions) {
+                Point next = new Point(from.x + dir.getDeltaX(), from.y + dir.getDeltaY());
+                if (isValidMove(next)) {
+                    executeMove(dir, isPlayer1);
+                    return;
+                }
+            }
+        }
+
         executeMove(directions.get(0), isPlayer1);
     }
 
@@ -421,7 +443,7 @@ public class AIController {
                 }
             }
 
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : Direction.movementValues()) {
                 Point next = new Point(current.x + dir.getDeltaX(), current.y + dir.getDeltaY());
                 if (isValidMove(next) && !visited.contains(next)) {
                     if (avoidEnemies && !isSafeFromEnemies(next)) {
@@ -450,7 +472,7 @@ public class AIController {
                 break;
             }
 
-            for (Direction dir : Direction.values()) {
+            for (Direction dir : Direction.movementValues()) {
                 Point next = new Point(current.x + dir.getDeltaX(), current.y + dir.getDeltaY());
                 if (isValidMove(next) && !parents.containsKey(next)) {
                     if (avoidEnemies && !isSafeFromEnemies(next)) {
@@ -510,7 +532,7 @@ public class AIController {
         return true;
     }
 
-    private boolean shouldBreakIce(Player player, Point target) {
+    private boolean shouldBreakIce(Player player) {
         Direction dir = player.getFacingDirection();
         Point checkPos = new Point(
                 player.getPosition().x + dir.getDeltaX(),
@@ -600,7 +622,7 @@ public class AIController {
         Point p = player.getPosition();
         List<Direction> iceDirs = new ArrayList<>();
 
-        for (Direction d : Direction.values()) {
+        for (Direction d : Direction.movementValues()) {
             Point neighbor = new Point(p.x + d.getDeltaX(), p.y + d.getDeltaY());
             if (hasIceAt(neighbor)) {
                 iceDirs.add(d);
@@ -615,10 +637,7 @@ public class AIController {
             executeMove(kickDir, isPlayer1);
 
             // Then kick
-            if (isPlayer1)
-                gameLogic.performIceKick(player);
-            else
-                gameLogic.performIceKick(player);
+            gameLogic.performIceKick(player);
             return;
         }
 

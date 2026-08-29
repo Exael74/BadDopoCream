@@ -5,6 +5,8 @@ import java.awt.Point;
 
 public class Troll extends Enemy {
 
+    private static final long serialVersionUID = 1L;
+
     public Troll(Point position) {
         super(position);
     }

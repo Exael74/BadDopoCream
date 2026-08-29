@@ -10,6 +10,28 @@ public enum Direction {
     RIGHT,
     IDLE;
 
+    /** Las cuatro direcciones que representan un desplazamiento real. */
+    private static final Direction[] MOVEMENT_DIRECTIONS = { UP, DOWN, LEFT, RIGHT };
+
+    /**
+     * Devuelve solo las direcciones que mueven a una entidad, es decir, todas menos
+     * {@link #IDLE}. Recorrer {@code values()} para elegir un movimiento incluye
+     * IDLE, cuyo delta es (0,0), y hace que "quedarse quieto" compita como si fuera
+     * un movimiento válido.
+     *
+     * @return Copia del arreglo de direcciones de movimiento
+     */
+    public static Direction[] movementValues() {
+        return MOVEMENT_DIRECTIONS.clone();
+    }
+
+    /**
+     * Indica si esta dirección produce un desplazamiento.
+     */
+    public boolean isMovement() {
+        return this != IDLE;
+    }
+
     /**
      * Obtiene la dirección opuesta.
      */
